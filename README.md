@@ -39,15 +39,40 @@ turn new articles into stories.
 
 ## Install with Docker Compose
 
-1. Create a directory and download the compose file:
+1. Create a directory with this `docker-compose.yml` (or download it:
+   `curl -O https://raw.githubusercontent.com/hyprlab/hyprfeed/main/docker-compose.yml`):
 
-   ```bash
-   mkdir hyprfeed && cd hyprfeed
-   curl -O https://raw.githubusercontent.com/hyprlab/hyprfeed/main/docker-compose.yml
-   curl -o .env https://raw.githubusercontent.com/hyprlab/hyprfeed/main/.env.example
+   ```yaml
+   services:
+     hyprfeed:
+       image: hyprlab/hyprfeed:latest
+       container_name: hyprfeed
+       ports:
+         # host:container — change the left side if 8098 is taken on your host
+         - "8098:8000"
+       environment:
+         # Session signing key. If unset, one is generated and kept in the data volume.
+         - SECRET_KEY=${SECRET_KEY:-}
+         # Cloudflare Turnstile (optional — leave empty to disable the challenge)
+         - TURNSTILE_SITE_KEY=${TURNSTILE_SITE_KEY:-}
+         - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY:-}
+         # Set to 0 to close sign-ups (the admin panel can also toggle this at runtime)
+         - ALLOW_REGISTRATION=${ALLOW_REGISTRATION:-1}
+         # How often feeds refresh in the background, in minutes
+         - REFRESH_MINUTES=${REFRESH_MINUTES:-15}
+         # How many stories each feed keeps; older ones are pruned
+         - MAX_ENTRIES_PER_FEED=${MAX_ENTRIES_PER_FEED:-300}
+       volumes:
+         - hyprfeed-data:/data
+       restart: unless-stopped
+
+   volumes:
+     hyprfeed-data:
    ```
 
-2. (Optional) edit `.env` — everything works with the defaults for a first run.
+2. (Optional) add a `.env` file next to it to set any of the variables above
+   ([`.env.example`](.env.example)) — everything works with the defaults for a
+   first run.
 
 3. Start it:
 

@@ -11,7 +11,7 @@ from flask_login import LoginManager
 from .config import Config
 from .models import User, db, utcnow
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -70,6 +70,10 @@ def create_app(config_class=Config) -> Flask:
             "allow_registration": auth.registration_open(),
             "app_version": __version__,
         }
+
+    from . import about_docs
+    app.jinja_env.globals["app_release_notes"] = about_docs.release_notes
+    app.jinja_env.globals["app_changelog"] = about_docs.changelog
 
     # ---- Template filters ----
     @app.template_filter("ago")
