@@ -4,7 +4,7 @@
 
 <h1 align="center">Hyprfeed</h1>
 
-<p align="center"><strong>Your sites, one beautiful magazine.</strong></p>
+<p align="center"><strong>A self-hosted RSS reader for the open web — follow any site, even ones without a feed.</strong></p>
 
 <p align="center">
   <a href="https://hub.docker.com/r/hyprlab/hyprfeed"><img src="https://img.shields.io/docker/v/hyprlab/hyprfeed?label=docker&color=F7DF1E" alt="Docker Hub"></a>
