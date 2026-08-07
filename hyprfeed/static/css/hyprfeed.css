@@ -371,13 +371,16 @@ html[data-theme="dark"] .icon-moon { display: none; }
 }
 .card:hover { transform: translateY(-2px); border-color: var(--line-strong); box-shadow: var(--shadow-2); }
 .card-body { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 14px 16px 16px; flex: 1; }
-.card-body .starbtn { top: auto; bottom: 10px; right: 10px; background: none; backdrop-filter: none; }
-.card-body .hidebtn { right: 44px; }
+/* Actions sit in the kicker row (matching the hero) so they never collide
+   with the title or dek — important on touch, where they're always visible. */
+.card-body .starbtn { top: 8px; right: 10px; background: none; backdrop-filter: none; }
+.card-body .hidebtn { top: 8px; right: 44px; }
+.card-body .kicker { padding-right: 72px; }
+.card-body .story-meta { margin-top: auto; padding-top: 8px; }
 .hero-body .hidebtn { top: 14px; right: 52px; }
 .story.is-hidden { display: none !important; }
 .card-title {
   font-size: 16.5px; font-weight: 680; letter-spacing: -0.016em; line-height: 1.3;
-  padding-right: 26px;
 }
 .card-title--sm { font-size: 15px; font-weight: 650; }
 .card-dek {

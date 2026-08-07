@@ -101,6 +101,13 @@
           {{ kicker(entry) }}
           <h3 class="card-title">{{ entry.title }}</h3>
           {% if entry.summary %}<p class="card-dek">{{ entry.summary[:150] }}{% if entry.summary|length > 150 %}…{% endif %}</p>{% endif %}
+          {% if entry.author or entry.word_count %}
+          <p class="story-meta">
+            {% if entry.author %}<span>{{ entry.author }}</span>{% endif %}
+            {% if entry.author and entry.word_count %}<span class="kicker-sep">·</span>{% endif %}
+            {% if entry.word_count %}<span>{{ entry.word_count|readtime }} read</span>{% endif %}
+          </p>
+          {% endif %}
           {{ star_btn(entry) }}
           {{ hide_btn(entry) }}
         </div>
