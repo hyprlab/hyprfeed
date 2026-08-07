@@ -799,6 +799,10 @@
       searchInput.select();
     }
     document.getElementById("search-btn").addEventListener("click", openPalette);
+    var searchKbd = document.getElementById("search-kbd");
+    if (searchKbd && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
+      searchKbd.textContent = "⌘K";
+    }
     document.addEventListener("keydown", function (e) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();

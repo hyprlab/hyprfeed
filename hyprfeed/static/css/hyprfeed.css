@@ -626,6 +626,22 @@ html[data-theme="light"] .tech-tile-name { color: #000; }
 }
 
 /* ————— Search palette ————— */
+.searchpill {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 34px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  color: var(--muted); background: var(--panel);
+  transition: border-color .15s, color .15s, background .15s;
+}
+.searchpill svg { width: 17px; height: 17px; }
+.searchpill kbd {
+  font-family: inherit; font-size: 10.5px; font-weight: 650; letter-spacing: .04em;
+  color: var(--faint); border: 1px solid var(--line); border-radius: 5px;
+  padding: 1px 6px; background: var(--surface); white-space: nowrap;
+}
+.searchpill:hover { color: var(--ink); border-color: var(--line-strong); background: var(--wash); }
+@media (max-width: 700px) { .searchpill kbd { display: none; } }
+
 .palette {
   border: 1px solid var(--line); border-radius: 16px; padding: 0;
   background: var(--surface); color: var(--ink);
