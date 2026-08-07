@@ -111,6 +111,8 @@ def _page_context():
 
     return {
         "feed_titles": {s.feed_id: s.display_title for s in subs},
+        "site_subs": [s for s in subs if not s.feed.is_youtube],
+        "youtube_subs": [s for s in subs if s.feed.is_youtube],
         "view": view,
         "filter": filter_name,
         "active_sub": active_sub,

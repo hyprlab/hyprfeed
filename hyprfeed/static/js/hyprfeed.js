@@ -285,16 +285,18 @@
   }
 
   function syncSidebarOrder() {
-    var list = document.querySelector(".sidebar .feed-list");
-    if (!list) return;
-    var byId = {};
-    list.querySelectorAll("li").forEach(function (li) {
-      var link = li.querySelector('a[href*="feed="]');
-      var m = link && link.href.match(/[?&]feed=(\d+)/);
-      if (m) byId[m[1]] = li;
-    });
-    feedsOrder().forEach(function (id) {
-      if (byId[id]) list.appendChild(byId[id]);
+    // Feeds live in two sidebar groups (sites + YouTube); reorder each
+    // list's own members without moving items between groups.
+    document.querySelectorAll(".sidebar .feed-list").forEach(function (list) {
+      var byId = {};
+      list.querySelectorAll("li").forEach(function (li) {
+        var link = li.querySelector('a[href*="feed="]');
+        var m = link && link.href.match(/[?&]feed=(\d+)/);
+        if (m) byId[m[1]] = li;
+      });
+      feedsOrder().forEach(function (id) {
+        if (byId[id]) list.appendChild(byId[id]);
+      });
     });
   }
 
@@ -520,6 +522,21 @@
   var currentFeedId = null;
   var currentRead = false;
 
+  function youtubeVideoId(url) {
+    if (!url) return null;
+    var u;
+    try { u = new URL(url); } catch (_) { return null; }
+    var host = u.hostname.replace(/^(www|m)\./, "");
+    var id = null;
+    if (host === "youtu.be") {
+      id = u.pathname.slice(1).split("/")[0];
+    } else if (host === "youtube.com" || host.endsWith(".youtube.com")) {
+      if (u.pathname === "/watch") id = u.searchParams.get("v");
+      else if (/^\/(shorts|embed|live)\//.test(u.pathname)) id = u.pathname.split("/")[2];
+    }
+    return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
+  }
+
   function storyIds() {
     return Array.prototype.map.call(document.querySelectorAll(".story[data-id]"), function (el) {
       return parseInt(el.getAttribute("data-id"), 10);
@@ -597,15 +614,29 @@
         hero.innerHTML = "";
         var content = document.getElementById("reader-content");
         content.innerHTML = data.content || "<p>This feed only provides a preview. Read the full story on the site.</p>";
-        // Show the lead image only if the article body doesn't already open
-        // with one (feeds often repeat the same image under a different URL).
-        var bodyOpensWithImage = content.innerHTML.slice(0, 600).indexOf("<img") !== -1;
-        if (data.image && !bodyOpensWithImage && content.innerHTML.indexOf(data.image) === -1) {
-          var img = document.createElement("img");
-          img.src = data.image;
-          img.alt = "";
-          img.onerror = function () { hero.innerHTML = ""; };
-          hero.appendChild(img);
+        var videoId = youtubeVideoId(data.url);
+        if (videoId) {
+          // YouTube story: embed the player where the hero image would go.
+          var wrap = document.createElement("div");
+          wrap.className = "video-embed";
+          var frame = document.createElement("iframe");
+          frame.src = "https://www.youtube-nocookie.com/embed/" + videoId;
+          frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+          frame.allowFullscreen = true;
+          frame.title = data.title;
+          wrap.appendChild(frame);
+          hero.appendChild(wrap);
+        } else {
+          // Show the lead image only if the article body doesn't already open
+          // with one (feeds often repeat the same image under a different URL).
+          var bodyOpensWithImage = content.innerHTML.slice(0, 600).indexOf("<img") !== -1;
+          if (data.image && !bodyOpensWithImage && content.innerHTML.indexOf(data.image) === -1) {
+            var img = document.createElement("img");
+            img.src = data.image;
+            img.alt = "";
+            img.onerror = function () { hero.innerHTML = ""; };
+            hero.appendChild(img);
+          }
         }
         var visit = document.getElementById("reader-visit");
         var visitFoot = document.getElementById("reader-visit-foot");
