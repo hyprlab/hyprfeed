@@ -86,10 +86,22 @@
   });
 
   /* ————— Modals ————— */
+  function switchSettingsTab(name) {
+    document.querySelectorAll(".tab").forEach(function (t) {
+      t.classList.toggle("is-active", t.getAttribute("data-tab") === name);
+    });
+    document.querySelectorAll(".tabpane").forEach(function (pane) {
+      pane.classList.toggle("is-active", pane.getAttribute("data-pane") === name);
+    });
+  }
+
   document.querySelectorAll("[data-open]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var dialog = document.getElementById(btn.getAttribute("data-open"));
-      if (dialog) dialog.showModal();
+      if (!dialog) return;
+      var tab = btn.getAttribute("data-tab-target");
+      if (tab) switchSettingsTab(tab);
+      dialog.showModal();
     });
   });
   document.querySelectorAll("dialog").forEach(function (dialog) {
@@ -104,10 +116,7 @@
   /* ————— Settings: tabs & preferences ————— */
   document.querySelectorAll(".tab").forEach(function (tab) {
     tab.addEventListener("click", function () {
-      document.querySelectorAll(".tab").forEach(function (t) { t.classList.toggle("is-active", t === tab); });
-      document.querySelectorAll(".tabpane").forEach(function (pane) {
-        pane.classList.toggle("is-active", pane.getAttribute("data-pane") === tab.getAttribute("data-tab"));
-      });
+      switchSettingsTab(tab.getAttribute("data-tab"));
     });
   });
   document.querySelectorAll('input[name="view_mode"]').forEach(function (radio) {
