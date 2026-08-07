@@ -448,6 +448,7 @@ def entry_detail(entry_id):
         image=entry.image_url,
         feed=sub.display_title if sub else entry.feed.title,
         feed_icon=entry.feed.icon_url,
+        site_url=entry.feed.site_url,
         published=entry.published.strftime("%B %-d, %Y · %H:%M"),
         minutes=max(1, round(entry.word_count / 220)) if entry.word_count else None,
         starred=entry.id in {

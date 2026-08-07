@@ -604,7 +604,10 @@
         currentFeedId = data.feed_id;
         if (data.auto_marked) bumpUnread(data.feed_id, -1);
         setReaderReadState(data.read);
-        document.getElementById("reader-feed").textContent = data.feed;
+        var readerFeed = document.getElementById("reader-feed");
+        readerFeed.textContent = data.feed;
+        if (data.site_url) readerFeed.href = data.site_url;
+        else readerFeed.removeAttribute("href");
         document.getElementById("reader-title").textContent = data.title;
         var meta = [data.published];
         if (data.author) meta.unshift(data.author);

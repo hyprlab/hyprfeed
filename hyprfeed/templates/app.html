@@ -105,7 +105,10 @@
       </button>
 
       <h2 class="context-title">
-        {%- if active_sub %}{{ active_sub.display_title }}
+        {%- if active_sub -%}
+          <a class="context-link" href="{{ active_sub.feed.site_url or active_sub.feed.url }}"
+             target="_blank" rel="noopener noreferrer"
+             title="Open {{ active_sub.display_title }}'s site">{{ active_sub.display_title }}<svg viewBox="0 0 24 24"><path d="M10 5H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4M14 4.5h5.5V10M19 5l-8.5 8.5"/></svg></a>
         {%- elif filter == 'unread' %}Unread
         {%- elif filter == 'saved' %}Saved
         {%- elif filter == 'history' %}History
@@ -495,7 +498,7 @@
     </div>
   </div>
   <article class="reader-article">
-    <p class="kicker" id="reader-feed"></p>
+    <p class="kicker"><a id="reader-feed" target="_blank" rel="noopener noreferrer"></a></p>
     <h1 class="reader-title" id="reader-title"></h1>
     <p class="reader-meta" id="reader-meta"></p>
     <div class="reader-hero" id="reader-hero"></div>
