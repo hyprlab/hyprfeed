@@ -82,6 +82,19 @@
     {% endif %}
     <div class="grid grid--magazine">
       {% for entry in entries if not (hero and entry.id == hero.id) %}
+      {% if loop.index0 > 0 and loop.index0 % 12 == 0 %}
+      {# Every ~4 rows, a full-width feature breaks up the card rhythm. #}
+      <article class="breaker story {{ 'is-read' if entry.id in read_ids }}" data-id="{{ entry.id }}" data-feed="{{ entry.feed_id }}" tabindex="0">
+        {{ thumb(entry, 'thumb--breaker') }}
+        <div class="breaker-body">
+          {{ kicker(entry) }}
+          <h3 class="breaker-title">{{ entry.title }}</h3>
+          {% if entry.summary %}<p class="breaker-dek">{{ entry.summary[:220] }}{% if entry.summary|length > 220 %}…{% endif %}</p>{% endif %}
+          {{ star_btn(entry) }}
+          {{ hide_btn(entry) }}
+        </div>
+      </article>
+      {% else %}
       <article class="card story {{ 'is-read' if entry.id in read_ids }}" data-id="{{ entry.id }}" data-feed="{{ entry.feed_id }}" tabindex="0">
         {{ thumb(entry) }}
         <div class="card-body">
@@ -92,6 +105,7 @@
           {{ hide_btn(entry) }}
         </div>
       </article>
+      {% endif %}
       {% endfor %}
     </div>
 
