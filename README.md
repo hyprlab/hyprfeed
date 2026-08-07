@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://hub.docker.com/r/hyprlab/hyprfeed"><img src="https://img.shields.io/docker/v/hyprlab/hyprfeed?label=docker&color=F7DF1E" alt="Docker Hub"></a>
-  <a href="https://github.com/hyprlab/hyprfeed/blob/main/CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.0.0-F7DF1E" alt="Version 1.0.0"></a>
+  <a href="https://github.com/hyprlab/hyprfeed/releases"><img src="https://img.shields.io/github/v/release/hyprlab/hyprfeed?label=release&color=F7DF1E" alt="Latest release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="AGPL-3.0 license"></a>
 </p>
 
