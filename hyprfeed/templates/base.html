@@ -6,6 +6,7 @@
   <meta name="csrf" content="{{ csrf_token() }}">
   <title>{% block title %}Hyprfeed{% endblock %}</title>
   <link rel="icon" href="{{ static_url('img/logo.svg') }}" type="image/svg+xml">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ static_url('img/apple-touch-icon.png') }}">
   <link rel="stylesheet" href="{{ static_url('css/hyprfeed.css') }}">
   <script>
     // Resolve theme before first paint to avoid a flash of the wrong theme.
