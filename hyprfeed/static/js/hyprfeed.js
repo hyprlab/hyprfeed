@@ -968,6 +968,73 @@
     });
   }
 
+  /* ————— Pull to refresh (touch devices) ————— */
+  (function initPullToRefresh() {
+    if (!window.matchMedia("(pointer: coarse)").matches) return;
+    if (!document.getElementById("entries-root")) return;  // app pages only
+
+    var THRESHOLD = 64;   // px of indicator travel that arms the refresh
+    var indicator = document.createElement("div");
+    indicator.className = "ptr";
+    indicator.setAttribute("aria-hidden", "true");
+    indicator.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 3.5V7h-3.5"/></svg>';
+    document.body.appendChild(indicator);
+
+    var startY = null, pulling = false, armed = false, refreshing = false;
+
+    function setTravel(px) {
+      indicator.style.transform = "translateY(" + px + "px) rotate(" + px * 2.2 + "deg)";
+    }
+    function reset() {
+      indicator.classList.remove("is-dragging", "is-armed");
+      indicator.style.transform = "";
+    }
+
+    document.addEventListener("touchstart", function (e) {
+      if (refreshing || window.scrollY > 0) return;
+      if (document.querySelector("dialog[open]") || document.querySelector(".sidebar.is-open")) return;
+      startY = e.touches[0].clientY;
+      pulling = true;
+      armed = false;
+    }, { passive: true });
+
+    document.addEventListener("touchmove", function (e) {
+      if (!pulling || refreshing) return;
+      var dy = e.touches[0].clientY - startY;
+      if (dy <= 0 || window.scrollY > 0) {
+        armed = false;
+        reset();
+        return;
+      }
+      var travel = Math.min(dy * 0.45, 104);
+      indicator.classList.add("is-dragging");
+      setTravel(travel);
+      armed = travel >= THRESHOLD;
+      indicator.classList.toggle("is-armed", armed);
+    }, { passive: true });
+
+    document.addEventListener("touchend", function () {
+      if (!pulling) return;
+      pulling = false;
+      indicator.classList.remove("is-dragging");
+      if (armed && !refreshing) {
+        refreshing = true;
+        indicator.classList.add("is-refreshing");
+        setTravel(THRESHOLD);
+        api("/refresh").then(function () {
+          location.reload();
+        }).catch(function (err) {
+          toast(err.message);
+          refreshing = false;
+          indicator.classList.remove("is-refreshing");
+          reset();
+        });
+      } else {
+        reset();
+      }
+    });
+  })();
+
   /* ————— Load more ————— */
   document.addEventListener("click", function (e) {
     var btn = e.target.closest("#load-more");
