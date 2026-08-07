@@ -453,6 +453,7 @@ html[data-theme="dark"] .icon-moon { display: none; }
 }
 .feedadd input:focus { outline: none; border-color: var(--volt); box-shadow: 0 0 0 3px var(--wash); }
 .feedadd + .form-error { margin-top: 8px; }
+.opml-row { display: flex; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
 .grip { display: grid; place-items: center; width: 18px; color: var(--faint); cursor: grab; flex: none; }
 .grip svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }
 .manage-item.is-dragging { opacity: .45; }

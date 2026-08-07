@@ -4,6 +4,14 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] — Unreleased
+
+### Added
+- OPML import and export in Settings → Reading & Feeds: export preserves your
+  sidebar order and marks page-watcher feeds so they survive a round-trip;
+  import subscribes instantly (up to 500 feeds, duplicates skipped) and
+  fetches new feeds in the background
+
 ## [1.3.0] — 2026-08-07
 
 ### Added
