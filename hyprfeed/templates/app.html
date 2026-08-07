@@ -166,6 +166,13 @@
         <span class="btn-busy" hidden>Reading the page…</span>
       </button>
     </div>
+    <div class="scrape-offer" id="gn-offer" hidden>
+      <p class="hint" id="gn-text"></p>
+      <button class="btn btn--ghost btn--block" type="button" id="gn-btn">
+        <span class="btn-label">Use the Google News feed</span>
+        <span class="btn-busy" hidden>Adding…</span>
+      </button>
+    </div>
   </form>
 </dialog>
 
@@ -236,6 +243,13 @@
         <button class="btn btn--ghost btn--block" id="feeds-scrape-btn" type="button">
           <span class="btn-label">Follow without a feed</span>
           <span class="btn-busy" hidden>Reading the page…</span>
+        </button>
+      </div>
+      <div class="wiz-scrape" id="feeds-gn" hidden>
+        <p class="hint" id="feeds-gn-text"></p>
+        <button class="btn btn--ghost btn--block" id="feeds-gn-btn" type="button">
+          <span class="btn-label">Use the Google News feed</span>
+          <span class="btn-busy" hidden>Adding…</span>
         </button>
       </div>
       {% if subs %}

@@ -15,6 +15,7 @@
         if (!resp.ok) {
           var err = new Error(data.error || "Something went wrong.");
           err.canScrape = !!data.can_scrape;
+          err.googleNews = data.google_news || null;
           throw err;
         }
         return data;
@@ -353,24 +354,33 @@
   if (feedsAddForm) {
     var feedsScrape = document.getElementById("feeds-scrape");
     var feedsScrapeBtn = document.getElementById("feeds-scrape-btn");
+    var feedsGn = document.getElementById("feeds-gn");
+    var feedsGnBtn = document.getElementById("feeds-gn-btn");
     var feedsPendingUrl = null;
+    var feedsGnInfo = null;
 
-    function settingsAddFeed(url, busyBtn, scrape) {
+    function settingsAddFeed(payload, busyBtn) {
       var errEl = document.getElementById("feeds-add-error");
       errEl.hidden = true;
       feedsScrape.hidden = true;
-      if (!url) return;
+      feedsGn.hidden = true;
+      if (!payload.url) return;
       busyBtn.disabled = true;
       busyBtn.querySelector(".btn-label").hidden = true;
       busyBtn.querySelector(".btn-busy").hidden = false;
-      api("/feeds/add", { url: url, scrape: !!scrape })
+      api("/feeds/add", payload)
         .then(function (data) { location.href = data.redirect; })
         .catch(function (err) {
           errEl.textContent = err.message;
           errEl.hidden = false;
-          if (err.canScrape && !scrape) {
-            feedsPendingUrl = url;
+          if (err.canScrape && !payload.scrape) {
+            feedsPendingUrl = payload.url;
             feedsScrape.hidden = false;
+          }
+          feedsGnInfo = err.googleNews;
+          if (feedsGnInfo) {
+            document.getElementById("feeds-gn-text").textContent = gnExplanation(feedsGnInfo);
+            feedsGn.hidden = false;
           }
           busyBtn.disabled = false;
           busyBtn.querySelector(".btn-label").hidden = false;
@@ -380,14 +390,18 @@
 
     feedsAddForm.addEventListener("submit", function (e) {
       e.preventDefault();
-      settingsAddFeed(document.getElementById("feeds-add-url").value.trim(),
-                      feedsAddForm.querySelector("button"), false);
+      settingsAddFeed({ url: document.getElementById("feeds-add-url").value.trim() },
+                      feedsAddForm.querySelector("button"));
     });
     document.getElementById("feeds-add-url").addEventListener("input", function () {
       feedsScrape.hidden = true;
+      feedsGn.hidden = true;
     });
     feedsScrapeBtn.addEventListener("click", function () {
-      if (feedsPendingUrl) settingsAddFeed(feedsPendingUrl, feedsScrapeBtn, true);
+      if (feedsPendingUrl) settingsAddFeed({ url: feedsPendingUrl, scrape: true }, feedsScrapeBtn);
+    });
+    feedsGnBtn.addEventListener("click", function () {
+      if (feedsGnInfo) settingsAddFeed({ url: feedsGnInfo.url, custom_title: feedsGnInfo.title }, feedsGnBtn);
     });
   }
 
@@ -421,10 +435,19 @@
   }
 
   /* ————— Add feed ————— */
+  function gnExplanation(info) {
+    return info.domain + " blocks automated readers, so Hyprfeed can't fetch it directly. "
+      + "Google News publishes a public feed of " + info.domain
+      + " stories — headlines link to the original articles.";
+  }
+
   var addForm = document.getElementById("add-form");
   if (addForm) {
     var scrapeOffer = document.getElementById("scrape-offer");
     var scrapeBtn = document.getElementById("scrape-btn");
+    var gnOffer = document.getElementById("gn-offer");
+    var gnBtn = document.getElementById("gn-btn");
+    var gnInfo = null;
 
     function setBusy(btn, busy) {
       btn.disabled = busy;
@@ -432,16 +455,19 @@
       btn.querySelector(".btn-busy").hidden = !busy;
     }
 
-    function submitAdd(scrape, btn) {
+    function submitAdd(payload, btn) {
       var errEl = document.getElementById("add-error");
       errEl.hidden = true;
       setBusy(btn, true);
-      api("/feeds/add", { url: document.getElementById("add-url").value, scrape: scrape })
+      api("/feeds/add", payload)
         .then(function (data) { location.href = data.redirect; })
         .catch(function (err) {
           errEl.textContent = err.message;
           errEl.hidden = false;
-          scrapeOffer.hidden = !(err.canScrape && !scrape);
+          scrapeOffer.hidden = !(err.canScrape && !payload.scrape);
+          gnInfo = err.googleNews;
+          gnOffer.hidden = !gnInfo;
+          if (gnInfo) document.getElementById("gn-text").textContent = gnExplanation(gnInfo);
           setBusy(btn, false);
         });
     }
@@ -449,13 +475,18 @@
     addForm.addEventListener("submit", function (e) {
       e.preventDefault();
       scrapeOffer.hidden = true;
-      submitAdd(false, addForm.querySelector('button[type="submit"]'));
+      gnOffer.hidden = true;
+      submitAdd({ url: document.getElementById("add-url").value }, addForm.querySelector('button[type="submit"]'));
     });
     scrapeBtn.addEventListener("click", function () {
-      submitAdd(true, scrapeBtn);
+      submitAdd({ url: document.getElementById("add-url").value, scrape: true }, scrapeBtn);
+    });
+    gnBtn.addEventListener("click", function () {
+      if (gnInfo) submitAdd({ url: gnInfo.url, custom_title: gnInfo.title }, gnBtn);
     });
     document.getElementById("add-url").addEventListener("input", function () {
       scrapeOffer.hidden = true;
+      gnOffer.hidden = true;
     });
   }
 

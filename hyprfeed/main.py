@@ -7,8 +7,8 @@ from flask_login import current_user, login_required
 from sqlalchemy import func
 
 from .auth import EMAIL_RE
-from .fetcher import (_favicon_for, add_feed, create_scrape_feed, refresh_feed,
-                      scrape_candidates)
+from .fetcher import (_favicon_for, add_feed, create_scrape_feed,
+                      google_news_fallback, refresh_feed, scrape_candidates)
 from .models import (Entry, Feed, Hidden, ReadMark, Star, Subscription, User,
                      db, int_setting, purge_feed, set_setting, utcnow)
 
@@ -170,10 +170,14 @@ def feeds_add():
         # gated/dead like apnews.com's stale index.rss): if the page itself has
         # recognizable articles, offer to watch it instead.
         can_scrape = False
+        google_news = None
         if not data.get("scrape"):
             candidates, _, _ = scrape_candidates(url)
             can_scrape = len(candidates) >= 3
-        return jsonify(error=error, can_scrape=can_scrape), 422
+            if not can_scrape and "blocks automated readers" in error:
+                # Hard bot wall: offer the public Google News feed as a choice.
+                google_news = google_news_fallback(url)
+        return jsonify(error=error, can_scrape=can_scrape, google_news=google_news), 422
     existing = Subscription.query.filter_by(user_id=current_user.id, feed_id=feed.id).first()
     if existing:
         return jsonify(error="You already follow this feed."), 409
@@ -184,10 +188,11 @@ def feeds_add():
     db.session.add(Subscription(
         user_id=current_user.id, feed_id=feed.id,
         position=0 if max_pos is None else max_pos + 1,
+        custom_title=(data.get("custom_title") or "").strip()[:300] or None,
     ))
     db.session.commit()
     return jsonify(ok=True, redirect=url_for("main.index", feed=feed.id),
-                   title=feed.title or feed.url)
+                   title=(data.get("custom_title") or "").strip() or feed.title or feed.url)
 
 
 @bp.route("/feeds/export.opml")

@@ -62,6 +62,23 @@ def _looks_like_feed(content: bytes) -> bool:
     return any(marker in head for marker in (b"<rss", b"<feed", b"<rdf", b"<?xml"))
 
 
+def google_news_fallback(url: str) -> dict | None:
+    """Public Google News RSS scoped to a site — the legitimate way to follow
+    publishers that block automated readers outright (e.g. Reuters)."""
+    if not urlparse(url).scheme:
+        url = "https://" + url
+    domain = urlparse(url).netloc.replace("www.", "")
+    if not domain or "." not in domain:
+        return None
+    from urllib.parse import quote
+    return {
+        "url": ("https://news.google.com/rss/search?q=site:" + quote(domain)
+                + "&hl=en-US&gl=US&ceid=US:en"),
+        "domain": domain,
+        "title": f"{domain.split('.')[0].capitalize()} (via Google News)",
+    }
+
+
 def discover_feed_url(url: str) -> tuple[str | None, str | None]:
     """Resolve a website or feed URL to an actual feed URL.
     Returns (feed_url, error) — exactly one is set."""
