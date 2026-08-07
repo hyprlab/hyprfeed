@@ -40,15 +40,8 @@
       </a>
     </nav>
 
-    <div class="sidebar-label">
-      <span>Feeds</span>
-      <button class="iconbtn iconbtn--sm" data-open="add-modal" aria-label="Add a feed" title="Add a feed">
-        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-      </button>
-    </div>
-
-    <ul class="feed-list">
-      {% for sub in subs %}
+    {% macro feed_items(sub_list) %}
+      {% for sub in sub_list %}
       <li>
         <a class="feeditem {{ 'is-active' if active_sub and active_sub.feed_id == sub.feed_id }}"
            href="{{ url_for('main.index', feed=sub.feed_id) }}" title="{{ sub.display_title }}">
@@ -57,10 +50,31 @@
           {% if unread_counts.get(sub.feed_id) %}<span class="count">{{ unread_counts[sub.feed_id] }}</span>{% endif %}
         </a>
       </li>
-      {% else %}
-      <li class="feed-list-empty">Nothing yet — add a site you love.</li>
       {% endfor %}
+    {% endmacro %}
+
+    <div class="sidebar-label">
+      <span>Feeds</span>
+      <button class="iconbtn iconbtn--sm" data-open="add-modal" aria-label="Add a feed" title="Add a feed">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+
+    <ul class="feed-list">
+      {{ feed_items(site_subs) }}
+      {% if not subs %}
+      <li class="feed-list-empty">Nothing yet — add a site you love.</li>
+      {% endif %}
     </ul>
+
+    {% if youtube_subs %}
+    <div class="sidebar-label">
+      <span>YouTube</span>
+    </div>
+    <ul class="feed-list feed-list--yt">
+      {{ feed_items(youtube_subs) }}
+    </ul>
+    {% endif %}
 
     <div class="sidebar-foot">
       <button type="button" class="user" data-open="settings-modal" data-tab-target="account"

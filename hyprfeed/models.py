@@ -88,6 +88,10 @@ class Feed(db.Model):
     last_fetched = db.Column(db.DateTime)
     last_error = db.Column(db.String(300))
 
+    @property
+    def is_youtube(self) -> bool:
+        return "youtube.com/feeds/videos.xml" in (self.url or "")
+
     entries = db.relationship(
         "Entry", backref="feed", cascade="all, delete-orphan", lazy="dynamic"
     )

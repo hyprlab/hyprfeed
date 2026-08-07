@@ -62,6 +62,39 @@ def _looks_like_feed(content: bytes) -> bool:
     return any(marker in head for marker in (b"<rss", b"<feed", b"<rdf", b"<?xml"))
 
 
+# ———— YouTube channels ————
+
+_YT_HOSTS = {"youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be"}
+_YT_CHANNEL_PATH = re.compile(r"^/channel/(UC[0-9A-Za-z_-]{22})")
+_YT_RSS_LINK = re.compile(r'href="(https://www\.youtube\.com/feeds/videos\.xml\?[^"]+)"')
+_YT_CANONICAL = re.compile(
+    r'rel="canonical" href="https://www\.youtube\.com/channel/(UC[0-9A-Za-z_-]{22})"')
+_YT_CHANNEL_ID = re.compile(r'"channelId":"(UC[0-9A-Za-z_-]{22})"')
+
+
+def _yt_feed(channel_id: str) -> str:
+    return f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
+
+
+def _youtube_feed_from_page(page_url: str, html: str) -> str | None:
+    """Resolve any YouTube page (channel, @handle, video) to its channel feed.
+    Order matters: a channel page's first "channelId" in the JSON blob can
+    belong to a *featured* channel, so trust the RSS/canonical links first."""
+    path_match = _YT_CHANNEL_PATH.match(urlparse(page_url).path)
+    if path_match:
+        return _yt_feed(path_match.group(1))
+    rss = _YT_RSS_LINK.search(html)
+    if rss:
+        return unescape(rss.group(1))
+    canonical = _YT_CANONICAL.search(html)
+    if canonical:
+        return _yt_feed(canonical.group(1))
+    channel_id = _YT_CHANNEL_ID.search(html)
+    if channel_id:
+        return _yt_feed(channel_id.group(1))
+    return None
+
+
 def google_news_fallback(url: str) -> dict | None:
     """Public Google News RSS scoped to a site — the legitimate way to follow
     publishers that block automated readers outright (e.g. Reuters)."""
@@ -97,6 +130,15 @@ def discover_feed_url(url: str) -> tuple[str | None, str | None]:
         return None, f"That site answered with HTTP {resp.status_code}."
     if _looks_like_feed(resp.content):
         return resp.url, None
+
+    # YouTube pages: resolve straight to the channel's Atom feed. (The RSS
+    # link tag sits megabytes deep in their HTML, past the generic scan.)
+    host = urlparse(resp.url).netloc.replace("www.", "")
+    if host in _YT_HOSTS or host.endswith(".youtube.com"):
+        yt = _youtube_feed_from_page(resp.url, resp.text)
+        if yt:
+            return yt, None
+        return None, "Couldn't find a YouTube channel on that page."
 
     # It's an HTML page: look for <link rel="alternate" type="application/rss+xml">.
     html = resp.text[:200_000]

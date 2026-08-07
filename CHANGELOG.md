@@ -7,6 +7,10 @@ All notable changes to Hyprfeed are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- YouTube channels as feeds: paste any channel, @handle, or video URL and
+  Hyprfeed resolves it to the channel's feed; videos arrive with thumbnails,
+  play embedded in the reader (privacy-enhanced youtube-nocookie player), and
+  channels sit in their own "YouTube" group in the sidebar
 - Live search: press Ctrl/⌘ K (or the topbar magnifier) for a command-palette
   overlay that searches your stories and feeds as you type — arrow keys to
   navigate, Enter opens the story in the reader
