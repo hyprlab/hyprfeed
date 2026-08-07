@@ -4,7 +4,7 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.5.2] — 2026-08-07
 
 ### Changed
 - Page-watcher stories now carry the article's real publish date far more
@@ -168,6 +168,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.5.2]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.5.2
 [1.5.1]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.5.1
 [1.5.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.5.0
 [1.4.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.4.0

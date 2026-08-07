@@ -3,6 +3,13 @@
 Plain-English notes on what each Hyprfeed release means for you. The full
 technical log lives in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.5.2 — 2026-08-07 — True timestamps
+
+Watched sites now show when a story was actually **published**, not when
+Hyprfeed first saw it — dates are read from the article's structured data,
+meta tags, or URL. The reader toolbar also returns to its original layout:
+close on the left, story controls on the right.
+
 ## 1.5.0 — 2026-08-07 — Every site has a way in
 
 Some sites retired their feeds (AP News) and some block feed readers entirely
