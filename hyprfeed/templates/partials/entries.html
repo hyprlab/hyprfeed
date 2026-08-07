@@ -1,0 +1,124 @@
+{% macro star_btn(entry) -%}
+  <button class="starbtn {{ 'is-starred' if entry.id in star_ids }}" data-star aria-label="Save story" title="Save">
+    <svg viewBox="0 0 24 24"><path d="M7 4.5h10a1 1 0 0 1 1 1V20l-6-3.5L6 20V5.5a1 1 0 0 1 1-1Z"/></svg>
+  </button>
+{%- endmacro %}
+
+{% macro kicker(entry) -%}
+  <p class="kicker">
+    <span class="unread-dot" aria-label="Unread"></span>
+    <span class="kicker-feed">{{ feed_titles.get(entry.feed_id, entry.feed.title) }}</span>
+    <span class="kicker-sep">·</span>
+    <time>{{ entry.published|ago }}</time>
+  </p>
+{%- endmacro %}
+
+{% macro thumb(entry, ratio_class='') -%}
+  {% if entry.image_url %}
+    <div class="thumb {{ ratio_class }}">
+      <img src="{{ entry.image_url }}" alt="" loading="lazy" onerror="this.closest('.thumb').classList.add('thumb--empty'); this.remove()">
+      <span class="thumb-letter" aria-hidden="true">{{ (feed_titles.get(entry.feed_id) or entry.title)[0]|upper }}</span>
+    </div>
+  {% else %}
+    <div class="thumb thumb--empty {{ ratio_class }}">
+      <span class="thumb-letter" aria-hidden="true">{{ (feed_titles.get(entry.feed_id) or entry.title)[0]|upper }}</span>
+    </div>
+  {% endif %}
+{%- endmacro %}
+
+<div class="entries" data-page="{{ page }}">
+{% if not subs %}
+
+  <div class="empty empty--onboard">
+    <svg class="bolt bolt--xl" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 1.6 4.6 13.4c-.3.4 0 1 .5 1h4.7l-1.6 7.2c-.1.6.6 1 1 .5l8.6-11.8c.3-.4 0-1-.5-1h-4.7l1.6-7.2c.1-.6-.6-1-1-.5Z"/></svg>
+    <h2 class="empty-title">Build your own magazine</h2>
+    <p class="empty-text">Follow the sites you love and Hyprfeed turns them into one elegant, readable front page.</p>
+    <button class="btn btn--primary" data-open="add-modal">Follow your first site</button>
+  </div>
+
+{% elif not entries and page == 1 %}
+
+  <div class="empty">
+    {% if filter == 'unread' %}
+      <h2 class="empty-title">All caught up</h2>
+      <p class="empty-text">No unread stories. Enjoy the quiet, or refresh to check for new ones.</p>
+    {% elif filter == 'saved' %}
+      <h2 class="empty-title">Nothing saved yet</h2>
+      <p class="empty-text">Tap the bookmark on any story to keep it here.</p>
+    {% else %}
+      <h2 class="empty-title">No stories yet</h2>
+      <p class="empty-text">These feeds haven't published anything we can show. Try refreshing.</p>
+    {% endif %}
+  </div>
+
+{% else %}
+
+  {% if view == 'magazine' %}
+    {% set hero = (entries | selectattr('image_url') | list | first) or entries[0] if page == 1 else none %}
+    {% if hero %}
+    <article class="hero story {{ 'is-read' if hero.id in read_ids }}" data-id="{{ hero.id }}" tabindex="0">
+      {{ thumb(hero, 'thumb--hero') }}
+      <div class="hero-body">
+        {{ kicker(hero) }}
+        <h2 class="hero-title">{{ hero.title }}</h2>
+        {% if hero.summary %}<p class="hero-dek">{{ hero.summary[:280] }}{% if hero.summary|length > 280 %}…{% endif %}</p>{% endif %}
+        <p class="story-meta">
+          {% if hero.author %}<span>{{ hero.author }}</span><span class="kicker-sep">·</span>{% endif %}
+          <span>{{ hero.word_count|readtime }} read</span>
+        </p>
+        {{ star_btn(hero) }}
+      </div>
+    </article>
+    {% endif %}
+    <div class="grid grid--magazine">
+      {% for entry in entries if not (hero and entry.id == hero.id) %}
+      <article class="card story {{ 'is-read' if entry.id in read_ids }}" data-id="{{ entry.id }}" tabindex="0">
+        {{ thumb(entry) }}
+        <div class="card-body">
+          {{ kicker(entry) }}
+          <h3 class="card-title">{{ entry.title }}</h3>
+          {% if entry.summary %}<p class="card-dek">{{ entry.summary[:150] }}{% if entry.summary|length > 150 %}…{% endif %}</p>{% endif %}
+          {{ star_btn(entry) }}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+
+  {% elif view == 'cards' %}
+    <div class="grid grid--cards">
+      {% for entry in entries %}
+      <article class="card story {{ 'is-read' if entry.id in read_ids }}" data-id="{{ entry.id }}" tabindex="0">
+        {{ thumb(entry) }}
+        <div class="card-body">
+          {{ kicker(entry) }}
+          <h3 class="card-title card-title--sm">{{ entry.title }}</h3>
+          {{ star_btn(entry) }}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+
+  {% else %}
+    <div class="grid grid--list">
+      {% for entry in entries %}
+      <article class="row story {{ 'is-read' if entry.id in read_ids }}" data-id="{{ entry.id }}" tabindex="0">
+        <span class="unread-dot" aria-label="Unread"></span>
+        <img class="favicon" src="{{ entry.feed.icon_url or '' }}" alt="" loading="lazy" onerror="this.classList.add('is-broken')">
+        <span class="row-feed">{{ feed_titles.get(entry.feed_id, entry.feed.title) }}</span>
+        <h3 class="row-title">{{ entry.title }}</h3>
+        {% if entry.summary %}<span class="row-dek">{{ entry.summary[:120] }}</span>{% endif %}
+        <time class="row-time">{{ entry.published|ago }}</time>
+        {{ star_btn(entry) }}
+      </article>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if has_more %}
+  <div class="pager">
+    <button class="btn btn--ghost" id="load-more" data-next="{{ page + 1 }}">Load older stories</button>
+  </div>
+  {% endif %}
+
+{% endif %}
+</div>

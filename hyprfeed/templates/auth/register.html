@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Create account — Hyprfeed{% endblock %}
+{% block bodyclass %}auth-body{% endblock %}
+{% block body %}
+<main class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-mark">
+      <svg class="bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 1.6 4.6 13.4c-.3.4 0 1 .5 1h4.7l-1.6 7.2c-.1.6.6 1 1 .5l8.6-11.8c.3-.4 0-1-.5-1h-4.7l1.6-7.2c.1-.6-.6-1-1-.5Z"/></svg>
+      <h1 class="wordmark">Hyprfeed</h1>
+      <p class="auth-tag">Follow any site. Read it like a magazine.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash flash--{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="post" class="auth-form">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <label class="field">
+        <span class="field-label">Email</span>
+        <input name="username" type="email" required autofocus autocomplete="email"
+               spellcheck="false" maxlength="80" placeholder="you@example.com">
+      </label>
+      <label class="field">
+        <span class="field-label">Password</span>
+        <input name="password" type="password" required minlength="8" autocomplete="new-password">
+      </label>
+      <label class="field">
+        <span class="field-label">Confirm password</span>
+        <input name="confirm" type="password" required minlength="8" autocomplete="new-password">
+      </label>
+      {% if turnstile_site_key %}
+        <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="auto"></div>
+      {% endif %}
+      <button class="btn btn--primary btn--block" type="submit">Create account</button>
+    </form>
+
+    <p class="auth-alt">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+  </div>
+</main>
+{% if turnstile_site_key %}
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+{% endif %}
+{% endblock %}

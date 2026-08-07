@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en" data-theme-pref="{{ current_user.theme if current_user.is_authenticated else 'system' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf" content="{{ csrf_token() }}">
+  <title>{% block title %}Hyprfeed{% endblock %}</title>
+  <link rel="icon" href="{{ static_url('img/logo.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ static_url('css/hyprfeed.css') }}">
+  <script>
+    // Resolve theme before first paint to avoid a flash of the wrong theme.
+    (function () {
+      var pref = document.documentElement.getAttribute('data-theme-pref') || 'system';
+      var theme = pref === 'system'
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : pref;
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body class="{% block bodyclass %}{% endblock %}">
+  {% block body %}{% endblock %}
+  <script src="{{ static_url('js/hyprfeed.js') }}" defer></script>
+</body>
+</html>

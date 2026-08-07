@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Sign in — Hyprfeed{% endblock %}
+{% block bodyclass %}auth-body{% endblock %}
+{% block body %}
+<main class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-mark">
+      <svg class="bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 1.6 4.6 13.4c-.3.4 0 1 .5 1h4.7l-1.6 7.2c-.1.6.6 1 1 .5l8.6-11.8c.3-.4 0-1-.5-1h-4.7l1.6-7.2c.1-.6-.6-1-1-.5Z"/></svg>
+      <h1 class="wordmark">Hyprfeed</h1>
+      <p class="auth-tag">Your sites, one beautiful magazine.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash flash--{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="post" class="auth-form">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <label class="field">
+        <span class="field-label">Email</span>
+        {# type=text on purpose: accounts created before the email requirement can still sign in #}
+        <input name="username" required autofocus autocomplete="username" spellcheck="false"
+               inputmode="email" placeholder="you@example.com">
+      </label>
+      <label class="field">
+        <span class="field-label">Password</span>
+        <input name="password" type="password" required autocomplete="current-password">
+      </label>
+      <label class="check">
+        <input type="checkbox" name="remember" checked>
+        <span>Keep me signed in</span>
+      </label>
+      {% if turnstile_site_key %}
+        <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="auto"></div>
+      {% endif %}
+      <button class="btn btn--primary btn--block" type="submit">Sign in</button>
+    </form>
+
+    {% if allow_registration %}
+      <p class="auth-alt">New here? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
+    {% endif %}
+  </div>
+</main>
+{% if turnstile_site_key %}
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+{% endif %}
+{% endblock %}
