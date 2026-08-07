@@ -19,8 +19,12 @@
     <form method="post" class="auth-form">
       <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
       <label class="field">
+        <span class="field-label">Name</span>
+        <input name="name" type="text" autocomplete="name" maxlength="120" placeholder="Your name">
+      </label>
+      <label class="field">
         <span class="field-label">Email</span>
-        <input name="username" type="email" required autofocus autocomplete="email"
+        <input name="username" type="email" required autocomplete="email"
                spellcheck="false" maxlength="80" placeholder="you@example.com">
       </label>
       <label class="field">

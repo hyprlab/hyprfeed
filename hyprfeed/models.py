@@ -16,6 +16,7 @@ class User(UserMixin, db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
+    name = db.Column(db.String(120))
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
     theme = db.Column(db.String(10), default="system", nullable=False)  # system|light|dark
@@ -26,6 +27,10 @@ class User(UserMixin, db.Model):
     subscriptions = db.relationship(
         "Subscription", backref="user", cascade="all, delete-orphan", lazy="dynamic"
     )
+
+    @property
+    def display_name(self) -> str:
+        return self.name or self.username
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
@@ -99,6 +104,7 @@ class Subscription(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     feed_id = db.Column(db.Integer, db.ForeignKey("feeds.id"), nullable=False, index=True)
     custom_title = db.Column(db.String(300))
+    position = db.Column(db.Integer)  # per-user sidebar order
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
     @property
@@ -132,6 +138,7 @@ def purge_feed(feed: "Feed") -> None:
     entry_ids = db.session.query(Entry.id).filter(Entry.feed_id == feed.id)
     ReadMark.query.filter(ReadMark.entry_id.in_(entry_ids)).delete(synchronize_session=False)
     Star.query.filter(Star.entry_id.in_(entry_ids)).delete(synchronize_session=False)
+    Hidden.query.filter(Hidden.entry_id.in_(entry_ids)).delete(synchronize_session=False)
     db.session.delete(feed)
 
 
@@ -145,6 +152,14 @@ class ReadMark(db.Model):
 
 class Star(db.Model):
     __tablename__ = "stars"
+
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    entry_id = db.Column(db.Integer, db.ForeignKey("entries.id"), primary_key=True)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+
+
+class Hidden(db.Model):
+    __tablename__ = "hidden_entries"
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     entry_id = db.Column(db.Integer, db.ForeignKey("entries.id"), primary_key=True)

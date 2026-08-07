@@ -3,9 +3,10 @@ from flask import (Blueprint, abort, current_app, jsonify, render_template,
 from flask_login import current_user, login_required
 from sqlalchemy import func
 
+from .auth import EMAIL_RE
 from .fetcher import add_feed, create_scrape_feed, refresh_feed, scrape_candidates
-from .models import (Entry, Feed, ReadMark, Star, Subscription, User, db,
-                     int_setting, purge_feed, set_setting, utcnow)
+from .models import (Entry, Feed, Hidden, ReadMark, Star, Subscription, User,
+                     db, int_setting, purge_feed, set_setting, utcnow)
 
 
 def retention_cap() -> int:
@@ -14,7 +15,7 @@ def retention_cap() -> int:
 bp = Blueprint("main", __name__)
 
 VIEWS = ("magazine", "cards", "list")
-FILTERS = ("all", "unread", "saved")
+FILTERS = ("all", "unread", "saved", "history")
 
 
 def _subscribed_feed_ids():
@@ -24,14 +25,23 @@ def _subscribed_feed_ids():
     ]
 
 
+def _hidden_sub():
+    return db.session.query(Hidden.entry_id).filter(Hidden.user_id == current_user.id)
+
+
 def _entries_query(feed_ids, filter_name):
-    q = Entry.query.filter(Entry.feed_id.in_(feed_ids))
+    q = Entry.query.filter(Entry.feed_id.in_(feed_ids), Entry.id.not_in(_hidden_sub()))
     if filter_name == "unread":
         read = db.session.query(ReadMark.entry_id).filter(ReadMark.user_id == current_user.id)
         q = q.filter(Entry.id.not_in(read))
     elif filter_name == "saved":
         starred = db.session.query(Star.entry_id).filter(Star.user_id == current_user.id)
         q = q.filter(Entry.id.in_(starred))
+    elif filter_name == "history":
+        # Reading history: most recently read first.
+        q = q.join(ReadMark, (ReadMark.entry_id == Entry.id)
+                   & (ReadMark.user_id == current_user.id))
+        return q.order_by(ReadMark.read_at.desc())
     return q.order_by(Entry.published.desc())
 
 
@@ -52,7 +62,9 @@ def _page_context():
 
     subs = (
         Subscription.query.filter_by(user_id=current_user.id)
-        .join(Feed).order_by(func.lower(Feed.title)).all()
+        .join(Feed)
+        .order_by(func.coalesce(Subscription.position, 1_000_000), func.lower(Feed.title))
+        .all()
     )
     feed_ids = [s.feed_id for s in subs]
     active_sub = None
@@ -87,7 +99,8 @@ def _page_context():
         read_sub = db.session.query(ReadMark.entry_id).filter(ReadMark.user_id == current_user.id)
         rows = (
             db.session.query(Entry.feed_id, func.count(Entry.id))
-            .filter(Entry.feed_id.in_(all_ids), Entry.id.not_in(read_sub))
+            .filter(Entry.feed_id.in_(all_ids), Entry.id.not_in(read_sub),
+                    Entry.id.not_in(_hidden_sub()))
             .group_by(Entry.feed_id).all()
         )
         unread_counts = dict(rows)
@@ -140,7 +153,7 @@ def index():
 @bp.route("/feeds/add", methods=["POST"])
 @login_required
 def feeds_add():
-    data = request.json or {}
+    data = request.get_json(silent=True) or {}
     url = data.get("url", "").strip()
     if not url:
         return jsonify(error="Enter a website or feed address."), 400
@@ -158,10 +171,40 @@ def feeds_add():
     existing = Subscription.query.filter_by(user_id=current_user.id, feed_id=feed.id).first()
     if existing:
         return jsonify(error="You already follow this feed."), 409
-    db.session.add(Subscription(user_id=current_user.id, feed_id=feed.id))
+    max_pos = (
+        db.session.query(func.max(Subscription.position))
+        .filter(Subscription.user_id == current_user.id).scalar()
+    )
+    db.session.add(Subscription(
+        user_id=current_user.id, feed_id=feed.id,
+        position=0 if max_pos is None else max_pos + 1,
+    ))
     db.session.commit()
     return jsonify(ok=True, redirect=url_for("main.index", feed=feed.id),
                    title=feed.title or feed.url)
+
+
+@bp.route("/feeds/reorder", methods=["POST"])
+@login_required
+def feeds_reorder():
+    order = (request.get_json(silent=True) or {}).get("order") or []
+    if not isinstance(order, list):
+        return jsonify(error="Bad order payload."), 400
+    subs = {s.feed_id: s for s in Subscription.query.filter_by(user_id=current_user.id)}
+    pos = 0
+    for feed_id in order:
+        sub = subs.get(feed_id)
+        if sub:
+            sub.position = pos
+            pos += 1
+    # Feeds missing from the payload keep their relative order at the end.
+    mentioned = set(order)
+    leftovers = [s for s in subs.values() if s.feed_id not in mentioned]
+    for sub in sorted(leftovers, key=lambda s: s.position if s.position is not None else 1_000_000):
+        sub.position = pos
+        pos += 1
+    db.session.commit()
+    return jsonify(ok=True)
 
 
 @bp.route("/feeds/<int:feed_id>/unsubscribe", methods=["POST"])
@@ -181,7 +224,7 @@ def feeds_unsubscribe(feed_id):
 @login_required
 def feeds_rename(feed_id):
     sub = Subscription.query.filter_by(user_id=current_user.id, feed_id=feed_id).first_or_404()
-    title = (request.json or {}).get("title", "").strip()[:300]
+    title = (request.get_json(silent=True) or {}).get("title", "").strip()[:300]
     sub.custom_title = title or None
     db.session.commit()
     return jsonify(ok=True, title=sub.display_title)
@@ -205,11 +248,17 @@ def entry_detail(entry_id):
     entry = Entry.query.get_or_404(entry_id)
     if entry.feed_id not in _subscribed_feed_ids():
         abort(404)
-    if current_user.mark_read_on_open:
+    was_read = db.session.get(ReadMark, (current_user.id, entry.id)) is not None
+    auto_marked = False
+    if current_user.mark_read_on_open and not was_read:
         _set_read(entry.id, True)
+        auto_marked = True
     sub = Subscription.query.filter_by(user_id=current_user.id, feed_id=entry.feed_id).first()
     return jsonify(
         id=entry.id,
+        feed_id=entry.feed_id,
+        read=was_read or auto_marked,
+        auto_marked=auto_marked,
         title=entry.title,
         url=entry.url,
         author=entry.author,
@@ -239,7 +288,7 @@ def _set_read(entry_id: int, read: bool) -> None:
 @login_required
 def entry_read(entry_id):
     Entry.query.get_or_404(entry_id)
-    _set_read(entry_id, bool((request.json or {}).get("read", True)))
+    _set_read(entry_id, bool((request.get_json(silent=True) or {}).get("read", True)))
     return jsonify(ok=True)
 
 
@@ -258,10 +307,24 @@ def entry_star(entry_id):
     return jsonify(ok=True, starred=starred)
 
 
+@bp.route("/entries/<int:entry_id>/hide", methods=["POST"])
+@login_required
+def entry_hide(entry_id):
+    Entry.query.get_or_404(entry_id)
+    hide = bool((request.get_json(silent=True) or {}).get("hidden", True))
+    row = db.session.get(Hidden, (current_user.id, entry_id))
+    if hide and not row:
+        db.session.add(Hidden(user_id=current_user.id, entry_id=entry_id))
+    elif not hide and row:
+        db.session.delete(row)
+    db.session.commit()
+    return jsonify(ok=True, hidden=hide)
+
+
 @bp.route("/entries/read-all", methods=["POST"])
 @login_required
 def read_all():
-    data = request.json or {}
+    data = request.get_json(silent=True) or {}
     feed_id = data.get("feed")
     feed_ids = [feed_id] if feed_id else _subscribed_feed_ids()
     feed_ids = [f for f in feed_ids if f in _subscribed_feed_ids()]
@@ -280,7 +343,9 @@ def read_all():
 @bp.route("/settings", methods=["POST"])
 @login_required
 def settings():
-    data = request.json or {}
+    data = request.get_json(silent=True) or {}
+    if "name" in data:
+        current_user.name = (data.get("name") or "").strip()[:120] or None
     if data.get("theme") in ("system", "light", "dark"):
         current_user.theme = data["theme"]
     if data.get("view_mode") in VIEWS:
@@ -311,7 +376,7 @@ def _gc_orphan_feeds() -> None:
 @login_required
 def admin_instance():
     _require_admin()
-    data = request.json or {}
+    data = request.get_json(silent=True) or {}
     if "refresh_minutes" in data:
         try:
             minutes = int(data["refresh_minutes"])
@@ -335,9 +400,30 @@ def admin_instance():
 @login_required
 def admin_registration():
     _require_admin()
-    open_ = bool((request.json or {}).get("open"))
+    open_ = bool((request.get_json(silent=True) or {}).get("open"))
     set_setting("registration_open", "1" if open_ else "0")
     return jsonify(ok=True, open=open_)
+
+
+@bp.route("/admin/users", methods=["POST"])
+@login_required
+def admin_create_user():
+    _require_admin()
+    data = request.get_json(silent=True) or {}
+    username = (data.get("username") or "").strip().lower()
+    password = data.get("password") or ""
+    if len(username) > 80 or not EMAIL_RE.match(username):
+        return jsonify(error="Enter a valid email address."), 400
+    if len(password) < 8:
+        return jsonify(error="Passwords need at least 8 characters."), 400
+    if User.query.filter(func.lower(User.username) == username).first():
+        return jsonify(error="An account with that email already exists."), 409
+    user = User(username=username, is_admin=bool(data.get("is_admin")),
+                name=(data.get("name") or "").strip()[:120] or None)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+    return jsonify(ok=True, id=user.id)
 
 
 @bp.route("/admin/users/<int:user_id>/password", methods=["POST"])
@@ -345,7 +431,7 @@ def admin_registration():
 def admin_reset_password(user_id):
     _require_admin()
     user = User.query.get_or_404(user_id)
-    new = (request.json or {}).get("new", "")
+    new = (request.get_json(silent=True) or {}).get("new", "")
     if len(new) < 8:
         return jsonify(error="Passwords need at least 8 characters."), 400
     user.set_password(new)
@@ -374,6 +460,7 @@ def admin_delete_user(user_id):
         return jsonify(error="You can't delete your own account from here."), 400
     ReadMark.query.filter_by(user_id=user.id).delete(synchronize_session=False)
     Star.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+    Hidden.query.filter_by(user_id=user.id).delete(synchronize_session=False)
     db.session.delete(user)  # subscriptions cascade via the relationship
     db.session.flush()
     _gc_orphan_feeds()
@@ -384,7 +471,7 @@ def admin_delete_user(user_id):
 @bp.route("/account/password", methods=["POST"])
 @login_required
 def change_password():
-    data = request.json or {}
+    data = request.get_json(silent=True) or {}
     current = data.get("current", "")
     new = data.get("new", "")
     if not current_user.check_password(current):

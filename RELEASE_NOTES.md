@@ -3,6 +3,16 @@
 Plain-English notes on what each Hyprfeed release means for you. The full
 technical log lives in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.3.0 — Unreleased — Your reader, your rules
+
+Stories can now be **hidden** (with undo), everything you've read lives in a
+new **History** view, and unread counts update the moment you open a story.
+Feeds are managed from one **Reading & Feeds** tab — add them, drag them into
+your preferred sidebar order, or sort alphabetically with a tap. Accounts got
+display names shown in the sidebar, admins can create users with roles, and
+feed lookups retry automatically so flaky first attempts are a thing of the
+past.
+
 ## 1.2.0 — 2026-08-07 — The setup wizard
 
 New installs are greeted by a guided setup: create your admin account, tune

@@ -4,6 +4,35 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] — Unreleased
+
+### Added
+- Display names: set during setup, registration, or in Settings → Account;
+  the sidebar shows name and email together, and admins can set names when
+  creating accounts
+- Admin user creation from Settings → Admin: email, temporary password, and
+  role (admin or standard user), joining the existing reset/promote/delete
+- Feed management upgrades in the merged **Reading & Feeds** tab: add feeds
+  (with the page-watcher fallback), drag-and-drop reordering that drives the
+  sidebar order, and one-tap A→Z / Z→A sorting
+- Hide stories: an eye-off button on every story hides it from all views,
+  with an Undo action in the toast
+- History view in the sidebar: everything you've read, most recent first
+- Manual read toggle in the reader when mark-read-on-open is off
+- Setup wizard offers "Follow without a feed" for sites without RSS
+
+### Changed
+- Reading and Feeds tabs merged into one "Reading & Feeds" tab
+- Opening a story now updates the sidebar unread counts live, and stories
+  are only greyed out once actually read
+- Feed fetching uses a pooled session with automatic retries and a
+  browser-UA fallback, fixing "no feed found" errors that succeeded on a
+  manual second try
+- Built With text is full black in light mode for contrast over the hero
+
+### Fixed
+- Horizontal overflow scrollbars in the About tab
+
 ## [1.2.0] — 2026-08-07
 
 ### Added
