@@ -4,6 +4,21 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] — Unreleased
+
+### Added
+- Google News fallback: when a site hard-blocks automated readers (e.g.
+  Reuters), the add dialog and setup wizard explain what happened and offer —
+  as an explicit choice — Google News' public site-scoped feed, subscribed
+  under a "Site (via Google News)" name
+- The page-watcher offer now appears on any feed-add failure where the page
+  has recognizable articles, not just when no feed is advertised (fixes
+  apnews.com, whose advertised feed is retired and answers 401)
+
+### Changed
+- Bot-wall responses (401/403) get a browser-UA retry and an honest
+  "blocks automated readers" error message instead of a bare status code
+
 ## [1.4.0] — 2026-08-07
 
 ### Added

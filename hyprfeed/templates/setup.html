@@ -110,6 +110,13 @@
           <span class="btn-busy" hidden>Reading the page…</span>
         </button>
       </div>
+      <div class="wiz-scrape" id="wiz-gn" hidden>
+        <p class="hint" id="wiz-gn-text"></p>
+        <button class="btn btn--ghost btn--block" id="wiz-gn-btn" type="button">
+          <span class="btn-label">Use the Google News feed</span>
+          <span class="btn-busy" hidden>Adding…</span>
+        </button>
+      </div>
       <div class="wiz-suggest">
         <button class="wiz-chip" data-url="theverge.com">The Verge</button>
         <button class="wiz-chip" data-url="arstechnica.com">Ars Technica</button>
@@ -158,6 +165,7 @@
         if (!resp.ok) {
           var e = new Error(data.error || "Something went wrong.");
           e.canScrape = !!data.can_scrape;
+          e.googleNews = data.google_news || null;
           throw e;
         }
         return data;
@@ -212,17 +220,21 @@
 
   var scrapeOffer = document.getElementById("wiz-scrape");
   var scrapeBtn = document.getElementById("wiz-scrape-btn");
+  var gnOffer = document.getElementById("wiz-gn");
+  var gnBtn = document.getElementById("wiz-gn-btn");
   var pendingScrapeUrl = null;
+  var gnInfo = null;
 
-  function addFeed(url, busyBtn, scrape) {
-    if (!accountCreated || !url) return Promise.reject(new Error("no url"));
+  function addFeed(payload, busyBtn) {
+    if (!accountCreated || !payload.url) return Promise.reject(new Error("no url"));
     err(3, null);
     scrapeOffer.hidden = true;
+    gnOffer.hidden = true;
     if (busyBtn) setBusy(busyBtn, true);
-    return api("/feeds/add", { url: url, scrape: !!scrape })
+    return api("/feeds/add", payload)
       .then(function (data) {
         var li = document.createElement("li");
-        li.textContent = data.title || url;
+        li.textContent = data.title || payload.url;
         li.className = "is-added";
         document.getElementById("wiz-added").appendChild(li);
         document.getElementById("wiz-url").value = "";
@@ -230,9 +242,17 @@
       })
       .catch(function (e) {
         err(3, e.message);
-        if (e.canScrape && !scrape) {
-          pendingScrapeUrl = url;
+        if (e.canScrape && !payload.scrape) {
+          pendingScrapeUrl = payload.url;
           scrapeOffer.hidden = false;
+        }
+        gnInfo = e.googleNews;
+        if (gnInfo) {
+          document.getElementById("wiz-gn-text").textContent =
+            gnInfo.domain + " blocks automated readers, so Hyprfeed can't fetch it directly. "
+            + "Google News publishes a public feed of " + gnInfo.domain
+            + " stories — headlines link to the original articles.";
+          gnOffer.hidden = false;
         }
         throw e;
       })
@@ -241,19 +261,24 @@
 
   document.getElementById("wiz-add-form").addEventListener("submit", function (e) {
     e.preventDefault();
-    addFeed(document.getElementById("wiz-url").value.trim(), this.querySelector("button"))
+    addFeed({ url: document.getElementById("wiz-url").value.trim() }, this.querySelector("button"))
       .catch(function () {});
   });
   document.getElementById("wiz-url").addEventListener("input", function () {
     scrapeOffer.hidden = true;
+    gnOffer.hidden = true;
   });
   scrapeBtn.addEventListener("click", function () {
     if (!pendingScrapeUrl) return;
-    addFeed(pendingScrapeUrl, scrapeBtn, true).catch(function () {});
+    addFeed({ url: pendingScrapeUrl, scrape: true }, scrapeBtn).catch(function () {});
+  });
+  gnBtn.addEventListener("click", function () {
+    if (!gnInfo) return;
+    addFeed({ url: gnInfo.url, custom_title: gnInfo.title }, gnBtn).catch(function () {});
   });
   document.querySelectorAll(".wiz-chip").forEach(function (chip) {
     chip.addEventListener("click", function () {
-      addFeed(chip.getAttribute("data-url"), chip)
+      addFeed({ url: chip.getAttribute("data-url") }, chip)
         .then(function () { chip.disabled = true; })   // keep disabled only on success
         .catch(function () {});
     });

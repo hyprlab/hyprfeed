@@ -3,6 +3,14 @@
 Plain-English notes on what each Hyprfeed release means for you. The full
 technical log lives in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.5.0 — Unreleased — Every site has a way in
+
+Some sites retired their feeds (AP News) and some block feed readers entirely
+(Reuters). Hyprfeed now handles both: the page watcher is offered whenever a
+site's feed is missing **or broken**, and for sites that shut out automated
+readers completely, Hyprfeed explains what's going on and offers Google News'
+public feed of that site's stories — your choice, never automatic.
+
 ## 1.4.0 — 2026-08-07 — Bring your feeds with you
 
 **OPML import and export** in Settings → Reading & Feeds. Coming from another
