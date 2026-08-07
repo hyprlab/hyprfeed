@@ -190,6 +190,29 @@ Flask · SQLAlchemy · Flask-Login · feedparser · SQLite · gunicorn. No front
 framework and no CDN dependencies — the [Inter](https://rsms.me/inter/)
 variable font (SIL Open Font License) is bundled in the image.
 
+## AI notice
+
+Hyprfeed is built by a human maintainer working with generative AI as a
+development tool:
+
+- **Code** — the large majority of the Python, JavaScript, and CSS in this
+  repository was written with Anthropic's Claude (via Claude Code), working
+  from the maintainer's direction. The maintainer decides what gets built,
+  reviews the results, tests every release, and signs off on everything that
+  ships.
+- **Text** — documentation, release notes, and in-app copy are largely
+  AI-drafted and human-edited.
+- **Artwork** — the flat bolt logo and the app's visual design were created
+  with the same AI assistance; the dimensional app icon artwork was provided
+  by the maintainer.
+- **The app itself contains no AI.** Hyprfeed has no AI features, makes no
+  requests to AI services, and never sends your reading data anywhere — it
+  talks only to the feeds and sites you choose to follow. AI was used to
+  *build* the app, not to run it.
+
+Bug reports and pull requests are welcome from humans and their AI tools alike;
+everything merged gets the same human review.
+
 ## License
 
 Hyprfeed is free software, released under the
