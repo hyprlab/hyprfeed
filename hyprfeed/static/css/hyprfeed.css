@@ -668,6 +668,8 @@ html[data-theme="dark"] .about-hero-bg { opacity: .2; filter: saturate(.55); }
   background: var(--field); border: 1px solid var(--line); border-radius: var(--radius-sm);
 }
 .wiz-addrow input:focus { outline: none; border-color: var(--volt); box-shadow: 0 0 0 3px var(--wash); }
+.wiz-scrape { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.wiz-scrape[hidden] { display: none; }
 .wiz-suggest { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .wiz-chip {
   padding: 6px 12px; border: 1px solid var(--line-strong); border-radius: 99px;

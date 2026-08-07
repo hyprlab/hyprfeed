@@ -110,15 +110,33 @@ docker run --rm -v hyprfeed_hyprfeed-data:/data -v "$PWD":/backup alpine \
 
 ## Configuration
 
-Set these in `.env` (or the compose `environment:` block):
+Most day-to-day settings (registration, refresh cadence, story retention) are
+managed **in the app** under Settings → Admin — the setup wizard seeds them on
+first run. Environment variables provide secrets and fresh-install defaults.
+
+Example `.env` (same as [`.env.example`](.env.example)):
+
+```ini
+# Session signing key. If unset, one is generated and stored in the data volume.
+SECRET_KEY=
+
+# Cloudflare Turnstile — leave both empty to run without the challenge.
+TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
+
+# ——— Fresh-install defaults (admins manage these at runtime afterwards) ———
+ALLOW_REGISTRATION=1      # allow new sign-ups (0 to close)
+REFRESH_MINUTES=15        # background refresh interval (0 pauses)
+MAX_ENTRIES_PER_FEED=300  # stories kept per feed; older ones are pruned
+```
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `SECRET_KEY` | auto-generated in `/data` | Session signing key — set one explicitly if you run replicas |
 | `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | empty (disabled) | Cloudflare Turnstile bot protection |
-| `ALLOW_REGISTRATION` | `1` | Default for sign-ups; the admin panel toggle overrides it at runtime |
-| `REFRESH_MINUTES` | `15` | Background feed refresh interval (`0` disables) |
-| `MAX_ENTRIES_PER_FEED` | `300` | Stories kept per feed; older ones (read or not) are pruned |
+| `ALLOW_REGISTRATION` | `1` | Fresh-install default; Settings → Admin toggle overrides at runtime |
+| `REFRESH_MINUTES` | `15` | Fresh-install default; Settings → Admin overrides at runtime (`0` pauses) |
+| `MAX_ENTRIES_PER_FEED` | `300` | Fresh-install default; Settings → Admin overrides at runtime |
 | `DATA_DIR` | `/data` | Where SQLite and the secret key live |
 
 ### Cloudflare Turnstile
