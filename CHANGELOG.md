@@ -7,6 +7,10 @@ All notable changes to Hyprfeed are documented here. The format follows
 ## [Unreleased]
 
 ### Changed
+- Page-watcher stories now carry the article's real publish date far more
+  often: extraction falls back through JSON-LD `datePublished`, more meta-tag
+  names, `<time datetime>`, and dates embedded in the URL before resorting to
+  first-seen time
 - Reader toolbar back to the original layout: close button on the left,
   story controls on the right
 
