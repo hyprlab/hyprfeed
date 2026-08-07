@@ -4,6 +4,16 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.5.1] — 2026-08-07
+
+### Added
+- Apple touch icon: the dimensional bolt art is served at 180px and linked
+  from every page, so adding Hyprfeed to an iOS home screen shows the icon
+- Brand asset set in `assets/icons/`: flat bolt PNGs (light + dark volt,
+  16–1024px), charcoal launcher tiles, and Android adaptive icon layers
+  (extracted glossy-bolt foreground + gradient background) built from the
+  1024px source art
+
 ## [1.5.0] — 2026-08-07
 
 ### Added
@@ -148,6 +158,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.5.1]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.5.1
 [1.5.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.5.0
 [1.4.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.4.0
 [1.3.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.3.0
