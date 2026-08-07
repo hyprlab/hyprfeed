@@ -11,7 +11,7 @@ from flask_login import LoginManager
 from .config import Config
 from .models import User, db, utcnow
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -144,9 +144,34 @@ def _migrate(app: Flask) -> None:
         db.session.commit()
         app.logger.info("migrated: added feeds.kind")
 
+    user_columns = {c["name"] for c in inspect(db.engine).get_columns("users")}
+    if "name" not in user_columns:
+        db.session.execute(text("ALTER TABLE users ADD COLUMN name VARCHAR(120)"))
+        db.session.commit()
+        app.logger.info("migrated: added users.name")
+
+    sub_columns = {c["name"] for c in inspect(db.engine).get_columns("subscriptions")}
+    if "position" not in sub_columns:
+        db.session.execute(text("ALTER TABLE subscriptions ADD COLUMN position INTEGER"))
+        # Backfill: current alphabetical order becomes the starting order.
+        rows = db.session.execute(text(
+            "SELECT s.id, s.user_id FROM subscriptions s JOIN feeds f ON f.id = s.feed_id "
+            "ORDER BY s.user_id, LOWER(COALESCE(NULLIF(s.custom_title, ''), f.title, f.url))"
+        )).fetchall()
+        counters: dict = {}
+        for sub_id, user_id in rows:
+            pos = counters.get(user_id, 0)
+            counters[user_id] = pos + 1
+            db.session.execute(
+                text("UPDATE subscriptions SET position = :pos WHERE id = :id"),
+                {"pos": pos, "id": sub_id},
+            )
+        db.session.commit()
+        app.logger.info("migrated: added subscriptions.position")
+
     # Sweep read/star marks orphaned by pruning before cleanup existed.
     swept = 0
-    for table in ("read_marks", "stars"):
+    for table in ("read_marks", "stars", "hidden_entries"):
         result = db.session.execute(
             text(f"DELETE FROM {table} WHERE entry_id NOT IN (SELECT id FROM entries)")
         )

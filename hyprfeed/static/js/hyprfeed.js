@@ -23,13 +23,24 @@
   }
 
   var toastTimer;
-  function toast(message) {
+  function toast(message, actionLabel, actionFn) {
     var el = document.getElementById("toast");
     if (!el) return;
     el.textContent = message;
+    if (actionLabel) {
+      var action = document.createElement("button");
+      action.className = "toast-action";
+      action.textContent = actionLabel;
+      action.addEventListener("click", function () {
+        clearTimeout(toastTimer);
+        el.hidden = true;
+        actionFn();
+      });
+      el.appendChild(action);
+    }
     el.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { el.hidden = true; }, 2600);
+    toastTimer = setTimeout(function () { el.hidden = true; }, actionLabel ? 5000 : 2600);
   }
 
   /* ————— Theme ————— */
@@ -111,6 +122,23 @@
     });
   }
 
+  var acctName = document.getElementById("acct-name");
+  if (acctName) {
+    acctName.addEventListener("change", function () {
+      var value = acctName.value.trim();
+      api("/settings", { name: value }).then(function () {
+        toast("Name saved");
+        var nameEl = document.getElementById("user-name");
+        var emailEl = document.getElementById("user-email");
+        var avatar = document.getElementById("user-avatar");
+        var email = (emailEl && emailEl.textContent) || (nameEl && nameEl.textContent) || "";
+        if (nameEl) nameEl.textContent = value || email;
+        if (avatar) avatar.textContent = (value || email).charAt(0).toUpperCase();
+        if (emailEl) emailEl.hidden = !value;
+      }).catch(function (err) { toast(err.message); });
+    });
+  }
+
   var passwordForm = document.getElementById("password-form");
   if (passwordForm) {
     passwordForm.addEventListener("submit", function (e) {
@@ -178,6 +206,26 @@
         .catch(function (err) { toast(err.message); });
     });
   });
+  var adduserForm = document.getElementById("admin-adduser");
+  if (adduserForm) {
+    adduserForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var errEl = document.getElementById("au-error");
+      errEl.hidden = true;
+      api("/admin/users", {
+        name: document.getElementById("au-name").value.trim(),
+        username: document.getElementById("au-email").value.trim(),
+        password: document.getElementById("au-password").value,
+        is_admin: document.getElementById("au-admin").checked
+      }).then(function () {
+        toast("User created");
+        setTimeout(function () { location.reload(); }, 600);
+      }).catch(function (err) {
+        errEl.textContent = err.message;
+        errEl.hidden = false;
+      });
+    });
+  }
   document.querySelectorAll(".manage-item[data-user]").forEach(function (item) {
     var userId = item.getAttribute("data-user");
     var username = item.getAttribute("data-username");
@@ -215,6 +263,124 @@
       });
     }
   });
+
+  /* ————— Settings: add / sort / reorder feeds ————— */
+  var feedsManage = document.getElementById("feeds-manage");
+
+  function feedsOrder() {
+    return Array.prototype.map.call(
+      feedsManage.querySelectorAll(".manage-item[data-feed]"),
+      function (li) { return parseInt(li.getAttribute("data-feed"), 10); }
+    );
+  }
+
+  function syncSidebarOrder() {
+    var list = document.querySelector(".sidebar .feed-list");
+    if (!list) return;
+    var byId = {};
+    list.querySelectorAll("li").forEach(function (li) {
+      var link = li.querySelector('a[href*="feed="]');
+      var m = link && link.href.match(/[?&]feed=(\d+)/);
+      if (m) byId[m[1]] = li;
+    });
+    feedsOrder().forEach(function (id) {
+      if (byId[id]) list.appendChild(byId[id]);
+    });
+  }
+
+  function saveFeedOrder() {
+    api("/feeds/reorder", { order: feedsOrder() })
+      .then(function () { syncSidebarOrder(); toast("Feed order saved"); })
+      .catch(function (err) { toast(err.message); });
+  }
+
+  if (feedsManage) {
+    var draggedItem = null;
+    feedsManage.querySelectorAll(".manage-item").forEach(function (li) {
+      li.addEventListener("dragstart", function (e) {
+        draggedItem = li;
+        li.classList.add("is-dragging");
+        e.dataTransfer.effectAllowed = "move";
+        try { e.dataTransfer.setData("text/plain", li.getAttribute("data-feed")); } catch (_) {}
+      });
+      li.addEventListener("dragend", function () {
+        li.classList.remove("is-dragging");
+        draggedItem = null;
+        saveFeedOrder();
+      });
+    });
+    feedsManage.addEventListener("dragover", function (e) {
+      if (!draggedItem) return;
+      e.preventDefault();
+      var items = Array.prototype.filter.call(
+        feedsManage.querySelectorAll(".manage-item:not(.is-dragging)"),
+        function () { return true; }
+      );
+      var next = null;
+      for (var i = 0; i < items.length; i++) {
+        var rect = items[i].getBoundingClientRect();
+        if (e.clientY < rect.top + rect.height / 2) { next = items[i]; break; }
+      }
+      if (next) feedsManage.insertBefore(draggedItem, next);
+      else feedsManage.appendChild(draggedItem);
+    });
+
+    document.querySelectorAll("[data-sort]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var dir = btn.getAttribute("data-sort") === "desc" ? -1 : 1;
+        var items = Array.prototype.slice.call(feedsManage.querySelectorAll(".manage-item"));
+        items.sort(function (a, b) {
+          var ta = a.querySelector(".manage-title").textContent.trim().toLowerCase();
+          var tb = b.querySelector(".manage-title").textContent.trim().toLowerCase();
+          return ta < tb ? -dir : ta > tb ? dir : 0;
+        });
+        items.forEach(function (li) { feedsManage.appendChild(li); });
+        saveFeedOrder();
+      });
+    });
+  }
+
+  var feedsAddForm = document.getElementById("feeds-add-form");
+  if (feedsAddForm) {
+    var feedsScrape = document.getElementById("feeds-scrape");
+    var feedsScrapeBtn = document.getElementById("feeds-scrape-btn");
+    var feedsPendingUrl = null;
+
+    function settingsAddFeed(url, busyBtn, scrape) {
+      var errEl = document.getElementById("feeds-add-error");
+      errEl.hidden = true;
+      feedsScrape.hidden = true;
+      if (!url) return;
+      busyBtn.disabled = true;
+      busyBtn.querySelector(".btn-label").hidden = true;
+      busyBtn.querySelector(".btn-busy").hidden = false;
+      api("/feeds/add", { url: url, scrape: !!scrape })
+        .then(function (data) { location.href = data.redirect; })
+        .catch(function (err) {
+          errEl.textContent = err.message;
+          errEl.hidden = false;
+          if (err.canScrape && !scrape) {
+            feedsPendingUrl = url;
+            feedsScrape.hidden = false;
+          }
+          busyBtn.disabled = false;
+          busyBtn.querySelector(".btn-label").hidden = false;
+          busyBtn.querySelector(".btn-busy").hidden = true;
+        });
+    }
+
+    feedsAddForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      settingsAddFeed(document.getElementById("feeds-add-url").value.trim(),
+                      feedsAddForm.querySelector("button"), false);
+    });
+    document.getElementById("feeds-add-url").addEventListener("input", function () {
+      feedsScrape.hidden = true;
+    });
+    feedsScrapeBtn.addEventListener("click", function () {
+      if (feedsPendingUrl) settingsAddFeed(feedsPendingUrl, feedsScrapeBtn, true);
+    });
+  }
 
   /* ————— Add feed ————— */
   var addForm = document.getElementById("add-form");
@@ -279,9 +445,11 @@
     });
   }
 
-  /* ————— Stories: open reader, star ————— */
+  /* ————— Stories: open reader, star, read state ————— */
   var reader = document.getElementById("reader");
   var currentEntryId = null;
+  var currentFeedId = null;
+  var currentRead = false;
 
   function storyIds() {
     return Array.prototype.map.call(document.querySelectorAll(".story[data-id]"), function (el) {
@@ -289,10 +457,53 @@
     });
   }
 
-  function markCardRead(entryId) {
+  function setCardRead(entryId, read) {
     document.querySelectorAll('.story[data-id="' + entryId + '"]').forEach(function (el) {
-      el.classList.add("is-read");
+      el.classList.toggle("is-read", read);
     });
+  }
+
+  function bumpUnread(feedId, delta) {
+    document.querySelectorAll(".feed-list .feeditem").forEach(function (link) {
+      var m = link.href.match(/[?&]feed=(\d+)/);
+      if (!m || parseInt(m[1], 10) !== feedId) return;
+      var badge = link.querySelector(".count");
+      if (!badge && delta > 0) {
+        badge = document.createElement("span");
+        badge.className = "count";
+        badge.textContent = "0";
+        link.appendChild(badge);
+      }
+      if (!badge) return;
+      var value = (parseInt(badge.textContent, 10) || 0) + delta;
+      if (value <= 0) badge.remove();
+      else badge.textContent = value;
+    });
+    var unreadNav = document.querySelector('.nav-primary a[href*="filter=unread"]');
+    if (unreadNav) {
+      var total = unreadNav.querySelector(".count");
+      if (!total && delta > 0) {
+        total = document.createElement("span");
+        total.className = "count count--volt";
+        total.textContent = "0";
+        unreadNav.appendChild(total);
+      }
+      if (total) {
+        var t = (parseInt(total.textContent, 10) || 0) + delta;
+        if (t <= 0) total.remove();
+        else total.textContent = t;
+      }
+    }
+  }
+
+  function setReaderReadState(read) {
+    currentRead = read;
+    var btn = document.getElementById("reader-read");
+    if (btn) {
+      btn.classList.toggle("is-read", read);
+      btn.title = read ? "Mark as unread" : "Mark as read";
+      btn.setAttribute("aria-label", btn.title);
+    }
   }
 
   function openEntry(entryId) {
@@ -304,6 +515,9 @@
       })
       .then(function (data) {
         currentEntryId = data.id;
+        currentFeedId = data.feed_id;
+        if (data.auto_marked) bumpUnread(data.feed_id, -1);
+        setReaderReadState(data.read);
         document.getElementById("reader-feed").textContent = data.feed;
         document.getElementById("reader-title").textContent = data.title;
         var meta = [data.published];
@@ -329,7 +543,8 @@
         visit.style.display = visitFoot.style.display = data.url ? "" : "none";
         if (data.url) { visit.href = visitFoot.href = data.url; }
         document.getElementById("reader-star").classList.toggle("is-starred", !!data.starred);
-        markCardRead(data.id);
+        // Grey the card only when the story is actually read.
+        setCardRead(data.id, data.read);
         if (!reader.open) reader.showModal();
         reader.scrollTop = 0;
       })
@@ -345,6 +560,29 @@
   }
 
   document.addEventListener("click", function (e) {
+    var hideBtn = e.target.closest("[data-hide]");
+    if (hideBtn) {
+      e.stopPropagation();
+      var hideStory = hideBtn.closest(".story");
+      var hideId = parseInt(hideStory.getAttribute("data-id"), 10);
+      var hideFeed = parseInt(hideStory.getAttribute("data-feed"), 10);
+      var wasUnread = !hideStory.classList.contains("is-read");
+      api("/entries/" + hideId + "/hide").then(function () {
+        document.querySelectorAll('.story[data-id="' + hideId + '"]').forEach(function (el) {
+          el.classList.add("is-hidden");
+        });
+        if (wasUnread) bumpUnread(hideFeed, -1);
+        toast("Story hidden", "Undo", function () {
+          api("/entries/" + hideId + "/hide", { hidden: false }).then(function () {
+            document.querySelectorAll('.story[data-id="' + hideId + '"]').forEach(function (el) {
+              el.classList.remove("is-hidden");
+            });
+            if (wasUnread) bumpUnread(hideFeed, 1);
+          }).catch(function (err) { toast(err.message); });
+        });
+      }).catch(function (err) { toast(err.message); });
+      return;
+    }
     var star = e.target.closest("[data-star]");
     if (star) {
       e.stopPropagation();
@@ -370,6 +608,16 @@
   if (reader) {
     document.getElementById("reader-prev").addEventListener("click", function () { openSibling(-1); });
     document.getElementById("reader-next").addEventListener("click", function () { openSibling(1); });
+    document.getElementById("reader-read").addEventListener("click", function () {
+      if (!currentEntryId) return;
+      var next = !currentRead;
+      api("/entries/" + currentEntryId + "/read", { read: next }).then(function () {
+        setReaderReadState(next);
+        setCardRead(currentEntryId, next);
+        bumpUnread(currentFeedId, next ? -1 : 1);
+        toast(next ? "Marked as read" : "Marked as unread");
+      }).catch(function (err) { toast(err.message); });
+    });
     document.getElementById("reader-star").addEventListener("click", function () {
       if (!currentEntryId) return;
       var btn = this;

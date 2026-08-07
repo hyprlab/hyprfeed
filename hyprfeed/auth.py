@@ -90,7 +90,8 @@ def register():
             flash("An account with that email already exists.", "error")
         else:
             # The first account on a fresh instance becomes the admin.
-            user = User(username=username, is_admin=User.query.count() == 0)
+            user = User(username=username, is_admin=User.query.count() == 0,
+                        name=request.form.get("name", "").strip()[:120] or None)
             user.set_password(password)
             db.session.add(user)
             db.session.commit()

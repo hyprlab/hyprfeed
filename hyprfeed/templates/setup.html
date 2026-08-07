@@ -35,6 +35,10 @@
         instance settings. You can add more accounts later.</p>
       <div class="auth-form">
         <label class="field">
+          <span class="field-label">Name</span>
+          <input id="wiz-name" type="text" autocomplete="name" maxlength="120" placeholder="Your name">
+        </label>
+        <label class="field">
           <span class="field-label">Email</span>
           <input id="wiz-email" type="email" autocomplete="email" spellcheck="false"
                  maxlength="80" placeholder="you@example.com" required>
@@ -190,6 +194,7 @@
         err(2, null);
         setBusy(btn, true);
         api("/setup", {
+          name: document.getElementById("wiz-name").value.trim(),
           username: document.getElementById("wiz-email").value.trim(),
           password: document.getElementById("wiz-password").value,
           registration_open: document.getElementById("wiz-registration").checked,

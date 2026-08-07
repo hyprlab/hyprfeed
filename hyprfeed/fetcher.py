@@ -9,15 +9,34 @@ from urllib.parse import urljoin, urlparse
 
 import feedparser
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
-from .models import Entry, Feed, ReadMark, Star, db, purge_feed, utcnow
+from .models import Entry, Feed, Hidden, ReadMark, Star, db, purge_feed, utcnow
 from .sanitize import first_image, sanitize_html, strip_tags
 
 log = logging.getLogger("hyprfeed.fetcher")
 
-USER_AGENT = "Hyprfeed/1.0 (+https://github.com/hyprfeed) feed reader"
+USER_AGENT = "Hyprfeed/1.0 (+https://github.com/hyprlab/hyprfeed) feed reader"
+# Fallback for sites whose CDN/bot filter rejects unknown user agents.
+BROWSER_UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
 TIMEOUT = 15
+CONNECT_TIMEOUT = 6.05
 COMMON_FEED_PATHS = ("feed", "rss", "atom.xml", "feed.xml", "rss.xml", "index.xml", "feed/")
+
+# Shared session: connection pooling plus automatic retries so a transient
+# DNS/connect/read blip or edge 5xx doesn't surface as "no feed found" —
+# users reported first-try failures that succeeded on manual retry.
+_session = requests.Session()
+_adapter = HTTPAdapter(max_retries=Retry(
+    total=2, connect=2, read=1, backoff_factor=0.4,
+    status_forcelist=(429, 500, 502, 503, 504),
+    allowed_methods=frozenset(["GET", "HEAD"]),
+    raise_on_status=False,
+), pool_maxsize=10)
+_session.mount("https://", _adapter)
+_session.mount("http://", _adapter)
 
 _LINK_REL = re.compile(
     r"<link[^>]+(?:type=[\"']application/(?:rss|atom)\+xml[\"'][^>]*|rel=[\"']alternate[\"'][^>]*)>",
@@ -29,7 +48,13 @@ _TYPE_OK = re.compile(r"type=[\"']application/(?:rss|atom)\+xml[\"']", re.I)
 
 def _get(url: str, **kwargs) -> requests.Response:
     headers = {"User-Agent": USER_AGENT, **kwargs.pop("headers", {})}
-    return requests.get(url, headers=headers, timeout=TIMEOUT, allow_redirects=True, **kwargs)
+    resp = _session.get(url, headers=headers, timeout=(CONNECT_TIMEOUT, TIMEOUT),
+                        allow_redirects=True, **kwargs)
+    if resp.status_code in (403, 406, 429):
+        headers["User-Agent"] = BROWSER_UA
+        resp = _session.get(url, headers=headers, timeout=(CONNECT_TIMEOUT, TIMEOUT),
+                            allow_redirects=True, **kwargs)
+    return resp
 
 
 def _looks_like_feed(content: bytes) -> bool:
@@ -142,6 +167,7 @@ def _prune_entries(feed_id: int, max_entries: int) -> None:
     )
     ReadMark.query.filter(ReadMark.entry_id.in_(doomed)).delete(synchronize_session=False)
     Star.query.filter(Star.entry_id.in_(doomed)).delete(synchronize_session=False)
+    Hidden.query.filter(Hidden.entry_id.in_(doomed)).delete(synchronize_session=False)
     db.session.query(Entry).filter(
         Entry.feed_id == feed_id, Entry.id.not_in(ids_to_keep)
     ).delete(synchronize_session=False)

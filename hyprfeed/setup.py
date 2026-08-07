@@ -37,7 +37,7 @@ def wizard():
 def submit():
     if not needs_setup():
         return jsonify(error="This instance is already set up."), 409
-    data = request.json or {}
+    data = request.get_json(silent=True) or {}
 
     username = (data.get("username") or "").strip().lower()
     password = data.get("password") or ""
@@ -56,7 +56,8 @@ def submit():
     if not 20 <= retention <= 5000:
         return jsonify(error="Stories per feed must be between 20 and 5000."), 400
 
-    admin = User(username=username, is_admin=True)
+    admin = User(username=username, is_admin=True,
+                 name=(data.get("name") or "").strip()[:120] or None)
     admin.set_password(password)
     db.session.add(admin)
     db.session.commit()
