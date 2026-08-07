@@ -298,6 +298,12 @@ html[data-theme="dark"] .icon-moon { display: none; }
 .thumb--blur img:not(.thumb-bg) {
   position: relative; z-index: 1; object-fit: contain;
 }
+/* Regular YouTube videos fill the frame (cover). Their feed thumbnails are
+   often 4:3 hqdefaults with baked-in letterbox bars — JS marks those
+   .thumb--crop and this zoom crops the bars away. Shorts use the blurred
+   backdrop above instead (server-side .thumb--blur via the /shorts/ URL). */
+.thumb--yt.thumb--crop img { transform: scale(1.13); }
+.story:hover .thumb--yt.thumb--crop img { transform: scale(1.17); }
 .thumb-letter {
   display: none;
   position: absolute; inset: 0;

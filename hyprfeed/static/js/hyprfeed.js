@@ -968,6 +968,24 @@
     });
   }
 
+  /* ————— YouTube thumbnails: crop baked-in letterbox bars ————— */
+  function classifyYtThumb(img) {
+    if (!img.naturalWidth || !img.naturalHeight) return;
+    var thumb = img.closest(".thumb--yt");
+    if (!thumb) return;
+    // 4:3 file = 16:9 video letterboxed inside it; zoom crops the bars.
+    if (img.naturalWidth / img.naturalHeight < 1.5) thumb.classList.add("thumb--crop");
+  }
+  document.addEventListener("load", function (e) {
+    var img = e.target;
+    if (img.tagName === "IMG" && img.closest && img.closest(".thumb--yt")) {
+      classifyYtThumb(img);
+    }
+  }, true);
+  document.querySelectorAll(".thumb--yt img").forEach(function (img) {
+    if (img.complete) classifyYtThumb(img);
+  });
+
   /* ————— Pull to refresh (touch devices) ————— */
   (function initPullToRefresh() {
     if (!window.matchMedia("(pointer: coarse)").matches) return;
