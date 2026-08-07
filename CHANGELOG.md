@@ -4,7 +4,7 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
-## [1.5.0] — Unreleased
+## [1.5.0] — 2026-08-07
 
 ### Added
 - Google News fallback: when a site hard-blocks automated readers (e.g.
@@ -148,6 +148,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.5.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.5.0
 [1.4.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.4.0
 [1.3.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.3.0
 [1.2.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.2.0
