@@ -99,6 +99,9 @@
       </h2>
 
       <div class="topbar-actions">
+        <button class="iconbtn" id="search-btn" aria-label="Search" title="Search (Ctrl/⌘ K)">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+        </button>
         <button class="iconbtn" id="refresh-btn" aria-label="Refresh feeds" title="Refresh feeds">
           <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 3.5V7h-3.5"/></svg>
         </button>
@@ -439,6 +442,17 @@
       </details>
     </section>
   </div>
+</dialog>
+
+<!-- ————— Search palette ————— -->
+<dialog class="palette" id="search-modal">
+  <div class="palette-inputrow">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+    <input id="search-input" placeholder="Search stories and feeds…"
+           autocomplete="off" spellcheck="false">
+    <kbd>esc</kbd>
+  </div>
+  <div class="palette-results" id="search-results" hidden></div>
 </dialog>
 
 <!-- ————— Reader ————— -->

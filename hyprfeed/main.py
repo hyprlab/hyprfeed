@@ -154,6 +154,71 @@ def index():
     return render_template("app.html", **ctx)
 
 
+def _ago_label(dt) -> str:
+    seconds = int((utcnow() - dt).total_seconds())
+    if seconds < 60:
+        return "now"
+    minutes = seconds // 60
+    if minutes < 60:
+        return f"{minutes}m"
+    hours = minutes // 60
+    if hours < 24:
+        return f"{hours}h"
+    days = hours // 24
+    if days < 7:
+        return f"{days}d"
+    return dt.strftime("%b %-d")
+
+
+@bp.route("/search")
+@login_required
+def search():
+    q = request.args.get("q", "").strip()
+    if len(q) < 2:
+        return jsonify(feeds=[], entries=[])
+    like = "%" + q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+
+    subs = (
+        Subscription.query.filter_by(user_id=current_user.id)
+        .join(Feed)
+        .order_by(func.coalesce(Subscription.position, 1_000_000), func.lower(Feed.title))
+        .all()
+    )
+    q_lower = q.lower()
+    feed_hits = [
+        {"id": s.feed_id, "title": s.display_title, "icon": s.feed.icon_url}
+        for s in subs if q_lower in s.display_title.lower()
+    ][:5]
+
+    feed_ids = [s.feed_id for s in subs]
+    titles = {s.feed_id: s.display_title for s in subs}
+    entries = []
+    if feed_ids:
+        from sqlalchemy import or_
+        read_sub = db.session.query(ReadMark.entry_id).filter(ReadMark.user_id == current_user.id)
+        rows = (
+            Entry.query.filter(
+                Entry.feed_id.in_(feed_ids),
+                Entry.id.not_in(_hidden_sub()),
+                or_(Entry.title.ilike(like, escape="\\"),
+                    Entry.summary.ilike(like, escape="\\")),
+            )
+            .order_by(Entry.published.desc()).limit(20).all()
+        )
+        read_ids = {
+            eid for (eid,) in read_sub.filter(ReadMark.entry_id.in_([r.id for r in rows]))
+        } if rows else set()
+        entries = [{
+            "id": e.id,
+            "title": e.title,
+            "feed": titles.get(e.feed_id, ""),
+            "icon": e.feed.icon_url,
+            "ago": _ago_label(e.published),
+            "read": e.id in read_ids,
+        } for e in rows]
+    return jsonify(feeds=feed_hits, entries=entries)
+
+
 @bp.route("/feeds/add", methods=["POST"])
 @login_required
 def feeds_add():

@@ -4,6 +4,15 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- Live search: press Ctrl/⌘ K (or the topbar magnifier) for a command-palette
+  overlay that searches your stories and feeds as you type — arrow keys to
+  navigate, Enter opens the story in the reader
+- Four more setup-wizard suggestions: The Atlantic, Tom's Hardware,
+  Mother Jones, and BBC News
+
 ## [1.5.2] — 2026-08-07
 
 ### Changed

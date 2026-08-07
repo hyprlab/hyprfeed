@@ -625,6 +625,55 @@ html[data-theme="light"] .tech-tile-name { color: #000; }
   .about-brand { align-items: center; text-align: center; }
 }
 
+/* ————— Search palette ————— */
+.palette {
+  border: 1px solid var(--line); border-radius: 16px; padding: 0;
+  background: var(--surface); color: var(--ink);
+  width: min(560px, calc(100vw - 32px));
+  margin: 10vh auto auto; box-shadow: var(--shadow-2);
+}
+.palette::backdrop { background: var(--scrim); backdrop-filter: blur(3px); }
+.palette[open] { animation: modal-in .18s cubic-bezier(.2, .9, .3, 1.1) both; }
+.palette-inputrow {
+  display: flex; align-items: center; gap: 11px; padding: 14px 16px;
+}
+.palette-inputrow svg { color: var(--faint); width: 19px; height: 19px; }
+.palette-inputrow input {
+  flex: 1; border: 0; outline: none; background: none;
+  font: inherit; font-size: 16px; color: var(--ink);
+}
+.palette-inputrow input::placeholder { color: var(--faint); }
+.palette-inputrow kbd {
+  font-family: inherit; font-size: 10.5px; font-weight: 650; letter-spacing: .04em;
+  color: var(--faint); border: 1px solid var(--line); border-radius: 5px;
+  padding: 2px 6px; text-transform: uppercase;
+}
+.palette-results {
+  border-top: 1px solid var(--line);
+  max-height: min(420px, 55vh); overflow-y: auto; padding: 8px;
+}
+.palette-label {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--faint); padding: 8px 10px 4px;
+}
+.palette-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: var(--radius-sm); cursor: pointer;
+}
+.palette-item .favicon { width: 16px; height: 16px; }
+.palette-item-title {
+  flex: 1; min-width: 0; font-size: 14px; font-weight: 550;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.palette-item.is-read .palette-item-title { color: var(--muted); font-weight: 450; }
+.palette-item-title mark {
+  background: var(--wash); color: inherit; font-weight: 700;
+  border-radius: 3px; padding: 0 1px;
+}
+.palette-item-meta { font-size: 11.5px; color: var(--faint); font-weight: 550; flex: none; }
+.palette-item.is-active { background: var(--wash); box-shadow: inset 3px 0 0 var(--volt); }
+.palette-empty { padding: 18px 12px 14px; text-align: center; font-size: 13.5px; color: var(--muted); }
+
 /* ————— Reader ————— */
 .reader {
   width: min(840px, 100vw); height: 100dvh; max-height: 100dvh;
