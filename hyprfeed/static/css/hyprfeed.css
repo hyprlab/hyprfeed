@@ -286,7 +286,18 @@ html[data-theme="dark"] .icon-moon { display: none; }
   width: 100%; height: 100%; object-fit: cover; display: block;
   transition: transform .35s ease;
 }
-.story:hover .thumb img { transform: scale(1.035); }
+.story:hover .thumb img:not(.thumb-bg) { transform: scale(1.035); }
+.thumb--empty img { display: none; }
+/* YouTube thumbnails ship letterboxed (4:3 with baked black bars): show the
+   image uncropped over a blurred, zoomed copy of itself instead of bars. */
+.thumb--blur .thumb-bg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; transform: scale(1.2);
+  filter: blur(18px) saturate(1.25) brightness(.92);
+}
+.thumb--blur img:not(.thumb-bg) {
+  position: relative; z-index: 1; object-fit: contain;
+}
 .thumb-letter {
   display: none;
   position: absolute; inset: 0;

@@ -21,8 +21,10 @@
 
 {% macro thumb(entry, ratio_class='') -%}
   {% if entry.image_url %}
-    <div class="thumb {{ ratio_class }}">
-      <img src="{{ entry.image_url }}" alt="" loading="lazy" onerror="this.closest('.thumb').classList.add('thumb--empty'); this.remove()">
+    {% set yt = entry.feed.is_youtube %}
+    <div class="thumb {{ ratio_class }}{{ ' thumb--blur' if yt }}">
+      {% if yt %}<img class="thumb-bg" src="{{ entry.image_url }}" alt="" aria-hidden="true" loading="lazy">{% endif %}
+      <img src="{{ entry.image_url }}" alt="" loading="lazy" onerror="this.closest('.thumb').classList.add('thumb--empty')">
       <span class="thumb-letter" aria-hidden="true">{{ (feed_titles.get(entry.feed_id) or entry.title)[0]|upper }}</span>
     </div>
   {% else %}
