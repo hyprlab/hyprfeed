@@ -166,9 +166,11 @@ def feeds_add():
     else:
         feed, error = add_feed(url)
     if error:
-        # No feed — but if the page has recognizable articles, offer to watch it.
+        # Whatever went wrong with the feed (none advertised, or advertised but
+        # gated/dead like apnews.com's stale index.rss): if the page itself has
+        # recognizable articles, offer to watch it instead.
         can_scrape = False
-        if not data.get("scrape") and "no RSS or Atom feed" in error:
+        if not data.get("scrape"):
             candidates, _, _ = scrape_candidates(url)
             can_scrape = len(candidates) >= 3
         return jsonify(error=error, can_scrape=can_scrape), 422
