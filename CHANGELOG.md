@@ -4,6 +4,12 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- Reader toolbar back to the original layout: close button on the left,
+  story controls on the right
+
 ## [1.5.1] — 2026-08-07
 
 ### Added
