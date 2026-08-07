@@ -17,6 +17,10 @@ follow into an elegant magazine. Paste any website URL — Hyprfeed discovers it
 feed, and if the site doesn't publish one, it can watch the page itself and
 turn new articles into stories.
 
+<p align="center">
+  <img src="assets/screenshot.jpg" alt="Hyprfeed's magazine view: a sidebar of feeds with unread counts, a lead story with a large photo, and a grid of story cards" width="100%">
+</p>
+
 ## Features
 
 - **Three view modes** — magazine (lead story + mixed grid), cards, and a
