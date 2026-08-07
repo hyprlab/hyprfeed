@@ -3,7 +3,7 @@
 Plain-English notes on what each Hyprfeed release means for you. The full
 technical log lives in [CHANGELOG.md](CHANGELOG.md).
 
-## 1.4.0 — Unreleased — Bring your feeds with you
+## 1.4.0 — 2026-08-07 — Bring your feeds with you
 
 **OPML import and export** in Settings → Reading & Feeds. Coming from another
 reader? Import its OPML file and your subscriptions appear instantly while
