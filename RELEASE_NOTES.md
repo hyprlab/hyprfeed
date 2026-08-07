@@ -3,6 +3,13 @@
 Plain-English notes on what each Hyprfeed release means for you. The full
 technical log lives in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.6.1 — 2026-08-07 — Polish for your pocket
+
+Pull down from the top of your feed on a phone to refresh it. Card buttons
+no longer crowd the text on touch screens, cards show the author and reading
+time, YouTube thumbnails glow instead of showing black bars, and clicking a
+feed's title takes you to the publisher's site.
+
 ## 1.6.0 — 2026-08-07 — Watch, search, subscribe
 
 **YouTube channels are feeds now** — paste a channel, @handle, or even a

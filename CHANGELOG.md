@@ -4,6 +4,21 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.6.1] — 2026-08-07
+
+### Added
+- Pull-to-refresh on touch devices: drag down from the top of the feed to
+  trigger a real feed refresh, with a volt indicator that arms at the
+  threshold and spins while fetching
+
+### Changed
+- Feed titles link out: the topbar title in a feed view and the reader's
+  feed kicker open the publisher's homepage in a new tab
+- Card actions (save/hide) moved up to the kicker row so they never collide
+  with text on touch screens; magazine cards gained an author/read-time line
+- YouTube thumbnails render uncropped over a blurred copy of themselves
+  instead of black letterbox bars (Shorts included)
+
 ## [1.6.0] — 2026-08-07
 
 ### Added
@@ -181,6 +196,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.6.1]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.6.1
 [1.6.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.6.0
 [1.5.2]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.5.2
 [1.5.1]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.5.1
