@@ -98,11 +98,18 @@
         </button>
       </form>
       <p class="form-error" id="wiz-error-3" hidden></p>
+      <div class="wiz-scrape" id="wiz-scrape" hidden>
+        <p class="hint">That site has no feed — but Hyprfeed can watch the page
+          itself and turn new articles it finds into stories.</p>
+        <button class="btn btn--ghost btn--block" id="wiz-scrape-btn" type="button">
+          <span class="btn-label">Follow without a feed</span>
+          <span class="btn-busy" hidden>Reading the page…</span>
+        </button>
+      </div>
       <div class="wiz-suggest">
         <button class="wiz-chip" data-url="theverge.com">The Verge</button>
         <button class="wiz-chip" data-url="arstechnica.com">Ars Technica</button>
         <button class="wiz-chip" data-url="https://hnrss.org/frontpage">Hacker News</button>
-        <button class="wiz-chip" data-url="xkcd.com">xkcd</button>
       </div>
       <ul class="wiz-added" id="wiz-added"></ul>
       <div class="wiz-nav">
@@ -144,7 +151,11 @@
       body: JSON.stringify(body)
     }).then(function (resp) {
       return resp.json().then(function (data) {
-        if (!resp.ok) throw new Error(data.error || "Something went wrong.");
+        if (!resp.ok) {
+          var e = new Error(data.error || "Something went wrong.");
+          e.canScrape = !!data.can_scrape;
+          throw e;
+        }
         return data;
       });
     });
@@ -194,30 +205,52 @@
     });
   });
 
-  function addFeed(url, busyBtn) {
-    if (!accountCreated || !url) return;
+  var scrapeOffer = document.getElementById("wiz-scrape");
+  var scrapeBtn = document.getElementById("wiz-scrape-btn");
+  var pendingScrapeUrl = null;
+
+  function addFeed(url, busyBtn, scrape) {
+    if (!accountCreated || !url) return Promise.reject(new Error("no url"));
     err(3, null);
+    scrapeOffer.hidden = true;
     if (busyBtn) setBusy(busyBtn, true);
-    api("/feeds/add", { url: url })
+    return api("/feeds/add", { url: url, scrape: !!scrape })
       .then(function (data) {
         var li = document.createElement("li");
         li.textContent = data.title || url;
         li.className = "is-added";
         document.getElementById("wiz-added").appendChild(li);
         document.getElementById("wiz-url").value = "";
+        return data;
       })
-      .catch(function (e) { err(3, e.message); })
+      .catch(function (e) {
+        err(3, e.message);
+        if (e.canScrape && !scrape) {
+          pendingScrapeUrl = url;
+          scrapeOffer.hidden = false;
+        }
+        throw e;
+      })
       .finally(function () { if (busyBtn) setBusy(busyBtn, false); });
   }
 
   document.getElementById("wiz-add-form").addEventListener("submit", function (e) {
     e.preventDefault();
-    addFeed(document.getElementById("wiz-url").value.trim(), this.querySelector("button"));
+    addFeed(document.getElementById("wiz-url").value.trim(), this.querySelector("button"))
+      .catch(function () {});
+  });
+  document.getElementById("wiz-url").addEventListener("input", function () {
+    scrapeOffer.hidden = true;
+  });
+  scrapeBtn.addEventListener("click", function () {
+    if (!pendingScrapeUrl) return;
+    addFeed(pendingScrapeUrl, scrapeBtn, true).catch(function () {});
   });
   document.querySelectorAll(".wiz-chip").forEach(function (chip) {
     chip.addEventListener("click", function () {
-      chip.disabled = true;
-      addFeed(chip.getAttribute("data-url"), null);
+      addFeed(chip.getAttribute("data-url"), chip)
+        .then(function () { chip.disabled = true; })   // keep disabled only on success
+        .catch(function () {});
     });
   });
   document.getElementById("wiz-finish").addEventListener("click", function () {
