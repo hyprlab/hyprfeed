@@ -223,6 +223,11 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 }
 .topbar-menu { display: none; }
 .context-title { font-size: 17px; font-weight: 750; letter-spacing: -0.02em; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.context-link { display: inline-flex; align-items: center; gap: 6px; }
+.context-link svg { width: 14px; height: 14px; color: var(--faint); opacity: 0; transition: opacity .15s; flex: none; }
+.context-link:hover { text-decoration: underline; text-decoration-color: var(--volt); text-decoration-thickness: 2.5px; text-underline-offset: 4px; }
+.context-link:hover svg { opacity: 1; }
+.kicker a[href]:hover { color: var(--ink); text-decoration: underline; text-decoration-color: var(--volt); text-decoration-thickness: 2px; text-underline-offset: 3px; }
 .topbar-actions { display: flex; align-items: center; gap: 6px; }
 
 .viewswitch {
