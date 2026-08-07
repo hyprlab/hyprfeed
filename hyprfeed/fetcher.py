@@ -265,13 +265,52 @@ def _meta_content(html: str, *keys: str) -> str | None:
 def _parse_iso_date(value: str | None) -> datetime | None:
     if not value:
         return None
+    value = value.strip()
+    dt = None
     try:
         dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
-        return None
+        try:  # RFC 2822 ("Thu, 07 Aug 2026 12:30:00 GMT") shows up in meta tags too
+            from email.utils import parsedate_to_datetime
+            dt = parsedate_to_datetime(value)
+        except (TypeError, ValueError):
+            return None
     if dt.tzinfo:
         dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
     return dt
+
+
+_JSONLD_DATE = re.compile(r'"datePublished"\s*:\s*"([^"]+)"')
+_TIME_TAG = re.compile(r"<time\b[^>]+datetime=[\"']([^\"']+)[\"']", re.I)
+_URL_DATE = re.compile(r"/(20\d{2})/(\d{1,2})/(\d{1,2})(?:/|$)")
+
+
+def _published_from_page(html: str, url: str) -> datetime | None:
+    """Best-effort publish date, most reliable source first."""
+    candidates = [
+        _meta_content(html, "article:published_time", "og:article:published_time",
+                      "article:published", "datepublished", "parsely-pub-date",
+                      "sailthru.date", "dc.date", "dc.date.issued", "date",
+                      "pubdate", "publish-date", "publication_date"),
+    ]
+    jsonld = _JSONLD_DATE.search(html[:400_000])
+    if jsonld:
+        candidates.insert(0, jsonld.group(1))
+    time_tag = _TIME_TAG.search(html[:400_000])
+    if time_tag:
+        candidates.append(time_tag.group(1))
+    for value in candidates:
+        parsed = _parse_iso_date(value)
+        if parsed:
+            return parsed
+    url_date = _URL_DATE.search(urlparse(url).path)
+    if url_date:
+        try:
+            return datetime(int(url_date.group(1)), int(url_date.group(2)),
+                            int(url_date.group(3)))
+        except ValueError:
+            pass
+    return None
 
 
 def _page_title(html: str) -> str | None:
@@ -295,10 +334,7 @@ def _article_metadata(url: str) -> dict:
         "description": _meta_content(html, "og:description", "twitter:description", "description"),
         "image": _meta_content(html, "og:image", "twitter:image"),
         "author": _meta_content(html, "author", "article:author"),
-        "published": _parse_iso_date(
-            _meta_content(html, "article:published_time", "og:article:published_time",
-                          "parsely-pub-date", "date")
-        ),
+        "published": _published_from_page(html, url),
     }
 
 
