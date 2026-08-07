@@ -67,7 +67,7 @@
         <span class="avatar" id="user-avatar">{{ current_user.display_name[0]|upper }}</span>
         <span class="user-meta">
           <span class="user-name" id="user-name">{{ current_user.display_name }}</span>
-          {% if current_user.name %}<span class="user-email" id="user-email">{{ current_user.username }}</span>{% endif %}
+          <span class="user-email" id="user-email" {% if not current_user.name %}hidden{% endif %}>{{ current_user.username }}</span>
         </span>
       </div>
       <button class="iconbtn" data-open="settings-modal" aria-label="Settings" title="Settings">
