@@ -3,7 +3,7 @@
 Plain-English notes on what each Hyprfeed release means for you. The full
 technical log lives in [CHANGELOG.md](CHANGELOG.md).
 
-## 1.3.0 — Unreleased — Your reader, your rules
+## 1.3.0 — 2026-08-07 — Your reader, your rules
 
 Stories can now be **hidden** (with undo), everything you've read lives in a
 new **History** view, and unread counts update the moment you open a story.
