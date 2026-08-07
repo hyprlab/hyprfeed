@@ -124,11 +124,14 @@ def _entry_image(parsed_entry, html_content: str) -> str | None:
 
 
 def _entry_content(parsed_entry) -> str:
-    if getattr(parsed_entry, "content", None):
-        for item in parsed_entry.content:
-            if item.get("value"):
-                return item["value"]
-    return getattr(parsed_entry, "summary", "") or ""
+    # Some feeds (e.g. Tom's Hardware) ship multiple content blocks where the
+    # first is an author bio and a later one is the article — take the longest.
+    candidates = [
+        item.get("value") or ""
+        for item in (getattr(parsed_entry, "content", None) or [])
+    ]
+    best = max(candidates, key=len, default="")
+    return best or getattr(parsed_entry, "summary", "") or ""
 
 
 _URL_IN_TEXT = re.compile(r"https?://\S+")
