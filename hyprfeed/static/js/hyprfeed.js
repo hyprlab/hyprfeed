@@ -375,6 +375,85 @@
     });
   }
 
+  /* ————— About hero: animated sine-wave gradient ————— */
+  (function initAboutHeroBg() {
+    var canvas = document.querySelector(".about-hero-bg");
+    if (!canvas) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var W = 200, H = 120;
+    canvas.width = W; canvas.height = H;
+    var cctx = canvas.getContext("2d");
+
+    function hslToRgb(h, s, l) {
+      h /= 360;
+      var a = s * Math.min(l, 1 - l);
+      var f = function (n) {
+        var k = (n + h * 12) % 12;
+        return Math.round((l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))) * 255);
+      };
+      return [f(0), f(8), f(4)];
+    }
+    var rand = function (a, b) { return a + Math.random() * (b - a); };
+
+    // Triadic palette from a random base hue; jitter keeps each visit distinct.
+    var hueBase = Math.random() * 360;
+    var triad = [0, 120, 240].map(function (d) { return (hueBase + d + rand(-8, 8) + 360) % 360; });
+    for (var i = triad.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = triad[i]; triad[i] = triad[j]; triad[j] = tmp;
+    }
+    var rgb = triad.map(function (h) { return hslToRgb(h, 1, 0.55); });
+    var n = rgb.length;
+
+    var freq1 = rand(2.2, 4.0), freq2 = rand(5.0, 8.0);
+    var amp1 = rand(0.16, 0.28), amp2 = rand(0.06, 0.12);
+    var speed1 = rand(0.05, 0.12) * (Math.random() < 0.5 ? 1 : -1);
+    var speed2 = rand(0.06, 0.14) * (Math.random() < 0.5 ? 1 : -1);
+    var phase = Math.random() * Math.PI * 2;
+    var rot = Math.random() * Math.PI * 2;
+    var cosR = Math.cos(rot), sinR = Math.sin(rot);
+    var maxDim = Math.max(W, H);
+
+    var img = cctx.createImageData(W, H);
+    var d = img.data;
+    var running = false, start = 0;
+
+    function frame(now) {
+      if (!running) return;
+      var t = (now - start) / 1000;
+      var p1 = t * speed1, p2 = t * speed2 + phase;
+      for (var y = 0; y < H; y++) {
+        for (var x = 0; x < W; x++) {
+          var cx = x - W / 2, cy = y - H / 2;
+          var rx = cx * cosR - cy * sinR, ry = cx * sinR + cy * cosR;
+          var nx = (rx + maxDim / 2) / maxDim, ny = (ry + maxDim / 2) / maxDim;
+          var wave = Math.sin(nx * freq1 + p1) * amp1 + Math.sin(nx * freq2 + p2) * amp2;
+          var g = Math.min(0.9999, Math.max(0, ny + wave));
+          var seg = g * (n - 1), lo = Math.floor(seg), f = seg - lo;
+          var c0 = rgb[lo], c1 = rgb[Math.min(lo + 1, n - 1)];
+          var o = (y * W + x) * 4;
+          d[o] = c0[0] + (c1[0] - c0[0]) * f;
+          d[o + 1] = c0[1] + (c1[1] - c0[1]) * f;
+          d[o + 2] = c0[2] + (c1[2] - c0[2]) * f;
+          d[o + 3] = 255;
+        }
+      }
+      cctx.putImageData(img, 0, 0);
+      requestAnimationFrame(frame);
+    }
+    // Only animate while the canvas is actually visible (About tab open).
+    new IntersectionObserver(function (entries) {
+      var visible = entries[0].isIntersecting;
+      if (visible && !running) {
+        running = true;
+        start = performance.now();
+        requestAnimationFrame(frame);
+      } else if (!visible) {
+        running = false;
+      }
+    }).observe(canvas);
+  })();
+
   /* ————— Load more ————— */
   document.addEventListener("click", function (e) {
     var btn = e.target.closest("#load-more");

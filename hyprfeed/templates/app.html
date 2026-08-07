@@ -174,6 +174,7 @@
       <button class="tab" data-tab="feeds" role="tab">Feeds</button>
       <button class="tab" data-tab="account" role="tab">Account</button>
       {% if current_user.is_admin %}<button class="tab" data-tab="admin" role="tab">Admin</button>{% endif %}
+      <button class="tab" data-tab="about" role="tab">About</button>
     </nav>
 
     <section class="tabpane is-active" data-pane="appearance">
@@ -241,9 +242,6 @@
         <button class="btn btn--primary" type="submit">Update password</button>
       </form>
       <p class="hint account-meta">Signed in as <strong>{{ current_user.username }}</strong>{% if current_user.is_admin %} <span class="chip">admin</span>{% endif %} · member since {{ current_user.created_at.strftime('%B %Y') }}</p>
-      <p class="hint about-line">Hyprfeed v{{ app_version }} · free software under
-        <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">AGPL-3.0</a> ·
-        <a href="https://github.com/hyprlab/hyprfeed" target="_blank" rel="noopener">Source</a></p>
     </section>
 
     {% if current_user.is_admin %}
@@ -283,6 +281,75 @@
       </ul>
     </section>
     {% endif %}
+
+    <section class="tabpane" data-pane="about">
+      <div class="about-hero">
+        <canvas class="about-hero-bg" aria-hidden="true"></canvas>
+        <div class="about-brand">
+          <svg class="bolt bolt--about" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 1.6 4.6 13.4c-.3.4 0 1 .5 1h4.7l-1.6 7.2c-.1.6.6 1 1 .5l8.6-11.8c.3-.4 0-1-.5-1h-4.7l1.6-7.2c.1-.6-.6-1-1-.5Z"/></svg>
+          <div class="about-name">Hyprfeed</div>
+          <div class="about-version">Version {{ app_version }}</div>
+          <p class="about-tagline">Your sites, one beautiful magazine — a self-hosted RSS reader for the open web.</p>
+          <p class="about-credit">Built by <a href="https://hyprlab.co" target="_blank" rel="noopener">Hyprlab</a></p>
+          <p class="about-license">Free software under the
+            <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">GNU AGPL-3.0</a>
+            · <a href="https://github.com/hyprlab/hyprfeed" target="_blank" rel="noopener">Source</a></p>
+        </div>
+        <div class="about-stack">
+          <div class="about-stack-label">Built with</div>
+          <div class="tech-stack">
+            {% for name, slug, url in [
+              ('Python', 'python', 'https://www.python.org/'),
+              ('Flask', 'flask', 'https://flask.palletsprojects.com/'),
+              ('Jinja', 'jinja', 'https://jinja.palletsprojects.com/'),
+              ('SQLAlchemy', 'sqlalchemy', 'https://www.sqlalchemy.org/'),
+              ('SQLite', 'sqlite', 'https://www.sqlite.org/'),
+              ('Gunicorn', 'gunicorn', 'https://gunicorn.org/'),
+              ('JavaScript', 'javascript', 'https://developer.mozilla.org/docs/Web/JavaScript'),
+              ('Docker', 'docker', 'https://www.docker.com/'),
+              ('Cloudflare', 'cloudflare', 'https://www.cloudflare.com/'),
+            ] %}
+            <a class="tech-tile" href="{{ url }}" target="_blank" rel="noopener" title="{{ name }}">
+              <span class="tech-icon" style="-webkit-mask-image: url('{{ static_url('img/tech/' ~ slug ~ '.svg') }}'); mask-image: url('{{ static_url('img/tech/' ~ slug ~ '.svg') }}');"></span>
+              <span class="tech-tile-name">{{ name }}</span>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <details class="about-details" open>
+        <summary class="about-summary">
+          <h4>Release notes</h4>
+          <span>What's new, in plain English.</span>
+        </summary>
+        <ul class="release-list">
+          {% for e in app_release_notes() %}
+          <li>
+            <div class="rel-version">{{ e.version }}{% if e.is_latest %} <span class="chip">latest</span>{% endif %}</div>
+            <div class="rel-meta">{{ e.date_label }}{% if e.date_label and e.title %} — {% endif %}{{ e.title }}</div>
+            <div class="rel-body">{{ e.body_html|safe }}</div>
+          </li>
+          {% endfor %}
+        </ul>
+      </details>
+
+      <details class="about-details">
+        <summary class="about-summary">
+          <h4>Changelog</h4>
+          <span>Every change, in technical detail.</span>
+        </summary>
+        <ul class="release-list">
+          {% for e in app_changelog() %}
+          <li>
+            <div class="rel-version">{{ e.version }}</div>
+            {% if e.date_label %}<div class="rel-meta">{{ e.date_label }}</div>{% endif %}
+            <div class="rel-body">{{ e.body_html|safe }}</div>
+          </li>
+          {% endfor %}
+        </ul>
+      </details>
+    </section>
   </div>
 </dialog>
 

@@ -4,6 +4,21 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] — 2026-08-07
+
+### Added
+- About tab in the settings modal: animated hero with app version, license,
+  and source links; "Built with" tech stack; release notes and changelog
+  rendered in-app from `RELEASE_NOTES.md` / `CHANGELOG.md` (parsed and cached
+  by `hyprfeed/about_docs.py` — editing the Markdown is the only step needed)
+- `RELEASE_NOTES.md` — plain-English release notes alongside the changelog
+- Full docker-compose example embedded in the README
+
+### Changed
+- Settings modal now has a fixed height; switching tabs no longer resizes it,
+  and each pane scrolls internally
+- Version/license line moved from the Account pane to the About tab
+
 ## [1.0.0] — 2026-08-07
 
 First stable release. ⚡
@@ -45,9 +60,13 @@ First stable release. ⚡
 - CSRF protection on every mutating request; allowlist HTML sanitizer for
   feed content
 
+**Licensing**
+- Released as free software under the GNU AGPL-3.0
+
 **Operations**
 - Single-container Docker deployment with SQLite in a named volume
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.1.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.1.0
 [1.0.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.0.0

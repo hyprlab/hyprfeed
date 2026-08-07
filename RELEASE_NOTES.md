@@ -1,0 +1,26 @@
+# Release Notes
+
+Plain-English notes on what each Hyprfeed release means for you. The full
+technical log lives in [CHANGELOG.md](CHANGELOG.md).
+
+## 1.1.0 — 2026-08-07 — The About tab
+
+Settings grew an **About** tab: version at a glance, the stack Hyprfeed is
+built with, and these release notes plus the full changelog — right inside the
+app, so you can see what changed after every update without leaving your
+reader. The settings window also keeps a steady height now instead of resizing
+as you move between tabs.
+
+## 1.0.0 — 2026-08-07 — First release
+
+Hyprfeed turns the sites you follow into one beautiful magazine.
+
+- **Read your way** — magazine, cards, or list views, light or dark, with a
+  clean built-in reader.
+- **Follow anything** — paste a website address and Hyprfeed finds its feed.
+  No feed? Hyprfeed can watch the page and turn new articles into stories.
+- **Yours and your people's** — multi-user accounts with private
+  subscriptions, read state, and saved stories; the first account becomes the
+  admin with a built-in user manager.
+- **Easy to run** — one Docker container, one data volume, optional Cloudflare
+  Turnstile protection. Free software under the AGPL-3.0.
