@@ -11,6 +11,12 @@ All notable changes to Hyprfeed are documented here. The format follows
   sidebar order and marks page-watcher feeds so they survive a round-trip;
   import subscribes instantly (up to 500 feeds, duplicates skipped) and
   fetches new feeds in the background
+- Magazine view: a full-width feature card breaks up the grid after every
+  ~4 rows of cards
+
+### Changed
+- Clicking your name in the sidebar opens Settings on the Account tab
+- Reader toolbar: controls moved to the left, close button to the right
 
 ## [1.3.0] — 2026-08-07
 
