@@ -4,6 +4,24 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] — 2026-08-07
+
+### Added
+- First-run setup wizard: on a fresh install every request steers to `/setup`,
+  which walks through creating the admin account, tuning instance settings
+  (registration, refresh cadence, per-feed story retention), and following
+  first sites (with one-tap suggestions) — then drops into the app signed in
+- Instance settings are now administerable at runtime from Settings → Admin:
+  background refresh interval and stories-kept-per-feed live in the database,
+  editable by admins, with the `REFRESH_MINUTES` / `MAX_ENTRIES_PER_FEED` env
+  vars serving as defaults for fresh installs; the background refresher picks
+  up interval changes without a restart
+- Hyprlab icon next to "Built by" on the About tab
+
+### Changed
+- New tagline — "A self-hosted RSS reader for the open web" — on the sign-in
+  screen, the account-creation screen, and the About tab
+
 ## [1.1.0] — 2026-08-07
 
 ### Added
@@ -68,5 +86,6 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.2.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.2.0
 [1.1.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.1.0
 [1.0.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.0.0

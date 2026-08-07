@@ -3,6 +3,14 @@
 Plain-English notes on what each Hyprfeed release means for you. The full
 technical log lives in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.2.0 — 2026-08-07 — The setup wizard
+
+New installs are greeted by a guided setup: create your admin account, tune
+your instance, and follow your first sites — all in about a minute. Refresh
+cadence and how many stories each feed keeps are now controlled by admins in
+**Settings → Admin** (no more editing `.env`), and interval changes apply
+without a restart.
+
 ## 1.1.0 — 2026-08-07 — The About tab
 
 Settings grew an **About** tab: version at a glance, the stack Hyprfeed is

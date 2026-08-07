@@ -5,7 +5,11 @@ from sqlalchemy import func
 
 from .fetcher import add_feed, create_scrape_feed, refresh_feed, scrape_candidates
 from .models import (Entry, Feed, ReadMark, Star, Subscription, User, db,
-                     purge_feed, set_setting, utcnow)
+                     int_setting, purge_feed, set_setting, utcnow)
+
+
+def retention_cap() -> int:
+    return int_setting("max_entries_per_feed", current_app.config["MAX_ENTRIES_PER_FEED"])
 
 bp = Blueprint("main", __name__)
 
@@ -112,6 +116,8 @@ def _admin_context():
     return {
         "admin_users": users,
         "admin_sub_counts": sub_counts,
+        "inst_refresh": int_setting("refresh_minutes", current_app.config["REFRESH_MINUTES"]),
+        "inst_retention": retention_cap(),
         "admin_stats": {
             "users": len(users),
             "feeds": db.session.query(func.count(Feed.id)).scalar(),
@@ -139,7 +145,7 @@ def feeds_add():
     if not url:
         return jsonify(error="Enter a website or feed address."), 400
     if data.get("scrape"):
-        feed, error = create_scrape_feed(url, current_app.config["MAX_ENTRIES_PER_FEED"])
+        feed, error = create_scrape_feed(url, retention_cap())
     else:
         feed, error = add_feed(url)
     if error:
@@ -154,7 +160,8 @@ def feeds_add():
         return jsonify(error="You already follow this feed."), 409
     db.session.add(Subscription(user_id=current_user.id, feed_id=feed.id))
     db.session.commit()
-    return jsonify(ok=True, redirect=url_for("main.index", feed=feed.id))
+    return jsonify(ok=True, redirect=url_for("main.index", feed=feed.id),
+                   title=feed.title or feed.url)
 
 
 @bp.route("/feeds/<int:feed_id>/unsubscribe", methods=["POST"])
@@ -186,7 +193,7 @@ def refresh():
     new_total = 0
     for feed in Feed.query.filter(Feed.id.in_(_subscribed_feed_ids())):
         try:
-            new_total += refresh_feed(feed, current_app.config["MAX_ENTRIES_PER_FEED"])
+            new_total += refresh_feed(feed, retention_cap())
         except Exception:
             db.session.rollback()
     return jsonify(ok=True, new=new_total)
@@ -298,6 +305,30 @@ def _gc_orphan_feeds() -> None:
     ).all()
     for feed in orphans:
         purge_feed(feed)
+
+
+@bp.route("/admin/instance", methods=["POST"])
+@login_required
+def admin_instance():
+    _require_admin()
+    data = request.json or {}
+    if "refresh_minutes" in data:
+        try:
+            minutes = int(data["refresh_minutes"])
+        except (TypeError, ValueError):
+            return jsonify(error="Refresh interval must be a number of minutes."), 400
+        if not 0 <= minutes <= 1440:
+            return jsonify(error="Refresh interval must be between 0 and 1440 minutes."), 400
+        set_setting("refresh_minutes", str(minutes))
+    if "max_entries_per_feed" in data:
+        try:
+            cap = int(data["max_entries_per_feed"])
+        except (TypeError, ValueError):
+            return jsonify(error="Stories per feed must be a number."), 400
+        if not 20 <= cap <= 5000:
+            return jsonify(error="Stories per feed must be between 20 and 5000."), 400
+        set_setting("max_entries_per_feed", str(cap))
+    return jsonify(ok=True)
 
 
 @bp.route("/admin/registration", methods=["POST"])

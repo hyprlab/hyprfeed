@@ -47,6 +47,18 @@ def get_setting(key: str) -> str | None:
     return row.value if row else None
 
 
+def int_setting(key: str, fallback: int) -> int:
+    """Admin-editable integer setting; the env-derived config value is the
+    default until an admin saves one."""
+    raw = get_setting(key)
+    if raw is not None:
+        try:
+            return int(raw)
+        except ValueError:
+            pass
+    return fallback
+
+
 def set_setting(key: str, value: str) -> None:
     row = db.session.get(Setting, key)
     if row:
