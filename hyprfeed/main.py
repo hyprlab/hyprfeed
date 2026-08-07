@@ -1,10 +1,14 @@
-from flask import (Blueprint, abort, current_app, jsonify, render_template,
-                   request, url_for)
+import threading
+import xml.etree.ElementTree as ET
+
+from flask import (Blueprint, Response, abort, current_app, jsonify,
+                   render_template, request, url_for)
 from flask_login import current_user, login_required
 from sqlalchemy import func
 
 from .auth import EMAIL_RE
-from .fetcher import add_feed, create_scrape_feed, refresh_feed, scrape_candidates
+from .fetcher import (_favicon_for, add_feed, create_scrape_feed, refresh_feed,
+                      scrape_candidates)
 from .models import (Entry, Feed, Hidden, ReadMark, Star, Subscription, User,
                      db, int_setting, purge_feed, set_setting, utcnow)
 
@@ -182,6 +186,110 @@ def feeds_add():
     db.session.commit()
     return jsonify(ok=True, redirect=url_for("main.index", feed=feed.id),
                    title=feed.title or feed.url)
+
+
+@bp.route("/feeds/export.opml")
+@login_required
+def feeds_export():
+    subs = (
+        Subscription.query.filter_by(user_id=current_user.id)
+        .join(Feed)
+        .order_by(func.coalesce(Subscription.position, 1_000_000), func.lower(Feed.title))
+        .all()
+    )
+    opml = ET.Element("opml", version="2.0")
+    head = ET.SubElement(opml, "head")
+    ET.SubElement(head, "title").text = "Hyprfeed subscriptions"
+    ET.SubElement(head, "dateCreated").text = utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
+    body = ET.SubElement(opml, "body")
+    for sub in subs:
+        attrs = {
+            "type": "rss",
+            "text": sub.display_title,
+            "title": sub.display_title,
+            "xmlUrl": sub.feed.url,
+        }
+        if sub.feed.site_url:
+            attrs["htmlUrl"] = sub.feed.site_url
+        if sub.feed.kind == "scrape":
+            # Round-trip marker so a Hyprfeed import restores the page watcher.
+            attrs["hyprfeedKind"] = "scrape"
+        ET.SubElement(body, "outline", attrs)
+    xml = ET.tostring(opml, encoding="unicode", xml_declaration=True)
+    return Response(xml, mimetype="text/x-opml",
+                    headers={"Content-Disposition": "attachment; filename=hyprfeed.opml"})
+
+
+def _refresh_feeds_async(app, feed_ids):
+    def work():
+        with app.app_context():
+            from .models import int_setting as _int
+            cap = _int("max_entries_per_feed", app.config["MAX_ENTRIES_PER_FEED"])
+            for feed in Feed.query.filter(Feed.id.in_(feed_ids)):
+                try:
+                    refresh_feed(feed, cap)
+                except Exception:
+                    db.session.rollback()
+    threading.Thread(target=work, daemon=True, name="hyprfeed-import-refresh").start()
+
+
+@bp.route("/feeds/import", methods=["POST"])
+@login_required
+def feeds_import():
+    upload = request.files.get("opml")
+    if not upload:
+        return jsonify(error="Choose an OPML file to import."), 400
+    raw = upload.read(2_000_000)
+    try:
+        root = ET.fromstring(raw)
+    except ET.ParseError:
+        return jsonify(error="That file doesn't look like valid OPML."), 422
+
+    outlines = [o for o in root.iter("outline") if o.get("xmlUrl")]
+    if not outlines:
+        return jsonify(error="No feeds found in that file."), 422
+    outlines = outlines[:500]
+
+    subscribed = set(_subscribed_feed_ids())
+    max_pos = (
+        db.session.query(func.max(Subscription.position))
+        .filter(Subscription.user_id == current_user.id).scalar()
+    )
+    next_pos = 0 if max_pos is None else max_pos + 1
+
+    added, skipped, new_feed_ids = 0, 0, []
+    seen_urls = set()
+    for outline in outlines:
+        url = outline.get("xmlUrl", "").strip()[:500]
+        if not url or url in seen_urls:
+            continue
+        seen_urls.add(url)
+        feed = Feed.query.filter_by(url=url).first()
+        if feed is None:
+            feed = Feed(
+                url=url,
+                kind="scrape" if outline.get("hyprfeedKind") == "scrape" else "rss",
+                title=(outline.get("title") or outline.get("text") or "")[:300],
+                site_url=(outline.get("htmlUrl") or "")[:500] or None,
+                icon_url=_favicon_for(outline.get("htmlUrl") or url),
+            )
+            db.session.add(feed)
+            db.session.flush()
+            new_feed_ids.append(feed.id)
+        if feed.id in subscribed:
+            skipped += 1
+            continue
+        db.session.add(Subscription(user_id=current_user.id, feed_id=feed.id,
+                                    position=next_pos))
+        subscribed.add(feed.id)
+        next_pos += 1
+        added += 1
+    db.session.commit()
+
+    if new_feed_ids:
+        # Fetch newly created feeds in the background so import stays instant.
+        _refresh_feeds_async(current_app._get_current_object(), new_feed_ids)
+    return jsonify(ok=True, added=added, skipped=skipped)
 
 
 @bp.route("/feeds/reorder", methods=["POST"])

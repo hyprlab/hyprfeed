@@ -3,6 +3,13 @@
 Plain-English notes on what each Hyprfeed release means for you. The full
 technical log lives in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.4.0 — Unreleased — Bring your feeds with you
+
+**OPML import and export** in Settings → Reading & Feeds. Coming from another
+reader? Import its OPML file and your subscriptions appear instantly while
+stories fill in behind the scenes. Leaving (we hope not)? Export keeps your
+custom order — and Hyprfeed's page-watcher feeds survive the trip back.
+
 ## 1.3.0 — 2026-08-07 — Your reader, your rules
 
 Stories can now be **hidden** (with undo), everything you've read lives in a

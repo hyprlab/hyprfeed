@@ -264,6 +264,14 @@
       {% else %}
       <p class="hint">You're not following anything yet.</p>
       {% endif %}
+      <div class="opml-row">
+        <button class="btn btn--ghost btn--xs" id="opml-import-btn" type="button">
+          <span class="btn-label">Import OPML…</span>
+          <span class="btn-busy" hidden>Importing…</span>
+        </button>
+        {% if subs %}<a class="btn btn--ghost btn--xs" href="{{ url_for('main.feeds_export') }}">Export OPML</a>{% endif %}
+        <input type="file" id="opml-file" accept=".opml,.xml,text/xml,text/x-opml,application/xml" hidden>
+      </div>
     </section>
 
     <section class="tabpane" data-pane="account">

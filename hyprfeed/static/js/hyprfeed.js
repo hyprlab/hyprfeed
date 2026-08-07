@@ -382,6 +382,35 @@
     });
   }
 
+  /* ————— OPML import ————— */
+  var opmlBtn = document.getElementById("opml-import-btn");
+  var opmlFile = document.getElementById("opml-file");
+  if (opmlBtn && opmlFile) {
+    opmlBtn.addEventListener("click", function () { opmlFile.click(); });
+    opmlFile.addEventListener("change", function () {
+      if (!opmlFile.files.length) return;
+      var form = new FormData();
+      form.append("opml", opmlFile.files[0]);
+      opmlBtn.disabled = true;
+      opmlBtn.querySelector(".btn-label").hidden = true;
+      opmlBtn.querySelector(".btn-busy").hidden = false;
+      fetch("/feeds/import", { method: "POST", headers: { "X-CSRF": CSRF }, body: form })
+        .then(function (resp) { return resp.json().then(function (d) { if (!resp.ok) throw new Error(d.error || "Import failed."); return d; }); })
+        .then(function (data) {
+          toast("Imported " + data.added + " " + (data.added === 1 ? "feed" : "feeds")
+                + (data.skipped ? " (" + data.skipped + " already followed)" : ""));
+          setTimeout(function () { location.reload(); }, 900);
+        })
+        .catch(function (err) {
+          toast(err.message);
+          opmlBtn.disabled = false;
+          opmlBtn.querySelector(".btn-label").hidden = false;
+          opmlBtn.querySelector(".btn-busy").hidden = true;
+          opmlFile.value = "";
+        });
+    });
+  }
+
   /* ————— Add feed ————— */
   var addForm = document.getElementById("add-form");
   if (addForm) {
