@@ -5,13 +5,13 @@ import threading
 import time
 from datetime import datetime
 
-from flask import Flask, request, session
+from flask import Flask, redirect, request, session, url_for
 from flask_login import LoginManager
 
 from .config import Config
 from .models import User, db, utcnow
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -32,9 +32,19 @@ def create_app(config_class=Config) -> Flask:
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
-    from . import auth, main
+    from . import auth, main, setup
     app.register_blueprint(auth.bp)
     app.register_blueprint(main.bp)
+    app.register_blueprint(setup.bp)
+
+    @app.before_request
+    def steer_to_setup():
+        """A fresh install (zero users) goes to the wizard, nowhere else."""
+        if request.endpoint in ("setup.wizard", "setup.submit", "static"):
+            return None
+        if setup.needs_setup():
+            return redirect(url_for("setup.wizard"))
+        return None
 
     # ---- CSRF (lightweight, session-token based) ----
     def csrf_token() -> str:
@@ -161,14 +171,19 @@ def _start_refresher(app: Flask) -> None:
         _refresher_running = True
 
     from .fetcher import refresh_all_feeds
+    from .models import int_setting
 
     def loop():
         time.sleep(20)  # let the app finish booting first
         while True:
-            try:
-                refresh_all_feeds(app)
-            except Exception:
-                logging.getLogger("hyprfeed").exception("background refresh failed")
-            time.sleep(interval * 60)
+            # Admins can change the cadence at runtime; re-read it every cycle.
+            with app.app_context():
+                minutes = int_setting("refresh_minutes", app.config["REFRESH_MINUTES"])
+            if minutes > 0:
+                try:
+                    refresh_all_feeds(app)
+                except Exception:
+                    logging.getLogger("hyprfeed").exception("background refresh failed")
+            time.sleep(max(minutes, 1) * 60)
 
     threading.Thread(target=loop, daemon=True, name="hyprfeed-refresher").start()

@@ -471,11 +471,13 @@ def add_feed(url: str) -> tuple[Feed | None, str | None]:
 
 
 def refresh_all_feeds(app) -> None:
+    from .models import int_setting
     with app.app_context():
+        cap = int_setting("max_entries_per_feed", app.config["MAX_ENTRIES_PER_FEED"])
         feeds = Feed.query.all()
         for feed in feeds:
             try:
-                refresh_feed(feed, app.config["MAX_ENTRIES_PER_FEED"])
+                refresh_feed(feed, cap)
             except Exception:
                 log.exception("refresh failed for %s", feed.url)
                 db.session.rollback()

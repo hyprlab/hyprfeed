@@ -457,6 +457,8 @@ html[data-theme="dark"] .icon-moon { display: none; }
 }
 .chip--muted { background: var(--field); color: var(--muted); border: 1px solid var(--line); }
 .admin-stats { margin: 10px 0 18px; }
+.inst-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.inst-grid + .hint { margin-top: 8px; }
 .manage-item .avatar { width: 30px; height: 30px; font-size: 13px; }
 
 /* ————— About tab ————— */
@@ -483,6 +485,10 @@ html[data-theme="dark"] .about-hero-bg { opacity: .2; filter: saturate(.55); }
   font-weight: 600; color: var(--ink);
   text-decoration: underline; text-decoration-color: var(--volt); text-decoration-thickness: 2px; text-underline-offset: 2px;
 }
+.hyprlab-credit {
+  display: inline-flex; align-items: center; gap: 5px; vertical-align: -3px;
+}
+.hyprlab-credit img { width: 16px; height: 16px; border-radius: 4px; }
 .about-stack { display: flex; flex-direction: column; gap: 10px; }
 .about-stack-label { font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); }
 .tech-stack { display: grid; grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 8px; }
@@ -631,6 +637,56 @@ html[data-theme="dark"] .about-hero-bg { opacity: .2; filter: saturate(.55); }
 }
 .flash--error { background: rgb(220 70 60 / .1); color: #C4443B; border: 1px solid rgb(220 70 60 / .25); }
 .flash--info { background: var(--wash); color: var(--ink); border: 1px solid color-mix(in srgb, var(--volt) 40%, transparent); }
+
+/* ————— Setup wizard ————— */
+.wizard { width: min(460px, 100%); }
+.wizard .auth-mark { margin-bottom: 14px; }
+.wiz-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
+.wiz-dot {
+  width: 22px; height: 4px; border-radius: 99px;
+  background: var(--line); transition: background .25s;
+}
+.wiz-dot.is-active { background: var(--volt); }
+.wiz-step { display: none; }
+.wiz-step.is-active { display: block; animation: wiz-in .25s ease both; }
+@keyframes wiz-in { from { opacity: 0; transform: translateX(10px); } }
+.wiz-title { font-size: 20px; font-weight: 800; letter-spacing: -0.025em; margin-bottom: 8px; }
+.wiz-text { font-size: 14px; color: var(--muted); line-height: 1.55; margin-bottom: 16px; }
+.wiz-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.wiz-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.wiz-list li::before {
+  content: ""; width: 7px; height: 7px; border-radius: 2px; flex: none;
+  background: var(--volt); box-shadow: 0 0 6px rgb(255 214 10 / .5);
+}
+.wiz-nav { display: flex; gap: 10px; justify-content: space-between; margin-top: 22px; }
+.wiz-nav .btn--primary:only-child { width: 100%; }
+.wiz-nav .btn--primary:not(:only-child) { flex: 1; }
+.wizard .auth-form { gap: 13px; display: flex; flex-direction: column; }
+.wiz-addrow { display: flex; gap: 8px; }
+.wiz-addrow input {
+  flex: 1; padding: 10px 12px; font: inherit; color: var(--ink);
+  background: var(--field); border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.wiz-addrow input:focus { outline: none; border-color: var(--volt); box-shadow: 0 0 0 3px var(--wash); }
+.wiz-suggest { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.wiz-chip {
+  padding: 6px 12px; border: 1px solid var(--line-strong); border-radius: 99px;
+  font-size: 13px; font-weight: 600; color: var(--muted);
+  transition: border-color .15s, color .15s, background .15s;
+}
+.wiz-chip:hover { border-color: var(--volt); color: var(--ink); background: var(--wash); }
+.wiz-chip[disabled] { opacity: .45; cursor: default; }
+.wiz-added { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.wiz-added li {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13.5px; font-weight: 550; color: var(--ink);
+}
+.wiz-added li::before {
+  content: ""; width: 12px; height: 7px; flex: none;
+  border-left: 2px solid var(--volt); border-bottom: 2px solid var(--volt);
+  transform: rotate(-45deg) translateY(-2px);
+}
+.wizard .form-error { margin-top: 12px; }
 
 /* ————— Responsive ————— */
 @media (max-width: 1060px) {

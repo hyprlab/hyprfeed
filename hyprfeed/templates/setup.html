@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}Set up Hyprfeed{% endblock %}
+{% block bodyclass %}auth-body{% endblock %}
+{% block body %}
+<main class="auth-wrap">
+  <div class="auth-card wizard" id="wizard">
+
+    <div class="auth-mark">
+      <svg class="bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 1.6 4.6 13.4c-.3.4 0 1 .5 1h4.7l-1.6 7.2c-.1.6.6 1 1 .5l8.6-11.8c.3-.4 0-1-.5-1h-4.7l1.6-7.2c.1-.6-.6-1-1-.5Z"/></svg>
+      <h1 class="wordmark">Hyprfeed</h1>
+    </div>
+
+    <div class="wiz-dots" aria-hidden="true">
+      <span class="wiz-dot is-active"></span><span class="wiz-dot"></span><span class="wiz-dot"></span><span class="wiz-dot"></span>
+    </div>
+
+    <!-- Step 1 · Welcome -->
+    <section class="wiz-step is-active" data-step="0">
+      <h2 class="wiz-title">Welcome</h2>
+      <p class="wiz-text">A self-hosted RSS reader for the open web. Let's set
+        up your instance — it takes about a minute.</p>
+      <ul class="wiz-list">
+        <li>Create the admin account</li>
+        <li>Tune how your instance behaves</li>
+        <li>Follow your first sites</li>
+      </ul>
+      <div class="wiz-nav">
+        <button class="btn btn--primary btn--block" data-next>Get started</button>
+      </div>
+    </section>
+
+    <!-- Step 2 · Admin account -->
+    <section class="wiz-step" data-step="1">
+      <h2 class="wiz-title">Create the admin account</h2>
+      <p class="wiz-text">This account manages users, registration, and
+        instance settings. You can add more accounts later.</p>
+      <div class="auth-form">
+        <label class="field">
+          <span class="field-label">Email</span>
+          <input id="wiz-email" type="email" autocomplete="email" spellcheck="false"
+                 maxlength="80" placeholder="you@example.com" required>
+        </label>
+        <label class="field">
+          <span class="field-label">Password</span>
+          <input id="wiz-password" type="password" minlength="8" autocomplete="new-password" required>
+        </label>
+        <label class="field">
+          <span class="field-label">Confirm password</span>
+          <input id="wiz-confirm" type="password" minlength="8" autocomplete="new-password" required>
+        </label>
+      </div>
+      <p class="form-error" id="wiz-error-1" hidden></p>
+      <div class="wiz-nav">
+        <button class="btn btn--ghost" data-back>Back</button>
+        <button class="btn btn--primary" data-next>Continue</button>
+      </div>
+    </section>
+
+    <!-- Step 3 · Instance settings -->
+    <section class="wiz-step" data-step="2">
+      <h2 class="wiz-title">Tune your instance</h2>
+      <p class="wiz-text">Sensible defaults — everything can be changed later
+        in Settings → Admin.</p>
+      <div class="auth-form">
+        <label class="check">
+          <input type="checkbox" id="wiz-registration" checked>
+          <span>Allow others to create accounts</span>
+        </label>
+        <label class="field">
+          <span class="field-label">Check feeds every (minutes)</span>
+          <input id="wiz-refresh" type="number" min="0" max="1440" step="1" value="15">
+        </label>
+        <label class="field">
+          <span class="field-label">Stories kept per feed</span>
+          <input id="wiz-retention" type="number" min="20" max="5000" step="10" value="300">
+        </label>
+        <p class="hint">Older stories past the cap are pruned automatically, read or not.</p>
+      </div>
+      <p class="form-error" id="wiz-error-2" hidden></p>
+      <div class="wiz-nav">
+        <button class="btn btn--ghost" data-back>Back</button>
+        <button class="btn btn--primary" data-next>
+          <span class="btn-label">Create my instance</span>
+          <span class="btn-busy" hidden>Setting up…</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Step 4 · First feeds -->
+    <section class="wiz-step" data-step="3">
+      <h2 class="wiz-title">Follow your first sites</h2>
+      <p class="wiz-text">Paste any website or feed address — or tap a
+        suggestion. You can always add more later.</p>
+      <form class="wiz-addrow" id="wiz-add-form">
+        <input id="wiz-url" type="text" placeholder="theverge.com" spellcheck="false" autocomplete="off">
+        <button class="btn btn--primary" type="submit">
+          <span class="btn-label">Follow</span>
+          <span class="btn-busy" hidden>Adding…</span>
+        </button>
+      </form>
+      <p class="form-error" id="wiz-error-3" hidden></p>
+      <div class="wiz-suggest">
+        <button class="wiz-chip" data-url="theverge.com">The Verge</button>
+        <button class="wiz-chip" data-url="arstechnica.com">Ars Technica</button>
+        <button class="wiz-chip" data-url="https://hnrss.org/frontpage">Hacker News</button>
+        <button class="wiz-chip" data-url="xkcd.com">xkcd</button>
+      </div>
+      <ul class="wiz-added" id="wiz-added"></ul>
+      <div class="wiz-nav">
+        <button class="btn btn--primary btn--block" id="wiz-finish">Open Hyprfeed</button>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var CSRF = document.querySelector('meta[name="csrf"]').content;
+  var steps = Array.prototype.slice.call(document.querySelectorAll(".wiz-step"));
+  var dots = Array.prototype.slice.call(document.querySelectorAll(".wiz-dot"));
+  var current = 0;
+  var accountCreated = false;
+
+  function show(n) {
+    current = n;
+    steps.forEach(function (s, i) { s.classList.toggle("is-active", i === n); });
+    dots.forEach(function (d, i) { d.classList.toggle("is-active", i <= n); });
+    var focus = steps[n].querySelector("input");
+    if (focus) focus.focus();
+  }
+
+  function err(step, message) {
+    var el = document.getElementById("wiz-error-" + step);
+    if (!el) return;
+    el.textContent = message || "";
+    el.hidden = !message;
+  }
+
+  function api(url, body) {
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRF": CSRF },
+      body: JSON.stringify(body)
+    }).then(function (resp) {
+      return resp.json().then(function (data) {
+        if (!resp.ok) throw new Error(data.error || "Something went wrong.");
+        return data;
+      });
+    });
+  }
+
+  function setBusy(btn, busy) {
+    btn.disabled = busy;
+    var label = btn.querySelector(".btn-label"), busyEl = btn.querySelector(".btn-busy");
+    if (label) label.hidden = busy;
+    if (busyEl) busyEl.hidden = !busy;
+  }
+
+  document.querySelectorAll("[data-back]").forEach(function (btn) {
+    btn.addEventListener("click", function () { show(current - 1); });
+  });
+
+  document.querySelectorAll("[data-next]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      if (current === 0) { show(1); return; }
+      if (current === 1) {
+        var email = document.getElementById("wiz-email").value.trim();
+        var pw = document.getElementById("wiz-password").value;
+        var confirm = document.getElementById("wiz-confirm").value;
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err(1, "Enter a valid email address."); return; }
+        if (pw.length < 8) { err(1, "Passwords need at least 8 characters."); return; }
+        if (pw !== confirm) { err(1, "Passwords don't match."); return; }
+        err(1, null);
+        show(2);
+        return;
+      }
+      if (current === 2) {
+        err(2, null);
+        setBusy(btn, true);
+        api("/setup", {
+          username: document.getElementById("wiz-email").value.trim(),
+          password: document.getElementById("wiz-password").value,
+          registration_open: document.getElementById("wiz-registration").checked,
+          refresh_minutes: parseInt(document.getElementById("wiz-refresh").value, 10),
+          max_entries_per_feed: parseInt(document.getElementById("wiz-retention").value, 10)
+        }).then(function () {
+          accountCreated = true;
+          show(3);
+        }).catch(function (e) {
+          err(2, e.message);
+        }).finally(function () { setBusy(btn, false); });
+      }
+    });
+  });
+
+  function addFeed(url, busyBtn) {
+    if (!accountCreated || !url) return;
+    err(3, null);
+    if (busyBtn) setBusy(busyBtn, true);
+    api("/feeds/add", { url: url })
+      .then(function (data) {
+        var li = document.createElement("li");
+        li.textContent = data.title || url;
+        li.className = "is-added";
+        document.getElementById("wiz-added").appendChild(li);
+        document.getElementById("wiz-url").value = "";
+      })
+      .catch(function (e) { err(3, e.message); })
+      .finally(function () { if (busyBtn) setBusy(busyBtn, false); });
+  }
+
+  document.getElementById("wiz-add-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    addFeed(document.getElementById("wiz-url").value.trim(), this.querySelector("button"));
+  });
+  document.querySelectorAll(".wiz-chip").forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      chip.disabled = true;
+      addFeed(chip.getAttribute("data-url"), null);
+    });
+  });
+  document.getElementById("wiz-finish").addEventListener("click", function () {
+    location.href = "/";
+  });
+})();
+</script>
+{% endblock %}

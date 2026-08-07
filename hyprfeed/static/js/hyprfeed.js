@@ -166,6 +166,18 @@
       }).catch(function (err) { toast(err.message); });
     });
   }
+  [["inst-refresh", "refresh_minutes", "Refresh interval saved"],
+   ["inst-retention", "max_entries_per_feed", "Retention saved"]].forEach(function (spec) {
+    var input = document.getElementById(spec[0]);
+    if (!input) return;
+    input.addEventListener("change", function () {
+      var body = {};
+      body[spec[1]] = parseInt(input.value, 10);
+      api("/admin/instance", body)
+        .then(function () { toast(spec[2]); })
+        .catch(function (err) { toast(err.message); });
+    });
+  });
   document.querySelectorAll(".manage-item[data-user]").forEach(function (item) {
     var userId = item.getAttribute("data-user");
     var username = item.getAttribute("data-username");
