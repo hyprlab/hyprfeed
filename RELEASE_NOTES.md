@@ -3,6 +3,15 @@
 Plain-English notes on what each Hyprfeed release means for you. The full
 technical log lives in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.6.0 — 2026-08-07 — Watch, search, subscribe
+
+**YouTube channels are feeds now** — paste a channel, @handle, or even a
+single video URL and new uploads land in your magazine with thumbnails,
+playing right inside the reader. Channels get their own YouTube section in
+the sidebar. And press **Ctrl/⌘ K** anywhere for the new live search — find
+any story or feed as you type. The setup wizard also suggests four more
+sites: The Atlantic, Tom's Hardware, Mother Jones, and BBC News.
+
 ## 1.5.2 — 2026-08-07 — True timestamps
 
 Watched sites now show when a story was actually **published**, not when
