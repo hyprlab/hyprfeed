@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+{% block title %}
+  {%- if active_sub %}{{ active_sub.display_title }} — Hyprfeed
+  {%- elif filter == 'unread' %}Unread — Hyprfeed
+  {%- elif filter == 'saved' %}Saved — Hyprfeed
+  {%- else %}Hyprfeed{% endif -%}
+{% endblock %}
+{% block body %}
+<div class="shell">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <a class="brand" href="{{ url_for('main.index') }}">
+        <svg class="bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 1.6 4.6 13.4c-.3.4 0 1 .5 1h4.7l-1.6 7.2c-.1.6.6 1 1 .5l8.6-11.8c.3-.4 0-1-.5-1h-4.7l1.6-7.2c.1-.6-.6-1-1-.5Z"/></svg>
+        <span class="wordmark">Hyprfeed</span>
+      </a>
+      <button class="iconbtn sidebar-close" data-close-sidebar aria-label="Close menu">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+
+    <nav class="nav-primary" aria-label="Library">
+      <a class="navitem {{ 'is-active' if filter == 'all' and not active_sub }}" href="{{ url_for('main.index') }}">
+        <svg viewBox="0 0 24 24"><path d="M4 5.5h16M4 12h16M4 18.5h10"/></svg>
+        <span>All stories</span>
+      </a>
+      <a class="navitem {{ 'is-active' if filter == 'unread' and not active_sub }}" href="{{ url_for('main.index', filter='unread') }}">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v4l2.5 2.5"/></svg>
+        <span>Unread</span>
+        {% if total_unread %}<span class="count count--volt">{{ total_unread if total_unread < 1000 else '999+' }}</span>{% endif %}
+      </a>
+      <a class="navitem {{ 'is-active' if filter == 'saved' and not active_sub }}" href="{{ url_for('main.index', filter='saved') }}">
+        <svg viewBox="0 0 24 24"><path d="M7 4.5h10a1 1 0 0 1 1 1V20l-6-3.5L6 20V5.5a1 1 0 0 1 1-1Z"/></svg>
+        <span>Saved</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-label">
+      <span>Feeds</span>
+      <button class="iconbtn iconbtn--sm" data-open="add-modal" aria-label="Add a feed" title="Add a feed">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+
+    <ul class="feed-list">
+      {% for sub in subs %}
+      <li>
+        <a class="feeditem {{ 'is-active' if active_sub and active_sub.feed_id == sub.feed_id }}"
+           href="{{ url_for('main.index', feed=sub.feed_id) }}" title="{{ sub.display_title }}">
+          <img class="favicon" src="{{ sub.feed.icon_url or '' }}" alt="" loading="lazy" onerror="this.classList.add('is-broken')">
+          <span class="feeditem-title">{{ sub.display_title }}</span>
+          {% if unread_counts.get(sub.feed_id) %}<span class="count">{{ unread_counts[sub.feed_id] }}</span>{% endif %}
+        </a>
+      </li>
+      {% else %}
+      <li class="feed-list-empty">Nothing yet — add a site you love.</li>
+      {% endfor %}
+    </ul>
+
+    <div class="sidebar-foot">
+      <div class="user">
+        <span class="avatar">{{ current_user.username[0]|upper }}</span>
+        <span class="user-name">{{ current_user.username }}</span>
+      </div>
+      <button class="iconbtn" data-open="settings-modal" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+      </button>
+      <form method="post" action="{{ url_for('auth.logout') }}" class="inline-form">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <button class="iconbtn" aria-label="Sign out" title="Sign out">
+          <svg viewBox="0 0 24 24"><path d="M14 5H7a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h7M17 15.5 20.5 12 17 8.5M20 12H10"/></svg>
+        </button>
+      </form>
+    </div>
+  </aside>
+  <div class="scrim" data-close-sidebar hidden></div>
+
+  <main class="content">
+    <header class="topbar">
+      <button class="iconbtn topbar-menu" data-open-sidebar aria-label="Open menu">
+        <svg viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></svg>
+      </button>
+
+      <h2 class="context-title">
+        {%- if active_sub %}{{ active_sub.display_title }}
+        {%- elif filter == 'unread' %}Unread
+        {%- elif filter == 'saved' %}Saved
+        {%- else %}All stories{% endif -%}
+      </h2>
+
+      <div class="topbar-actions">
+        <button class="iconbtn" id="refresh-btn" aria-label="Refresh feeds" title="Refresh feeds">
+          <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 3.5V7h-3.5"/></svg>
+        </button>
+        {% if filter != 'saved' %}
+        <button class="iconbtn" id="readall-btn" aria-label="Mark all as read" title="Mark all as read"
+                {% if active_sub %}data-feed="{{ active_sub.feed_id }}"{% endif %}>
+          <svg viewBox="0 0 24 24"><path d="m3.5 12.5 4 4L14 9M11 16.5l1.5 1.5L20 10.5"/></svg>
+        </button>
+        {% endif %}
+        <div class="viewswitch" role="group" aria-label="View mode">
+          {% set qs = {'filter': filter if filter != 'all' else none, 'feed': active_sub.feed_id if active_sub else none} %}
+          <a class="viewswitch-btn {{ 'is-active' if view == 'magazine' }}" title="Magazine"
+             href="{{ url_for('main.index', view='magazine', **qs) }}">
+            <svg viewBox="0 0 24 24"><path d="M4 5h10v8H4zM17 5h3v3h-3zM17 11h3v2h-3zM4 16h16v1.5H4zM4 19.5h11v1.5H4z"/></svg>
+          </a>
+          <a class="viewswitch-btn {{ 'is-active' if view == 'cards' }}" title="Cards"
+             href="{{ url_for('main.index', view='cards', **qs) }}">
+            <svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
+          </a>
+          <a class="viewswitch-btn {{ 'is-active' if view == 'list' }}" title="List"
+             href="{{ url_for('main.index', view='list', **qs) }}">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </a>
+        </div>
+        <button class="iconbtn" id="theme-btn" aria-label="Toggle theme" title="Toggle theme">
+          <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div id="entries-root"
+         data-view="{{ view }}" data-filter="{{ filter }}"
+         {% if active_sub %}data-feed="{{ active_sub.feed_id }}"{% endif %}>
+      {% include "partials/entries.html" %}
+    </div>
+  </main>
+</div>
+
+<!-- ————— Add feed ————— -->
+<dialog class="modal" id="add-modal">
+  <div class="modal-head">
+    <h3>Follow a site</h3>
+    <button class="iconbtn" data-close aria-label="Close">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <form id="add-form" class="modal-body">
+    <label class="field">
+      <span class="field-label">Website or feed address</span>
+      <input id="add-url" type="text" placeholder="theverge.com, or a direct RSS URL"
+             autocomplete="off" spellcheck="false" required>
+    </label>
+    <p class="hint">Paste any site — Hyprfeed finds its RSS or Atom feed for you.</p>
+    <p class="form-error" id="add-error" hidden></p>
+    <button class="btn btn--primary btn--block" type="submit">
+      <span class="btn-label">Follow</span>
+      <span class="btn-busy" hidden>Finding feed…</span>
+    </button>
+    <div class="scrape-offer" id="scrape-offer" hidden>
+      <p class="hint">No feed — but Hyprfeed can watch the page itself and turn
+        new articles it finds into stories.</p>
+      <button class="btn btn--ghost btn--block" type="button" id="scrape-btn">
+        <span class="btn-label">Follow without a feed</span>
+        <span class="btn-busy" hidden>Reading the page…</span>
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ————— Settings ————— -->
+<dialog class="modal modal--wide" id="settings-modal">
+  <div class="modal-head">
+    <h3>Settings</h3>
+    <button class="iconbtn" data-close aria-label="Close">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="settings">
+    <nav class="settings-tabs" role="tablist">
+      <button class="tab is-active" data-tab="appearance" role="tab">Appearance</button>
+      <button class="tab" data-tab="reading" role="tab">Reading</button>
+      <button class="tab" data-tab="feeds" role="tab">Feeds</button>
+      <button class="tab" data-tab="account" role="tab">Account</button>
+      {% if current_user.is_admin %}<button class="tab" data-tab="admin" role="tab">Admin</button>{% endif %}
+    </nav>
+
+    <section class="tabpane is-active" data-pane="appearance">
+      <p class="setting-label">Theme</p>
+      <div class="theme-picker">
+        {% for t in ('system', 'light', 'dark') %}
+        <label class="theme-opt">
+          <input type="radio" name="theme" value="{{ t }}" {{ 'checked' if current_user.theme == t }}>
+          <span class="theme-chip theme-chip--{{ t }}">
+            <span class="theme-chip-dot"></span>{{ t|capitalize }}
+          </span>
+        </label>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="tabpane" data-pane="reading">
+      <p class="setting-label">Default view</p>
+      <div class="seg" id="default-view">
+        {% for v in ('magazine', 'cards', 'list') %}
+        <label><input type="radio" name="view_mode" value="{{ v }}" {{ 'checked' if current_user.view_mode == v }}><span>{{ v|capitalize }}</span></label>
+        {% endfor %}
+      </div>
+      <label class="check setting-row">
+        <input type="checkbox" id="mark-read-open" {{ 'checked' if current_user.mark_read_on_open }}>
+        <span>Mark stories as read when opened</span>
+      </label>
+    </section>
+
+    <section class="tabpane" data-pane="feeds">
+      {% if subs %}
+      <ul class="manage-list">
+        {% for sub in subs %}
+        <li class="manage-item" data-feed="{{ sub.feed_id }}">
+          <img class="favicon" src="{{ sub.feed.icon_url or '' }}" alt="" onerror="this.classList.add('is-broken')">
+          <div class="manage-meta">
+            <span class="manage-title">{{ sub.display_title }}
+              {% if sub.feed.kind == 'scrape' %}<span class="chip chip--muted" title="No RSS feed — Hyprfeed watches the page for new articles">watcher</span>{% endif %}
+            </span>
+            <span class="manage-url">{{ sub.feed.url }}</span>
+            {% if sub.feed.last_error %}<span class="manage-err">{{ sub.feed.last_error }}</span>{% endif %}
+          </div>
+          <button class="iconbtn iconbtn--sm" data-rename aria-label="Rename" title="Rename">
+            <svg viewBox="0 0 24 24"><path d="M4 20h4L19.5 8.5a2 2 0 0 0-3-3L5 17v3ZM13.5 6.5l3 3"/></svg>
+          </button>
+          <button class="iconbtn iconbtn--sm iconbtn--danger" data-unsub aria-label="Unfollow" title="Unfollow">
+            <svg viewBox="0 0 24 24"><path d="M5.5 7.5h13M9.5 7V5h5v2M7 7.5l.8 12a1 1 0 0 0 1 .9h6.4a1 1 0 0 0 1-.9l.8-12M10.2 11v6M13.8 11v6"/></svg>
+          </button>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="hint">You're not following anything yet.</p>
+      {% endif %}
+    </section>
+
+    <section class="tabpane" data-pane="account">
+      <p class="setting-label">Change password</p>
+      <form id="password-form" class="stack">
+        <label class="field"><span class="field-label">Current password</span>
+          <input type="password" id="pw-current" autocomplete="current-password" required></label>
+        <label class="field"><span class="field-label">New password</span>
+          <input type="password" id="pw-new" minlength="8" autocomplete="new-password" required></label>
+        <p class="form-error" id="pw-error" hidden></p>
+        <button class="btn btn--primary" type="submit">Update password</button>
+      </form>
+      <p class="hint account-meta">Signed in as <strong>{{ current_user.username }}</strong>{% if current_user.is_admin %} <span class="chip">admin</span>{% endif %} · member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+    </section>
+
+    {% if current_user.is_admin %}
+    <section class="tabpane" data-pane="admin">
+      <label class="check">
+        <input type="checkbox" id="reg-open" {{ 'checked' if allow_registration }}>
+        <span>Allow new account registration</span>
+      </label>
+      {% if admin_stats %}
+      <p class="hint admin-stats">{{ admin_stats.users }} {{ 'user' if admin_stats.users == 1 else 'users' }} · {{ admin_stats.feeds }} {{ 'feed' if admin_stats.feeds == 1 else 'feeds' }} · {{ admin_stats.entries }} stories</p>
+      {% endif %}
+      <p class="setting-label">Users</p>
+      <ul class="manage-list">
+        {% for u in admin_users %}
+        <li class="manage-item" data-user="{{ u.id }}" data-username="{{ u.username }}">
+          <span class="avatar">{{ u.username[0]|upper }}</span>
+          <div class="manage-meta">
+            <span class="manage-title">{{ u.username }}
+              {% if u.is_admin %}<span class="chip">admin</span>{% endif %}
+              {% if u.id == current_user.id %}<span class="chip chip--muted">you</span>{% endif %}
+            </span>
+            <span class="manage-url">joined {{ u.created_at.strftime('%b %-d, %Y') }} · {{ admin_sub_counts.get(u.id, 0) }} {{ 'feed' if admin_sub_counts.get(u.id, 0) == 1 else 'feeds' }}</span>
+          </div>
+          <button class="iconbtn iconbtn--sm" data-admin-password aria-label="Reset password" title="Reset password">
+            <svg viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4"/><path d="M10.3 12.7 21 2M15 5l3 3M18 2l3 3"/></svg>
+          </button>
+          {% if u.id != current_user.id %}
+          <button class="iconbtn iconbtn--sm" data-admin-toggle aria-label="{{ 'Remove admin' if u.is_admin else 'Make admin' }}" title="{{ 'Remove admin' if u.is_admin else 'Make admin' }}">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5.5L12 2.5 4 5.5V12c0 6 8 10 8 10Z"/>{% if not u.is_admin %}<path d="m8.8 12 2.2 2.2 4.2-4.4"/>{% endif %}</svg>
+          </button>
+          <button class="iconbtn iconbtn--sm iconbtn--danger" data-admin-delete aria-label="Delete user" title="Delete user">
+            <svg viewBox="0 0 24 24"><path d="M5.5 7.5h13M9.5 7V5h5v2M7 7.5l.8 12a1 1 0 0 0 1 .9h6.4a1 1 0 0 0 1-.9l.8-12M10.2 11v6M13.8 11v6"/></svg>
+          </button>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </div>
+</dialog>
+
+<!-- ————— Reader ————— -->
+<dialog class="reader" id="reader">
+  <div class="reader-bar">
+    <button class="iconbtn" data-close aria-label="Close reader">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="reader-bar-actions">
+      <button class="iconbtn" id="reader-prev" aria-label="Previous story" title="Previous (k)">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <button class="iconbtn" id="reader-next" aria-label="Next story" title="Next (j)">
+        <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <button class="iconbtn" id="reader-star" aria-label="Save story" title="Save">
+        <svg viewBox="0 0 24 24"><path d="M7 4.5h10a1 1 0 0 1 1 1V20l-6-3.5L6 20V5.5a1 1 0 0 1 1-1Z"/></svg>
+      </button>
+      <a class="iconbtn" id="reader-visit" target="_blank" rel="noopener noreferrer" aria-label="Open original" title="Open original">
+        <svg viewBox="0 0 24 24"><path d="M10 5H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4M14 4.5h5.5V10M19 5l-8.5 8.5"/></svg>
+      </a>
+    </div>
+  </div>
+  <article class="reader-article">
+    <p class="kicker" id="reader-feed"></p>
+    <h1 class="reader-title" id="reader-title"></h1>
+    <p class="reader-meta" id="reader-meta"></p>
+    <div class="reader-hero" id="reader-hero"></div>
+    <div class="prose" id="reader-content"></div>
+    <footer class="reader-foot">
+      <a class="btn btn--primary" id="reader-visit-foot" target="_blank" rel="noopener noreferrer">Read on site ↗</a>
+    </footer>
+  </article>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+{% endblock %}

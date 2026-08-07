@@ -1,0 +1,6 @@
+# Auto-loaded by `docker compose` when running from a clone of the repository:
+# builds the image from local source instead of pulling from Docker Hub.
+# (Users who only download docker-compose.yml never see this file.)
+services:
+  hyprfeed:
+    build: .

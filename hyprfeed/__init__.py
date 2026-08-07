@@ -1,0 +1,169 @@
+import logging
+import os
+import secrets
+import threading
+import time
+from datetime import datetime
+
+from flask import Flask, request, session
+from flask_login import LoginManager
+
+from .config import Config
+from .models import User, db, utcnow
+
+__version__ = "1.0.0"
+
+logging.basicConfig(level=logging.INFO)
+
+_refresher_started = threading.Lock()
+_refresher_running = False
+
+
+def create_app(config_class=Config) -> Flask:
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+
+    db.init_app(app)
+
+    login_manager = LoginManager(app)
+    login_manager.login_view = "auth.login"
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return db.session.get(User, int(user_id))
+
+    from . import auth, main
+    app.register_blueprint(auth.bp)
+    app.register_blueprint(main.bp)
+
+    # ---- CSRF (lightweight, session-token based) ----
+    def csrf_token() -> str:
+        if "_csrf" not in session:
+            session["_csrf"] = secrets.token_hex(16)
+        return session["_csrf"]
+
+    @app.before_request
+    def check_csrf():
+        if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
+            return None
+        sent = request.headers.get("X-CSRF") or request.form.get("_csrf")
+        if not sent or sent != session.get("_csrf"):
+            return {"error": "Invalid or missing CSRF token."}, 400
+        return None
+
+    @app.template_global()
+    def static_url(filename: str) -> str:
+        """Static URL with an mtime cache-buster so redeploys invalidate
+        browser caches immediately."""
+        from flask import url_for
+        try:
+            version = int(os.path.getmtime(os.path.join(app.static_folder, filename)))
+        except OSError:
+            version = 0
+        return url_for("static", filename=filename, v=version)
+
+    @app.context_processor
+    def inject_globals():
+        return {
+            "csrf_token": csrf_token,
+            "turnstile_site_key": app.config["TURNSTILE_SITE_KEY"],
+            "allow_registration": auth.registration_open(),
+        }
+
+    # ---- Template filters ----
+    @app.template_filter("ago")
+    def ago(dt: datetime) -> str:
+        seconds = int((utcnow() - dt).total_seconds())
+        if seconds < 60:
+            return "now"
+        minutes = seconds // 60
+        if minutes < 60:
+            return f"{minutes}m ago"
+        hours = minutes // 60
+        if hours < 24:
+            return f"{hours}h ago"
+        days = hours // 24
+        if days < 7:
+            return f"{days}d ago"
+        if days < 365:
+            return dt.strftime("%b %-d")
+        return dt.strftime("%b %-d, %Y")
+
+    @app.template_filter("readtime")
+    def readtime(words: int) -> str:
+        return f"{max(1, round((words or 0) / 220))} min"
+
+    with app.app_context():
+        db.create_all()
+        _migrate(app)
+
+    _start_refresher(app)
+    return app
+
+
+def _migrate(app: Flask) -> None:
+    """Tiny in-place migrations for databases created by older versions."""
+    from sqlalchemy import inspect, text
+
+    columns = {c["name"] for c in inspect(db.engine).get_columns("users")}
+    if "is_admin" not in columns:
+        db.session.execute(
+            text("ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0")
+        )
+        # Pre-admin databases: the earliest account becomes the admin.
+        first_id = db.session.execute(
+            text("SELECT id FROM users ORDER BY id LIMIT 1")
+        ).scalar()
+        if first_id is not None:
+            db.session.execute(
+                text("UPDATE users SET is_admin = 1 WHERE id = :id"), {"id": first_id}
+            )
+        db.session.commit()
+        app.logger.info("migrated: added users.is_admin")
+
+    feed_columns = {c["name"] for c in inspect(db.engine).get_columns("feeds")}
+    if "kind" not in feed_columns:
+        db.session.execute(
+            text("ALTER TABLE feeds ADD COLUMN kind VARCHAR(10) NOT NULL DEFAULT 'rss'")
+        )
+        db.session.commit()
+        app.logger.info("migrated: added feeds.kind")
+
+    # Sweep read/star marks orphaned by pruning before cleanup existed.
+    swept = 0
+    for table in ("read_marks", "stars"):
+        result = db.session.execute(
+            text(f"DELETE FROM {table} WHERE entry_id NOT IN (SELECT id FROM entries)")
+        )
+        swept += result.rowcount or 0
+    if swept:
+        db.session.commit()
+        app.logger.info("cleaned up %d orphaned read/star marks", swept)
+
+
+def _start_refresher(app: Flask) -> None:
+    """Background thread that refreshes every feed on an interval."""
+    global _refresher_running
+    interval = app.config["REFRESH_MINUTES"]
+    if interval <= 0:
+        return
+    # Avoid double-start under the werkzeug reloader parent process.
+    if app.debug and os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+        return
+    with _refresher_started:
+        if _refresher_running:
+            return
+        _refresher_running = True
+
+    from .fetcher import refresh_all_feeds
+
+    def loop():
+        time.sleep(20)  # let the app finish booting first
+        while True:
+            try:
+                refresh_all_feeds(app)
+            except Exception:
+                logging.getLogger("hyprfeed").exception("background refresh failed")
+            time.sleep(interval * 60)
+
+    threading.Thread(target=loop, daemon=True, name="hyprfeed-refresher").start()
