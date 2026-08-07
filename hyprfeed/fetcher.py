@@ -50,7 +50,7 @@ def _get(url: str, **kwargs) -> requests.Response:
     headers = {"User-Agent": USER_AGENT, **kwargs.pop("headers", {})}
     resp = _session.get(url, headers=headers, timeout=(CONNECT_TIMEOUT, TIMEOUT),
                         allow_redirects=True, **kwargs)
-    if resp.status_code in (403, 406, 429):
+    if resp.status_code in (401, 403, 406, 429):
         headers["User-Agent"] = BROWSER_UA
         resp = _session.get(url, headers=headers, timeout=(CONNECT_TIMEOUT, TIMEOUT),
                             allow_redirects=True, **kwargs)
@@ -73,6 +73,9 @@ def discover_feed_url(url: str) -> tuple[str | None, str | None]:
         reason = type(exc).__name__.replace("ConnectionError", "connection failed") \
             .replace("ConnectTimeout", "timed out").replace("ReadTimeout", "timed out")
         return None, f"Couldn't reach that site ({reason}). Check the address and try again."
+    if resp.status_code in (401, 403):
+        return None, ("That site blocks automated readers "
+                      f"(HTTP {resp.status_code}). If it offers RSS, try the feed's direct URL.")
     if not resp.ok:
         return None, f"That site answered with HTTP {resp.status_code}."
     if _looks_like_feed(resp.content):
