@@ -68,6 +68,7 @@ def create_app(config_class=Config) -> Flask:
             "csrf_token": csrf_token,
             "turnstile_site_key": app.config["TURNSTILE_SITE_KEY"],
             "allow_registration": auth.registration_open(),
+            "app_version": __version__,
         }
 
     # ---- Template filters ----

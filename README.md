@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://hub.docker.com/r/hyprlab/hyprfeed"><img src="https://img.shields.io/docker/v/hyprlab/hyprfeed?label=docker&color=F7DF1E" alt="Docker Hub"></a>
   <a href="https://github.com/hyprlab/hyprfeed/blob/main/CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.0.0-F7DF1E" alt="Version 1.0.0"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="MIT license"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="AGPL-3.0 license"></a>
 </p>
 
 Hyprfeed is a self-hosted, multi-user RSS reader that turns the sites you
@@ -145,4 +145,10 @@ variable font (SIL Open Font License) is bundled in the image.
 
 ## License
 
-[MIT](LICENSE) © Hyprlab
+Hyprfeed is free software, released under the
+[GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0). You may run,
+study, share, and modify it. If you run a modified version as a network
+service, the AGPL requires you to offer its source code to your users — the
+"Source" link in the app's settings makes that easy to satisfy.
+
+© 2026 Hyprlab

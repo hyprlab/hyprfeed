@@ -241,6 +241,9 @@
         <button class="btn btn--primary" type="submit">Update password</button>
       </form>
       <p class="hint account-meta">Signed in as <strong>{{ current_user.username }}</strong>{% if current_user.is_admin %} <span class="chip">admin</span>{% endif %} · member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+      <p class="hint about-line">Hyprfeed v{{ app_version }} · free software under
+        <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">AGPL-3.0</a> ·
+        <a href="https://github.com/hyprlab/hyprfeed" target="_blank" rel="noopener">Source</a></p>
     </section>
 
     {% if current_user.is_admin %}
