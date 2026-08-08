@@ -1251,6 +1251,9 @@
           });
         }, 60);
         setTimeout(function () {
+          // Leave the layout the moment the collapse finishes — don't make
+          // the last gap-close wait on the network round-trip.
+          el.classList.add("is-hidden");
           performHide(el, function () {
             el.classList.remove("swipe-out", "swipe-collapse");
             el.style.transform = "";
@@ -1260,7 +1263,7 @@
             el.style.paddingTop = "";
             el.style.paddingBottom = "";
           });
-        }, 300);
+        }, 250);
       } else {
         el.classList.add("swipe-return");
         el.style.transform = "";
