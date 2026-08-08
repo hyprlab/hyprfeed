@@ -1232,8 +1232,9 @@
       pill.innerHTML = direction < 0 ? PILL_HIDE : PILL_SAVE;
       var rect = el.getBoundingClientRect();
       pill.style.top = rect.top + rect.height / 2 + "px";
-      pill.style.left = direction > 0 ? "18px" : "auto";
-      pill.style.right = direction < 0 ? "18px" : "auto";
+      // The pill sits on the side the card is heading toward.
+      pill.style.left = direction < 0 ? "18px" : "auto";
+      pill.style.right = direction > 0 ? "18px" : "auto";
       pill.classList.remove("is-armed");
       pill.hidden = false;
     }
