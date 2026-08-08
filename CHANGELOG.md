@@ -4,6 +4,17 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.7.3] — 2026-08-08
+
+### Changed
+- "Hidden" is now "Skipped": the card action is Skip (double-chevron icon),
+  skipped stories collect in a Skipped sidebar bin, and Restore brings one
+  back; old filter=hidden links still work
+- Sidebar shelf order is now Unread, All stories, Saved, Skipped, History
+- Saved is immune to skip: a story that is both saved and skipped stays
+  visible in Saved while hidden everywhere else
+- The undo toast slides down and fades out instead of vanishing
+
 ## [1.7.2] — 2026-08-08
 
 ### Added
@@ -257,6 +268,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.7.3]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.3
 [1.7.2]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.2
 [1.7.1]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.1
 [1.7.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.0
