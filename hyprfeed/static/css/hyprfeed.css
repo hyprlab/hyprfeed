@@ -423,14 +423,20 @@ html[data-theme="dark"] .icon-moon { display: none; }
 /* Collapse runs while the slide-out is still finishing, so it must carry
    the transform/opacity transitions along. */
 .swipe-pill {
-  position: fixed; z-index: 95; transform: translateY(-50%);
+  position: fixed; z-index: 95;
   display: flex; align-items: center; gap: 7px;
   padding: 8px 14px; border-radius: 999px;
   background: var(--surface); border: 1px solid var(--line);
   color: var(--muted); font-size: 13px; font-weight: 700;
   box-shadow: var(--shadow-2); pointer-events: none;
-  transition: background .12s, color .12s, border-color .12s;
+  opacity: 0; transform: translate(0, -50%);
+  transition: transform .24s cubic-bezier(.2, .8, .3, 1), opacity .2s ease,
+              background .12s, color .12s, border-color .12s;
 }
+.swipe-pill.from-left { transform: translate(-170%, -50%); }
+.swipe-pill.from-right { transform: translate(170%, -50%); }
+.swipe-pill.is-showing { transform: translate(0, -50%); opacity: 1; }
+.swipe-pill.is-leaving { transform: translate(0, calc(-50% + 18px)); opacity: 0; }
 .swipe-pill svg { width: 16px; height: 16px; }
 .swipe-pill.is-armed {
   background: var(--volt); border-color: var(--volt); color: var(--volt-ink);
