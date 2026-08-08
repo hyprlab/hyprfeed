@@ -469,6 +469,16 @@ html[data-theme="dark"] .icon-moon { display: none; }
   height: min(660px, calc(100dvh - 48px));
 }
 #settings-modal .modal-head { flex: none; }
+@media (max-width: 700px) {
+  /* Phones: settings takes over the whole screen. */
+  #settings-modal[open] {
+    width: 100vw; max-width: 100vw;
+    height: 100dvh; max-height: 100dvh;
+    margin: 0; border: 0; border-radius: 0;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
 .settings {
   display: flex; flex-direction: column;
   flex: 1; min-height: 0;
