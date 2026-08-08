@@ -876,6 +876,20 @@
   });
 
   if (reader) {
+    reader.addEventListener("close", function () {
+      // In the Unread view, stories read in the reader leave the list when
+      // it closes. (All stories keeps them greyed out.)
+      var root = document.getElementById("entries-root");
+      if (!root || root.getAttribute("data-filter") !== "unread") return;
+      var dismissed = 0;
+      document.querySelectorAll(".story.is-read:not(.is-hidden)").forEach(function (el) {
+        el.classList.add("is-hidden");
+        dismissed++;
+      });
+      if (dismissed && !document.querySelector(".story:not(.is-hidden)")) {
+        location.reload();   // empty now — show the "All caught up" state
+      }
+    });
     document.getElementById("reader-prev").addEventListener("click", function () { openSibling(-1); });
     document.getElementById("reader-next").addEventListener("click", function () { openSibling(1); });
     var copyTipTimer = null;
