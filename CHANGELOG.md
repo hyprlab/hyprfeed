@@ -8,7 +8,9 @@ All notable changes to Hyprfeed are documented here. The format follows
 
 ### Changed
 - Settings modal fills the whole screen on phones; the tab bar stays on one
-  swipeable row and Admin fields stack vertically
+  swipeable row (with edge fades on overflow) and Admin fields stack vertically
+- The article reader goes full-bleed on phones, edge to edge and
+  safe-area aware
 - The About tab shows only the changelog (open by default, with a "latest"
   chip); the separate release notes were retired
 
