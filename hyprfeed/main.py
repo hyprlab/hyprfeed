@@ -450,7 +450,6 @@ def feeds_organize():
     subs = {s.feed_id: s for s in Subscription.query.filter_by(user_id=current_user.id)}
     groups = {g.id: g for g in FeedGroup.query.filter_by(user_id=current_user.id)}
     feed_pos = group_pos = 0
-    current_group = None
     for item in layout[:1000]:
         if not isinstance(item, dict):
             continue
@@ -459,13 +458,15 @@ def feeds_organize():
             if group:
                 group.position = group_pos
                 group_pos += 1
-                current_group = group.id
         elif item.get("type") == "feed":
             sub = subs.get(item.get("id"))
             if sub:
                 sub.position = feed_pos
-                sub.group_id = current_group
                 feed_pos += 1
+                # Membership is explicit — containment in the UI, never
+                # inferred from adjacency.
+                gid = item.get("group")
+                sub.group_id = gid if gid in groups else None
     db.session.commit()
     return jsonify(ok=True)
 

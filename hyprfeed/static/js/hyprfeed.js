@@ -296,22 +296,27 @@
   var organizeDirty = false;
 
   function collectLayout() {
-    return Array.prototype.map.call(feedsManage.children, function (li) {
-      if (li.classList.contains("manage-group")) {
-        return { type: "group", id: parseInt(li.getAttribute("data-group"), 10) };
+    var layout = [];
+    Array.prototype.forEach.call(feedsManage.children, function (el) {
+      if (el.classList.contains("manage-group-wrap")) {
+        var gid = parseInt(el.getAttribute("data-group"), 10);
+        layout.push({ type: "group", id: gid });
+        el.querySelectorAll(".manage-sublist > .manage-item").forEach(function (li) {
+          layout.push({ type: "feed", id: parseInt(li.getAttribute("data-feed"), 10), group: gid });
+        });
+      } else if (el.hasAttribute("data-feed")) {
+        layout.push({ type: "feed", id: parseInt(el.getAttribute("data-feed"), 10), group: null });
       }
-      if (li.hasAttribute("data-feed")) {
-        return { type: "feed", id: parseInt(li.getAttribute("data-feed"), 10) };
-      }
-      return null;
-    }).filter(Boolean);
+    });
+    return layout;
   }
 
   function refreshIndent() {
-    var inGroup = false;
-    Array.prototype.forEach.call(feedsManage.children, function (li) {
-      if (li.classList.contains("manage-group")) { inGroup = true; return; }
-      li.classList.toggle("manage-item--in-group", inGroup);
+    feedsManage.querySelectorAll(":scope > .manage-item[data-feed]").forEach(function (li) {
+      li.classList.remove("manage-item--in-group");
+    });
+    feedsManage.querySelectorAll(".manage-sublist .manage-item[data-feed]").forEach(function (li) {
+      li.classList.add("manage-item--in-group");
     });
   }
 
@@ -321,45 +326,8 @@
       .catch(function (err) { toast(err.message); });
   }
 
-  function groupMembers(header) {
-    var members = [];
-    var el = header.nextElementSibling;
-    while (el && !el.classList.contains("manage-group")) {
-      members.push(el);
-      el = el.nextElementSibling;
-    }
-    return members;
-  }
-
   if (feedsManage) {
     var draggedItem = null;
-    var draggedMembers = [];
-
-    feedsManage.querySelectorAll(".manage-item").forEach(function (li) {
-      li.addEventListener("dragstart", function (e) {
-        draggedItem = li;
-        li.classList.add("is-dragging");
-        // Dragging a group carries its member feeds along (hidden meanwhile).
-        draggedMembers = li.classList.contains("manage-group") ? groupMembers(li) : [];
-        draggedMembers.forEach(function (m) { m.classList.add("is-drag-hidden"); });
-        e.dataTransfer.effectAllowed = "move";
-        try { e.dataTransfer.setData("text/plain", "drag"); } catch (_) {}
-      });
-      li.addEventListener("dragend", function () {
-        li.classList.remove("is-dragging");
-        clearDropTargets();
-        var anchor = li;
-        draggedMembers.forEach(function (m) {
-          anchor.after(m);
-          m.classList.remove("is-drag-hidden");
-          anchor = m;
-        });
-        draggedItem = null;
-        draggedMembers = [];
-        refreshIndent();
-        saveOrganize();
-      });
-    });
 
     function clearDropTargets() {
       feedsManage.querySelectorAll(".is-drop-target").forEach(function (el) {
@@ -367,56 +335,99 @@
       });
     }
 
+    function bindDrag(li) {
+      li.addEventListener("dragstart", function (e) {
+        e.stopPropagation();   // a feed drag must not also start its group's drag
+        draggedItem = li;
+        li.classList.add("is-dragging");
+        e.dataTransfer.effectAllowed = "move";
+        try { e.dataTransfer.setData("text/plain", "drag"); } catch (_) {}
+      });
+      li.addEventListener("dragend", function () {
+        li.classList.remove("is-dragging");
+        clearDropTargets();
+        draggedItem = null;
+        refreshIndent();
+        saveOrganize();
+      });
+    }
+    feedsManage.querySelectorAll(":scope > .manage-item, :scope > .manage-group-wrap, .manage-sublist > .manage-item")
+      .forEach(bindDrag);
+
+    function midpointInsert(container, items, clientY) {
+      var next = null;
+      for (var i = 0; i < items.length; i++) {
+        var rect = items[i].getBoundingClientRect();
+        if (clientY < rect.top + rect.height / 2) { next = items[i]; break; }
+      }
+      if (next) container.insertBefore(draggedItem, next);
+      else container.appendChild(draggedItem);
+    }
+
     feedsManage.addEventListener("dragover", function (e) {
       if (!draggedItem) return;
       e.preventDefault();
       clearDropTargets();
-      var items = Array.prototype.filter.call(
-        feedsManage.querySelectorAll(".manage-item:not(.is-dragging):not(.is-drag-hidden)"),
-        function () { return true; }
-      );
-      var draggingFeed = !draggedItem.classList.contains("manage-group");
+      var draggingGroup = draggedItem.classList.contains("manage-group-wrap");
+      var topItems = Array.prototype.filter.call(feedsManage.children, function (el) {
+        return el !== draggedItem && !el.contains(draggedItem);
+      });
 
-      // A feed hovering anywhere over a group header files INTO that group.
-      if (draggingFeed) {
-        for (var h = 0; h < items.length; h++) {
-          if (!items[h].classList.contains("manage-group")) continue;
-          var hr = items[h].getBoundingClientRect();
-          if (e.clientY >= hr.top && e.clientY <= hr.bottom) {
-            items[h].classList.add("is-drop-target");
-            items[h].after(draggedItem);
-            refreshIndent();
-            return;
-          }
+      if (draggingGroup) {
+        // Groups are sealed blocks: they only reorder among top-level items.
+        // Nothing can fall in or out while moving one.
+        midpointInsert(feedsManage, topItems, e.clientY);
+        return;
+      }
+
+      // Dragging a feed: check whether the pointer is inside a group block.
+      for (var w = 0; w < topItems.length; w++) {
+        var wrap = topItems[w];
+        if (!wrap.classList.contains("manage-group-wrap")) continue;
+        var rect = wrap.getBoundingClientRect();
+        if (e.clientY < rect.top || e.clientY > rect.bottom) continue;
+        var head = wrap.querySelector(".manage-group");
+        var headRect = head.getBoundingClientRect();
+        var sublist = wrap.querySelector(".manage-sublist");
+        if (e.clientY <= headRect.bottom) {
+          // Over the header: file at the top of this group.
+          head.classList.add("is-drop-target");
+          sublist.insertBefore(draggedItem, sublist.firstChild);
+        } else {
+          // Within the group's body: position among its members.
+          var members = Array.prototype.filter.call(
+            sublist.children, function (el) { return el !== draggedItem; });
+          midpointInsert(sublist, members, e.clientY);
         }
+        refreshIndent();
+        return;
       }
 
-      var next = null;
-      for (var i = 0; i < items.length; i++) {
-        var rect = items[i].getBoundingClientRect();
-        if (e.clientY < rect.top + rect.height / 2) { next = items[i]; break; }
-      }
-      if (next) feedsManage.insertBefore(draggedItem, next);
-      else feedsManage.appendChild(draggedItem);
+      // Outside any group: place among top-level items (ungrouped).
+      midpointInsert(feedsManage, topItems, e.clientY);
       refreshIndent();
     });
 
-    // Sort feeds alphabetically within each section, keeping groups in place.
+    // Sort: alphabetize ungrouped feeds (in their slots) and each group's
+    // members; group positions stay where they are.
     document.querySelectorAll("[data-sort]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var dir = btn.getAttribute("data-sort") === "desc" ? -1 : 1;
-        var sections = [{ header: null, items: [] }];
-        Array.prototype.forEach.call(Array.prototype.slice.call(feedsManage.children), function (li) {
-          if (li.classList.contains("manage-group")) sections.push({ header: li, items: [] });
-          else sections[sections.length - 1].items.push(li);
+        function cmp(a, b) {
+          var ta = a.querySelector(".manage-title").textContent.trim().toLowerCase();
+          var tb = b.querySelector(".manage-title").textContent.trim().toLowerCase();
+          return ta < tb ? -dir : ta > tb ? dir : 0;
+        }
+        var order = Array.prototype.slice.call(feedsManage.children);
+        var loose = order.filter(function (el) { return el.hasAttribute("data-feed"); }).sort(cmp);
+        var looseIdx = 0;
+        order.forEach(function (el) {
+          feedsManage.appendChild(el.hasAttribute("data-feed") ? loose[looseIdx++] : el);
         });
-        sections.forEach(function (section) {
-          if (section.header) feedsManage.appendChild(section.header);
-          section.items.sort(function (a, b) {
-            var ta = a.querySelector(".manage-title").textContent.trim().toLowerCase();
-            var tb = b.querySelector(".manage-title").textContent.trim().toLowerCase();
-            return ta < tb ? -dir : ta > tb ? dir : 0;
-          }).forEach(function (li) { feedsManage.appendChild(li); });
+        feedsManage.querySelectorAll(".manage-sublist").forEach(function (sublist) {
+          Array.prototype.slice.call(sublist.children).sort(cmp).forEach(function (li) {
+            sublist.appendChild(li);
+          });
         });
         refreshIndent();
         saveOrganize();
@@ -430,19 +441,19 @@
     }
     document.querySelectorAll("[data-grename]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        var item = btn.closest(".manage-group");
-        var name = prompt("Group name:", item.querySelector(".manage-title").textContent.trim());
+        var wrap = btn.closest(".manage-group-wrap");
+        var name = prompt("Group name:", wrap.querySelector(".manage-title").textContent.trim());
         if (name === null || !name.trim()) return;
-        api("/groups/" + item.getAttribute("data-group") + "/rename", { name: name.trim() })
+        api("/groups/" + wrap.getAttribute("data-group") + "/rename", { name: name.trim() })
           .then(reloadToFeedsTab).catch(function (err) { toast(err.message); });
       });
     });
     document.querySelectorAll("[data-gdelete]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        var item = btn.closest(".manage-group");
-        var name = item.querySelector(".manage-title").textContent.trim();
+        var wrap = btn.closest(".manage-group-wrap");
+        var name = wrap.querySelector(".manage-title").textContent.trim();
         if (!confirm('Delete the group "' + name + '"? Its feeds are kept, just ungrouped.')) return;
-        api("/groups/" + item.getAttribute("data-group") + "/delete")
+        api("/groups/" + wrap.getAttribute("data-group") + "/delete")
           .then(reloadToFeedsTab).catch(function (err) { toast(err.message); });
       });
     });
