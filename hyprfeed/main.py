@@ -9,8 +9,9 @@ from sqlalchemy import func
 from .auth import EMAIL_RE
 from .fetcher import (_favicon_for, add_feed, create_scrape_feed,
                       google_news_fallback, refresh_feed, scrape_candidates)
-from .models import (Entry, Feed, Hidden, ReadMark, Star, Subscription, User,
-                     db, int_setting, purge_feed, set_setting, utcnow)
+from .models import (Entry, Feed, FeedGroup, Hidden, ReadMark, Star,
+                     Subscription, User, db, int_setting, purge_feed,
+                     set_setting, utcnow)
 
 
 def retention_cap() -> int:
@@ -109,10 +110,26 @@ def _page_context():
         )
         unread_counts = dict(rows)
 
+    groups = (
+        FeedGroup.query.filter_by(user_id=current_user.id)
+        .order_by(func.coalesce(FeedGroup.position, 1_000_000), func.lower(FeedGroup.name))
+        .all()
+    )
+    group_members = {g.id: [s for s in subs if s.group_id == g.id] for g in groups}
+    valid_group_ids = set(group_members)
+    ungrouped = [s for s in subs if s.group_id not in valid_group_ids]
+
     return {
         "feed_titles": {s.feed_id: s.display_title for s in subs},
-        "site_subs": [s for s in subs if not s.feed.is_youtube],
-        "youtube_subs": [s for s in subs if s.feed.is_youtube],
+        "site_subs": [s for s in ungrouped if not s.feed.is_youtube],
+        "youtube_subs": [s for s in ungrouped if s.feed.is_youtube],
+        "groups": groups,
+        "group_members": group_members,
+        "group_unread": {
+            g.id: sum(unread_counts.get(s.feed_id, 0) for s in group_members[g.id])
+            for g in groups
+        },
+        "manage_ungrouped": ungrouped,
         "view": view,
         "filter": filter_name,
         "active_sub": active_sub,
@@ -366,25 +383,89 @@ def feeds_import():
     return jsonify(ok=True, added=added, skipped=skipped)
 
 
-@bp.route("/feeds/reorder", methods=["POST"])
+@bp.route("/groups", methods=["POST"])
 @login_required
-def feeds_reorder():
-    order = (request.get_json(silent=True) or {}).get("order") or []
-    if not isinstance(order, list):
-        return jsonify(error="Bad order payload."), 400
+def group_create():
+    name = ((request.get_json(silent=True) or {}).get("name") or "").strip()[:60]
+    if not name:
+        return jsonify(error="Give the group a name."), 400
+    max_pos = (
+        db.session.query(func.max(FeedGroup.position))
+        .filter(FeedGroup.user_id == current_user.id).scalar()
+    )
+    group = FeedGroup(user_id=current_user.id, name=name,
+                      position=0 if max_pos is None else max_pos + 1)
+    db.session.add(group)
+    db.session.commit()
+    return jsonify(ok=True, id=group.id, name=group.name)
+
+
+def _own_group(group_id) -> "FeedGroup":
+    group = db.session.get(FeedGroup, group_id)
+    if group is None or group.user_id != current_user.id:
+        abort(404)
+    return group
+
+
+@bp.route("/groups/<int:group_id>/rename", methods=["POST"])
+@login_required
+def group_rename(group_id):
+    group = _own_group(group_id)
+    name = ((request.get_json(silent=True) or {}).get("name") or "").strip()[:60]
+    if not name:
+        return jsonify(error="Give the group a name."), 400
+    group.name = name
+    db.session.commit()
+    return jsonify(ok=True, name=group.name)
+
+
+@bp.route("/groups/<int:group_id>/delete", methods=["POST"])
+@login_required
+def group_delete(group_id):
+    group = _own_group(group_id)
+    Subscription.query.filter_by(user_id=current_user.id, group_id=group.id) \
+        .update({"group_id": None}, synchronize_session=False)
+    db.session.delete(group)
+    db.session.commit()
+    return jsonify(ok=True)
+
+
+@bp.route("/groups/<int:group_id>/collapse", methods=["POST"])
+@login_required
+def group_collapse(group_id):
+    group = _own_group(group_id)
+    group.collapsed = bool((request.get_json(silent=True) or {}).get("collapsed"))
+    db.session.commit()
+    return jsonify(ok=True)
+
+
+@bp.route("/feeds/organize", methods=["POST"])
+@login_required
+def feeds_organize():
+    """Apply the settings drag layout: a flat sequence of group headers and
+    feeds, where a feed belongs to the most recent group above it (or none)."""
+    layout = (request.get_json(silent=True) or {}).get("layout") or []
+    if not isinstance(layout, list):
+        return jsonify(error="Bad layout payload."), 400
     subs = {s.feed_id: s for s in Subscription.query.filter_by(user_id=current_user.id)}
-    pos = 0
-    for feed_id in order:
-        sub = subs.get(feed_id)
-        if sub:
-            sub.position = pos
-            pos += 1
-    # Feeds missing from the payload keep their relative order at the end.
-    mentioned = set(order)
-    leftovers = [s for s in subs.values() if s.feed_id not in mentioned]
-    for sub in sorted(leftovers, key=lambda s: s.position if s.position is not None else 1_000_000):
-        sub.position = pos
-        pos += 1
+    groups = {g.id: g for g in FeedGroup.query.filter_by(user_id=current_user.id)}
+    feed_pos = group_pos = 0
+    current_group = None
+    for item in layout[:1000]:
+        if not isinstance(item, dict):
+            continue
+        if item.get("type") == "group":
+            group = groups.get(item.get("id"))
+            if group:
+                group.position = group_pos
+                group_pos += 1
+                current_group = group.id
+        elif item.get("type") == "feed":
+            sub = subs.get(item.get("id"))
+            if sub:
+                sub.position = feed_pos
+                sub.group_id = current_group
+                feed_pos += 1
     db.session.commit()
     return jsonify(ok=True)
 
@@ -644,6 +725,7 @@ def admin_delete_user(user_id):
     ReadMark.query.filter_by(user_id=user.id).delete(synchronize_session=False)
     Star.query.filter_by(user_id=user.id).delete(synchronize_session=False)
     Hidden.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+    FeedGroup.query.filter_by(user_id=user.id).delete(synchronize_session=False)
     db.session.delete(user)  # subscriptions cascade via the relationship
     db.session.flush()
     _gc_orphan_feeds()

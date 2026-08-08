@@ -100,6 +100,16 @@ class Feed(db.Model):
     )
 
 
+class FeedGroup(db.Model):
+    __tablename__ = "feed_groups"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    name = db.Column(db.String(60), nullable=False)
+    position = db.Column(db.Integer)
+    collapsed = db.Column(db.Boolean, default=False, nullable=False)
+
+
 class Subscription(db.Model):
     __tablename__ = "subscriptions"
     __table_args__ = (db.UniqueConstraint("user_id", "feed_id"),)
@@ -107,6 +117,7 @@ class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     feed_id = db.Column(db.Integer, db.ForeignKey("feeds.id"), nullable=False, index=True)
+    group_id = db.Column(db.Integer, db.ForeignKey("feed_groups.id"))
     custom_title = db.Column(db.String(300))
     position = db.Column(db.Integer)  # per-user sidebar order
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)

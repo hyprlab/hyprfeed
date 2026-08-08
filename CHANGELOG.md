@@ -4,6 +4,19 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- Feed groups: create named groups in Settings → Reading & Feeds and organize
+  them by drag and drop — a feed belongs to the group header above it, and
+  dragging a header moves the whole group. Groups render as
+  expandable/collapsible sidebar sections with rolled-up unread counts, and
+  the collapsed state is remembered per user. Deleting a group keeps its
+  feeds. A→Z/Z→A sorting now sorts within each group
+
+### Changed
+- Desktop settings modal grows to 80vh
+
 ## [1.6.2] — 2026-08-08
 
 ### Changed

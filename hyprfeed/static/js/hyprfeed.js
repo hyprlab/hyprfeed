@@ -291,58 +291,80 @@
     }
   });
 
-  /* ————— Settings: add / sort / reorder feeds ————— */
+  /* ————— Settings: groups, sort, drag organization ————— */
   var feedsManage = document.getElementById("feeds-manage");
+  var organizeDirty = false;
 
-  function feedsOrder() {
-    return Array.prototype.map.call(
-      feedsManage.querySelectorAll(".manage-item[data-feed]"),
-      function (li) { return parseInt(li.getAttribute("data-feed"), 10); }
-    );
+  function collectLayout() {
+    return Array.prototype.map.call(feedsManage.children, function (li) {
+      if (li.classList.contains("manage-group")) {
+        return { type: "group", id: parseInt(li.getAttribute("data-group"), 10) };
+      }
+      if (li.hasAttribute("data-feed")) {
+        return { type: "feed", id: parseInt(li.getAttribute("data-feed"), 10) };
+      }
+      return null;
+    }).filter(Boolean);
   }
 
-  function syncSidebarOrder() {
-    // Feeds live in two sidebar groups (sites + YouTube); reorder each
-    // list's own members without moving items between groups.
-    document.querySelectorAll(".sidebar .feed-list").forEach(function (list) {
-      var byId = {};
-      list.querySelectorAll("li").forEach(function (li) {
-        var link = li.querySelector('a[href*="feed="]');
-        var m = link && link.href.match(/[?&]feed=(\d+)/);
-        if (m) byId[m[1]] = li;
-      });
-      feedsOrder().forEach(function (id) {
-        if (byId[id]) list.appendChild(byId[id]);
-      });
+  function refreshIndent() {
+    var inGroup = false;
+    Array.prototype.forEach.call(feedsManage.children, function (li) {
+      if (li.classList.contains("manage-group")) { inGroup = true; return; }
+      li.classList.toggle("manage-item--in-group", inGroup);
     });
   }
 
-  function saveFeedOrder() {
-    api("/feeds/reorder", { order: feedsOrder() })
-      .then(function () { syncSidebarOrder(); toast("Feed order saved"); })
+  function saveOrganize() {
+    api("/feeds/organize", { layout: collectLayout() })
+      .then(function () { organizeDirty = true; toast("Layout saved"); })
       .catch(function (err) { toast(err.message); });
+  }
+
+  function groupMembers(header) {
+    var members = [];
+    var el = header.nextElementSibling;
+    while (el && !el.classList.contains("manage-group")) {
+      members.push(el);
+      el = el.nextElementSibling;
+    }
+    return members;
   }
 
   if (feedsManage) {
     var draggedItem = null;
+    var draggedMembers = [];
+
     feedsManage.querySelectorAll(".manage-item").forEach(function (li) {
       li.addEventListener("dragstart", function (e) {
         draggedItem = li;
         li.classList.add("is-dragging");
+        // Dragging a group carries its member feeds along (hidden meanwhile).
+        draggedMembers = li.classList.contains("manage-group") ? groupMembers(li) : [];
+        draggedMembers.forEach(function (m) { m.classList.add("is-drag-hidden"); });
         e.dataTransfer.effectAllowed = "move";
-        try { e.dataTransfer.setData("text/plain", li.getAttribute("data-feed")); } catch (_) {}
+        try { e.dataTransfer.setData("text/plain", "drag"); } catch (_) {}
       });
       li.addEventListener("dragend", function () {
         li.classList.remove("is-dragging");
+        var anchor = li;
+        draggedMembers.forEach(function (m) {
+          anchor.after(m);
+          m.classList.remove("is-drag-hidden");
+          anchor = m;
+        });
         draggedItem = null;
-        saveFeedOrder();
+        draggedMembers = [];
+        refreshIndent();
+        saveOrganize();
       });
     });
+
     feedsManage.addEventListener("dragover", function (e) {
       if (!draggedItem) return;
       e.preventDefault();
       var items = Array.prototype.filter.call(
-        feedsManage.querySelectorAll(".manage-item:not(.is-dragging)"),
+        feedsManage.querySelectorAll(".manage-item:not(.is-dragging):not(.is-drag-hidden)"),
         function () { return true; }
       );
       var next = null;
@@ -354,20 +376,88 @@
       else feedsManage.appendChild(draggedItem);
     });
 
+    // Sort feeds alphabetically within each section, keeping groups in place.
     document.querySelectorAll("[data-sort]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var dir = btn.getAttribute("data-sort") === "desc" ? -1 : 1;
-        var items = Array.prototype.slice.call(feedsManage.querySelectorAll(".manage-item"));
-        items.sort(function (a, b) {
-          var ta = a.querySelector(".manage-title").textContent.trim().toLowerCase();
-          var tb = b.querySelector(".manage-title").textContent.trim().toLowerCase();
-          return ta < tb ? -dir : ta > tb ? dir : 0;
+        var sections = [{ header: null, items: [] }];
+        Array.prototype.forEach.call(Array.prototype.slice.call(feedsManage.children), function (li) {
+          if (li.classList.contains("manage-group")) sections.push({ header: li, items: [] });
+          else sections[sections.length - 1].items.push(li);
         });
-        items.forEach(function (li) { feedsManage.appendChild(li); });
-        saveFeedOrder();
+        sections.forEach(function (section) {
+          if (section.header) feedsManage.appendChild(section.header);
+          section.items.sort(function (a, b) {
+            var ta = a.querySelector(".manage-title").textContent.trim().toLowerCase();
+            var tb = b.querySelector(".manage-title").textContent.trim().toLowerCase();
+            return ta < tb ? -dir : ta > tb ? dir : 0;
+          }).forEach(function (li) { feedsManage.appendChild(li); });
+        });
+        refreshIndent();
+        saveOrganize();
+      });
+    });
+
+    // Group actions: create / rename / delete reload into the same tab.
+    function reloadToFeedsTab() {
+      location.hash = "settings-reading";
+      location.reload();
+    }
+    document.querySelectorAll("[data-grename]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var item = btn.closest(".manage-group");
+        var name = prompt("Group name:", item.querySelector(".manage-title").textContent.trim());
+        if (name === null || !name.trim()) return;
+        api("/groups/" + item.getAttribute("data-group") + "/rename", { name: name.trim() })
+          .then(reloadToFeedsTab).catch(function (err) { toast(err.message); });
+      });
+    });
+    document.querySelectorAll("[data-gdelete]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var item = btn.closest(".manage-group");
+        var name = item.querySelector(".manage-title").textContent.trim();
+        if (!confirm('Delete the group "' + name + '"? Its feeds are kept, just ungrouped.')) return;
+        api("/groups/" + item.getAttribute("data-group") + "/delete")
+          .then(reloadToFeedsTab).catch(function (err) { toast(err.message); });
       });
     });
   }
+
+  var groupCreate = document.getElementById("group-create");
+  if (groupCreate) {
+    groupCreate.addEventListener("click", function () {
+      var name = prompt("Name for the new group:");
+      if (name === null || !name.trim()) return;
+      api("/groups", { name: name.trim() })
+        .then(function () { location.hash = "settings-reading"; location.reload(); })
+        .catch(function (err) { toast(err.message); });
+    });
+  }
+
+  // Settings closes after drag changes -> refresh so the sidebar matches.
+  var settingsModal = document.getElementById("settings-modal");
+  if (settingsModal) {
+    settingsModal.addEventListener("close", function () {
+      if (organizeDirty) location.reload();
+    });
+  }
+  // Reopen settings on the feeds tab after a group action reload.
+  if (location.hash === "#settings-reading" && settingsModal) {
+    history.replaceState(null, "", location.pathname + location.search);
+    switchSettingsTab("reading");
+    settingsModal.showModal();
+  }
+
+  /* ————— Sidebar: collapse/expand groups ————— */
+  document.querySelectorAll(".grouphead").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var wrap = btn.closest(".sidebar-group");
+      var collapsed = wrap.classList.toggle("is-collapsed");
+      btn.setAttribute("aria-expanded", String(!collapsed));
+      api("/groups/" + wrap.getAttribute("data-group") + "/collapse", { collapsed: collapsed })
+        .catch(function () {});
+    });
+  });
 
   var feedsAddForm = document.getElementById("feeds-add-form");
   if (feedsAddForm) {
