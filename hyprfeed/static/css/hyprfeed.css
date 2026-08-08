@@ -422,6 +422,19 @@ html[data-theme="dark"] .icon-moon { display: none; }
 .story.swipe-out { transition: transform .22s ease-in, opacity .22s ease-in !important; }
 /* Collapse runs while the slide-out is still finishing, so it must carry
    the transform/opacity transitions along. */
+.swipe-pill {
+  position: fixed; z-index: 95; transform: translateY(-50%);
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 14px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--line);
+  color: var(--muted); font-size: 13px; font-weight: 700;
+  box-shadow: var(--shadow-2); pointer-events: none;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.swipe-pill svg { width: 16px; height: 16px; }
+.swipe-pill.is-armed {
+  background: var(--volt); border-color: var(--volt); color: var(--volt-ink);
+}
 .story.swipe-collapse {
   transition: transform .22s ease-in, opacity .22s ease-in,
               height .16s ease, padding .16s ease !important;

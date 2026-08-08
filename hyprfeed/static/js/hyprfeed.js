@@ -1217,8 +1217,31 @@
 
   (function initCardSwipes() {
     if (!window.matchMedia("(pointer: coarse)").matches) return;
-    var story = null, startX = 0, startY = 0, dx = 0, dir = 0;
+    var story = null, startX = 0, startY = 0, dx = 0, dir = 0, thresholdPx = 0;
     var engaged = false, cancelled = false;
+
+    // Action pill: tells the user what releasing the swipe will do.
+    var pill = document.createElement("div");
+    pill.className = "swipe-pill";
+    pill.hidden = true;
+    document.body.appendChild(pill);
+    var PILL_HIDE = '<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A9.8 9.8 0 0 1 12 5c5 0 8.6 4 9.8 6.2a1.7 1.7 0 0 1 0 1.6 13.2 13.2 0 0 1-2.6 3.2M6.6 6.6C4.3 8 2.9 10 2.2 11.2a1.7 1.7 0 0 0 0 1.6C3.4 15 7 19 12 19c1.5 0 2.9-.36 4.1-.94M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>Hide';
+    var PILL_SAVE = '<svg viewBox="0 0 24 24"><path d="M7 4.5h10a1 1 0 0 1 1 1V20l-6-3.5L6 20V5.5a1 1 0 0 1 1-1Z"/></svg>Save';
+
+    function showPill(el, direction) {
+      pill.innerHTML = direction < 0 ? PILL_HIDE : PILL_SAVE;
+      var rect = el.getBoundingClientRect();
+      pill.style.top = rect.top + rect.height / 2 + "px";
+      pill.style.left = direction > 0 ? "18px" : "auto";
+      pill.style.right = direction < 0 ? "18px" : "auto";
+      pill.classList.remove("is-armed");
+      pill.hidden = false;
+    }
+
+    function hidePill() {
+      pill.hidden = true;
+      pill.classList.remove("is-armed");
+    }
 
     function resetSwipeStyles(el) {
       el.classList.remove("swipe-out", "swipe-collapse");
@@ -1285,8 +1308,10 @@
         if (Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy)) {
           engaged = true;
           dir = dx < 0 ? -1 : 1;
+          thresholdPx = story.offsetWidth * 0.6;
           story.classList.add("is-swiping");
           window.__hfCardSwipe = true;
+          showPill(story, dir);
         } else {
           return;
         }
@@ -1295,10 +1320,12 @@
       var x = dir < 0 ? Math.min(0, dx) : Math.max(0, dx);
       story.style.transform = "translateX(" + x + "px)";
       story.style.opacity = String(Math.max(0.3, 1 - Math.abs(x) / (story.offsetWidth * 1.1)));
+      pill.classList.toggle("is-armed", Math.abs(x) >= thresholdPx);
     }, { passive: false });
 
     document.addEventListener("touchend", function () {
       window.__hfCardSwipe = false;
+      hidePill();
       if (!story || !engaged) { story = null; return; }
       var el = story;
       story = null;
