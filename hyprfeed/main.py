@@ -621,6 +621,25 @@ def entry_hide(entry_id):
     return jsonify(ok=True, hidden=hide)
 
 
+@bp.route("/entries/skip-all", methods=["POST"])
+@login_required
+def skip_all():
+    data = request.get_json(silent=True) or {}
+    feed_id = data.get("feed")
+    subscribed = _subscribed_feed_ids()
+    feed_ids = [feed_id] if feed_id in subscribed else subscribed
+    targets = db.session.query(Entry.id).filter(
+        Entry.feed_id.in_(feed_ids), Entry.id.not_in(_hidden_sub())
+    )
+    now = utcnow()
+    db.session.bulk_save_objects([
+        Hidden(user_id=current_user.id, entry_id=eid, created_at=now)
+        for (eid,) in targets
+    ])
+    db.session.commit()
+    return jsonify(ok=True)
+
+
 @bp.route("/entries/read-all", methods=["POST"])
 @login_required
 def read_all():
