@@ -565,7 +565,15 @@ html[data-theme="dark"] .icon-moon { display: none; }
 .grip svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }
 .manage-item.is-dragging { opacity: .45; }
 .manage-item.is-drag-hidden { display: none; }
-.manage-group { margin-top: 10px; background: var(--field); border-radius: var(--radius-sm); border-bottom: 0 !important; padding-left: 8px; padding-right: 8px; }
+.manage-group-wrap { list-style: none; margin-top: 10px; }
+.manage-group-wrap.is-dragging { opacity: .45; }
+.manage-sublist { list-style: none; margin: 0; padding: 0; }
+.manage-sublist:not(:has(.manage-item))::after {
+  content: "Drop feeds here";
+  display: block; padding: 8px 0 8px 30px;
+  font-size: 12.5px; color: var(--faint);
+}
+.manage-group { background: var(--field); border-radius: var(--radius-sm); border-bottom: 0 !important; padding-left: 8px; padding-right: 8px; }
 .manage-group .manage-title { font-weight: 700; }
 .manage-group.is-drop-target {
   outline: 2px dashed var(--volt); outline-offset: -2px; background: var(--wash);
