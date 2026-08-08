@@ -54,7 +54,10 @@
 {% elif not entries and page == 1 %}
 
   <div class="empty">
-    {% if filter == 'saved' %}
+    {% if filter == 'unread' %}
+      <h2 class="empty-title">All caught up</h2>
+      <p class="empty-text">No unread stories. Enjoy the quiet, or refresh to check for new ones.</p>
+    {% elif filter == 'saved' %}
       <h2 class="empty-title">Nothing saved yet</h2>
       <p class="empty-text">Tap the bookmark on any story to keep it here.</p>
     {% elif filter == 'history' %}
