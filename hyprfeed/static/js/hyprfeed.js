@@ -1183,11 +1183,81 @@
     if (img.complete) classifyYtThumb(img);
   });
 
-  /* ————— Swipe left to hide (touch devices) ————— */
-  (function initSwipeHide() {
+  /* ————— Card swipes (touch): left = hide, right = save + mark read ————— */
+  function performSaveRead(storyEl, onDone) {
+    var id = parseInt(storyEl.getAttribute("data-id"), 10);
+    var feedId = parseInt(storyEl.getAttribute("data-feed"), 10);
+    var wasUnread = !storyEl.classList.contains("is-read");
+    Promise.all([
+      api("/entries/" + id + "/star", { starred: true }),
+      api("/entries/" + id + "/read", { read: true }),
+    ]).then(function () {
+      document.querySelectorAll('.story[data-id="' + id + '"]').forEach(function (el) {
+        el.classList.add("is-read");
+        var starBtn = el.querySelector("[data-star]");
+        if (starBtn) starBtn.classList.add("is-starred");
+      });
+      if (wasUnread) bumpUnread(feedId, -1);
+      if (onDone) onDone();
+      toast("Saved", "Undo", function () {
+        Promise.all([
+          api("/entries/" + id + "/star", { starred: false }),
+          api("/entries/" + id + "/read", { read: false }),
+        ]).then(function () {
+          document.querySelectorAll('.story[data-id="' + id + '"]').forEach(function (el) {
+            el.classList.remove("is-read", "is-hidden");
+            var starBtn = el.querySelector("[data-star]");
+            if (starBtn) starBtn.classList.remove("is-starred");
+          });
+          if (wasUnread) bumpUnread(feedId, 1);
+        }).catch(function (err) { toast(err.message); });
+      });
+    }).catch(function (err) { toast(err.message); });
+  }
+
+  (function initCardSwipes() {
     if (!window.matchMedia("(pointer: coarse)").matches) return;
-    var story = null, startX = 0, startY = 0, dx = 0;
+    var story = null, startX = 0, startY = 0, dx = 0, dir = 0;
     var engaged = false, cancelled = false;
+
+    function resetSwipeStyles(el) {
+      el.classList.remove("swipe-out", "swipe-collapse");
+      el.style.transform = "";
+      el.style.opacity = "";
+      el.style.height = "";
+      el.style.overflow = "";
+      el.style.paddingTop = "";
+      el.style.paddingBottom = "";
+    }
+
+    function slideOutAndCollapse(el, dirSign, done) {
+      el.classList.add("swipe-out");
+      el.style.transform = "translateX(" + dirSign * 110 + "%)";
+      el.style.opacity = "0";
+      setTimeout(function () {
+        el.style.height = el.offsetHeight + "px";
+        el.style.overflow = "hidden";
+        el.classList.add("swipe-collapse");
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            el.style.height = "0px";
+            el.style.paddingTop = "0px";
+            el.style.paddingBottom = "0px";
+          });
+        });
+      }, 60);
+      setTimeout(function () {
+        el.classList.add("is-hidden");
+        done();
+      }, 250);
+    }
+
+    function springBack(el) {
+      el.classList.add("swipe-return");
+      el.style.transform = "";
+      el.style.opacity = "";
+      setTimeout(function () { el.classList.remove("swipe-return"); }, 300);
+    }
 
     document.addEventListener("touchstart", function (e) {
       var el = e.target.closest && e.target.closest(".story[data-id]");
@@ -1199,6 +1269,7 @@
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       dx = 0;
+      dir = 0;
       engaged = false;
       cancelled = false;
     }, { passive: true });
@@ -1211,8 +1282,9 @@
       if (!engaged) {
         // Axis lock: a mostly-vertical move is a scroll, leave it alone.
         if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { cancelled = true; return; }
-        if (dx < -14 && Math.abs(dx) > Math.abs(dy)) {
+        if (Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy)) {
           engaged = true;
+          dir = dx < 0 ? -1 : 1;
           story.classList.add("is-swiping");
           window.__hfCardSwipe = true;
         } else {
@@ -1220,9 +1292,9 @@
         }
       }
       e.preventDefault();   // own the gesture: no scroll while sliding the card
-      var x = Math.min(0, dx);
+      var x = dir < 0 ? Math.min(0, dx) : Math.max(0, dx);
       story.style.transform = "translateX(" + x + "px)";
-      story.style.opacity = String(Math.max(0.3, 1 + x / (story.offsetWidth * 1.1)));
+      story.style.opacity = String(Math.max(0.3, 1 - Math.abs(x) / (story.offsetWidth * 1.1)));
     }, { passive: false });
 
     document.addEventListener("touchend", function () {
@@ -1232,43 +1304,26 @@
       story = null;
       el.classList.remove("is-swiping");
       var threshold = el.offsetWidth * 0.6;   // deliberate swipe, not a nudge
-      if (dx <= -threshold) {
-        el.classList.add("swipe-out");
-        el.style.transform = "translateX(-110%)";
-        el.style.opacity = "0";
-        // Collapse overlaps the slide-out so the cards below start gliding
-        // up almost immediately.
-        setTimeout(function () {
-          el.style.height = el.offsetHeight + "px";
-          el.style.overflow = "hidden";
-          el.classList.add("swipe-collapse");
-          requestAnimationFrame(function () {
-            requestAnimationFrame(function () {
-              el.style.height = "0px";
-              el.style.paddingTop = "0px";
-              el.style.paddingBottom = "0px";
-            });
+
+      if (dir < 0 && dx <= -threshold) {
+        // Hide.
+        slideOutAndCollapse(el, -1, function () {
+          performHide(el, function () { resetSwipeStyles(el); });
+        });
+      } else if (dir > 0 && dx >= threshold) {
+        // Save + mark read.
+        var root = document.getElementById("entries-root");
+        if (root && root.getAttribute("data-filter") === "unread") {
+          // Read stories leave the Unread view.
+          slideOutAndCollapse(el, 1, function () {
+            performSaveRead(el, function () { resetSwipeStyles(el); });
           });
-        }, 60);
-        setTimeout(function () {
-          // Leave the layout the moment the collapse finishes — don't make
-          // the last gap-close wait on the network round-trip.
-          el.classList.add("is-hidden");
-          performHide(el, function () {
-            el.classList.remove("swipe-out", "swipe-collapse");
-            el.style.transform = "";
-            el.style.opacity = "";
-            el.style.height = "";
-            el.style.overflow = "";
-            el.style.paddingTop = "";
-            el.style.paddingBottom = "";
-          });
-        }, 250);
+        } else {
+          springBack(el);
+          performSaveRead(el);
+        }
       } else {
-        el.classList.add("swipe-return");
-        el.style.transform = "";
-        el.style.opacity = "";
-        setTimeout(function () { el.classList.remove("swipe-return"); }, 300);
+        springBack(el);
       }
     });
   })();

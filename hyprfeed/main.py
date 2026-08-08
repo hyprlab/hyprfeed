@@ -582,12 +582,12 @@ def entry_read(entry_id):
 def entry_star(entry_id):
     Entry.query.get_or_404(entry_id)
     star = db.session.get(Star, (current_user.id, entry_id))
-    if star:
-        db.session.delete(star)
-        starred = False
-    else:
+    want = (request.get_json(silent=True) or {}).get("starred")
+    starred = (star is None) if want is None else bool(want)  # no body = toggle
+    if starred and star is None:
         db.session.add(Star(user_id=current_user.id, entry_id=entry_id))
-        starred = True
+    elif not starred and star is not None:
+        db.session.delete(star)
     db.session.commit()
     return jsonify(ok=True, starred=starred)
 
