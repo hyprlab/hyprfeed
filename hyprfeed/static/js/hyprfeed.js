@@ -1231,7 +1231,7 @@
       var el = story;
       story = null;
       el.classList.remove("is-swiping");
-      var threshold = Math.min(120, el.offsetWidth * 0.35);
+      var threshold = el.offsetWidth * 0.6;   // deliberate swipe, not a nudge
       if (dx <= -threshold) {
         el.classList.add("swipe-out");
         el.style.transform = "translateX(-110%)";
