@@ -660,6 +660,17 @@
       });
     });
   }
+  var skipallBtn = document.getElementById("skipall-btn");
+  if (skipallBtn) {
+    skipallBtn.addEventListener("click", function () {
+      var scope = skipallBtn.hasAttribute("data-feed") ? "this feed" : "every feed";
+      if (!confirm("Skip all stories in " + scope + "? They move to the Skipped bin and can be restored from there.")) return;
+      var payload = skipallBtn.hasAttribute("data-feed")
+        ? { feed: parseInt(skipallBtn.getAttribute("data-feed"), 10) } : {};
+      api("/entries/skip-all", payload).then(function () { location.reload(); })
+        .catch(function (err) { toast(err.message); });
+    });
+  }
   var readallBtn = document.getElementById("readall-btn");
   if (readallBtn) {
     readallBtn.addEventListener("click", function () {
