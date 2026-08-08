@@ -415,6 +415,11 @@ html[data-theme="dark"] .icon-moon { display: none; }
 .card-body .story-meta { margin-top: auto; padding-top: 8px; }
 .hero-body .hidebtn { top: 14px; right: 52px; }
 .story.is-hidden { display: none !important; }
+/* Swipe-to-hide: the card tracks the finger with no easing, then springs
+   back or slides out on release. */
+.story.is-swiping { transition: none !important; }
+.story.swipe-return { transition: transform .25s ease, opacity .25s ease !important; }
+.story.swipe-out { transition: transform .22s ease-in, opacity .22s ease-in !important; }
 .card-title {
   font-size: 16.5px; font-weight: 680; letter-spacing: -0.016em; line-height: 1.3;
 }
