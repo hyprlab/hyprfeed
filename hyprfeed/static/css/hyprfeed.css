@@ -567,8 +567,15 @@ html[data-theme="dark"] .icon-moon { display: none; }
 .manage-item.is-drag-hidden { display: none; }
 .manage-group { margin-top: 10px; background: var(--field); border-radius: var(--radius-sm); border-bottom: 0 !important; padding-left: 8px; padding-right: 8px; }
 .manage-group .manage-title { font-weight: 700; }
+.manage-group.is-drop-target {
+  outline: 2px dashed var(--volt); outline-offset: -2px; background: var(--wash);
+}
 .group-folder { width: 17px; height: 17px; color: var(--muted); flex: none; }
-.manage-item--in-group { padding-left: 26px; }
+/* Nested feeds: indented with a tree rail so membership is unmistakable. */
+.manage-item--in-group {
+  margin-left: 14px; padding-left: 14px;
+  border-left: 2px solid var(--line-strong);
+}
 .manage-item[draggable] { user-select: none; }
 .manage-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .manage-item {
