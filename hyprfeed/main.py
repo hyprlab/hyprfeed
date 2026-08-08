@@ -44,7 +44,11 @@ def _entries_query(feed_ids, filter_name):
                   & (Hidden.user_id == current_user.id))
             .order_by(Hidden.created_at.desc())
         )
-    q = Entry.query.filter(Entry.feed_id.in_(feed_ids), Entry.id.not_in(_hidden_sub()))
+    q = Entry.query.filter(Entry.feed_id.in_(feed_ids))
+    if filter_name != "saved":
+        # Skipped stories vanish everywhere — except Saved, which is immune:
+        # an explicit save always keeps the story visible there.
+        q = q.filter(Entry.id.not_in(_hidden_sub()))
     if filter_name == "unread":
         read = db.session.query(ReadMark.entry_id).filter(ReadMark.user_id == current_user.id)
         q = q.filter(Entry.id.not_in(read))
