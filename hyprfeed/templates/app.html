@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block title %}
   {%- if active_sub %}{{ active_sub.display_title }} — Hyprfeed
-  {%- elif filter == 'unread' %}Unread — Hyprfeed
   {%- elif filter == 'saved' %}Saved — Hyprfeed
   {%- elif filter == 'history' %}History — Hyprfeed
   {%- elif filter == 'skipped' %}Skipped — Hyprfeed
@@ -22,14 +21,10 @@
     </div>
 
     <nav class="nav-primary" aria-label="Library">
-      <a class="navitem {{ 'is-active' if filter == 'all' and not active_sub }}" href="{{ url_for('main.index') }}">
+      <a class="navitem {{ 'is-active' if filter == 'all' and not active_sub }}" id="nav-all" href="{{ url_for('main.index') }}">
         <svg viewBox="0 0 24 24"><path d="M4 5.5h16M4 12h16M4 18.5h10"/></svg>
         <span>All stories</span>
-      </a>
-      <a class="navitem {{ 'is-active' if filter == 'unread' and not active_sub }}" href="{{ url_for('main.index', filter='unread') }}">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/></svg>
-        <span>Unread</span>
-        {% if total_unread %}<span class="count count--volt">{{ total_unread if total_unread < 1000 else '999+' }}</span>{% endif %}
+        {% if total_unread %}<span class="count count--volt" id="total-unread">{{ total_unread if total_unread < 1000 else '999+' }}</span>{% endif %}
       </a>
       <a class="navitem {{ 'is-active' if filter == 'saved' and not active_sub }}" href="{{ url_for('main.index', filter='saved') }}">
         <svg viewBox="0 0 24 24"><path d="M7 4.5h10a1 1 0 0 1 1 1V20l-6-3.5L6 20V5.5a1 1 0 0 1 1-1Z"/></svg>
@@ -132,7 +127,6 @@
           <a class="context-link" href="{{ active_sub.feed.site_url or active_sub.feed.url }}"
              target="_blank" rel="noopener noreferrer"
              title="Open {{ active_sub.display_title }}'s site">{{ active_sub.display_title }}<svg viewBox="0 0 24 24"><path d="M10 5H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4M14 4.5h5.5V10M19 5l-8.5 8.5"/></svg></a>
-        {%- elif filter == 'unread' %}Unread
         {%- elif filter == 'saved' %}Saved
         {%- elif filter == 'history' %}History
         {%- elif filter == 'skipped' %}Skipped
