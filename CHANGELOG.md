@@ -4,7 +4,7 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.6.2] — 2026-08-08
 
 ### Changed
 - Settings modal fills the whole screen on phones; the tab bar stays on one
@@ -213,6 +213,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.6.2]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.6.2
 [1.6.1]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.6.1
 [1.6.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.6.0
 [1.5.2]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.5.2
