@@ -664,6 +664,27 @@
   var currentEntryId = null;
   var currentFeedId = null;
   var currentRead = false;
+  var currentEntryUrl = null;
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    // Fallback for plain-http LAN deployments where the Clipboard API
+    // is unavailable outside secure contexts.
+    return new Promise(function (resolve, reject) {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      (reader.open ? reader : document.body).appendChild(area);
+      area.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (_) {}
+      area.remove();
+      ok ? resolve() : reject(new Error("Copy failed"));
+    });
+  }
 
   function youtubeVideoId(url) {
     if (!url) return null;
@@ -784,6 +805,9 @@
             hero.appendChild(img);
           }
         }
+        currentEntryUrl = data.url || null;
+        var copyBtn = document.getElementById("reader-copy");
+        copyBtn.style.display = data.url ? "" : "none";
         var visit = document.getElementById("reader-visit");
         var visitFoot = document.getElementById("reader-visit-foot");
         visit.style.display = visitFoot.style.display = data.url ? "" : "none";
@@ -854,6 +878,12 @@
   if (reader) {
     document.getElementById("reader-prev").addEventListener("click", function () { openSibling(-1); });
     document.getElementById("reader-next").addEventListener("click", function () { openSibling(1); });
+    document.getElementById("reader-copy").addEventListener("click", function () {
+      if (!currentEntryUrl) return;
+      copyText(currentEntryUrl)
+        .then(function () { toast("Link copied"); })
+        .catch(function () { toast("Couldn't copy the link"); });
+    });
     document.getElementById("reader-read").addEventListener("click", function () {
       if (!currentEntryId) return;
       var next = !currentRead;
