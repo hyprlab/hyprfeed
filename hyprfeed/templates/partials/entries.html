@@ -5,9 +5,15 @@
 {%- endmacro %}
 
 {% macro hide_btn(entry) -%}
+  {% if filter == 'hidden' %}
+  <button class="starbtn hidebtn" data-hide aria-label="Unhide story" title="Unhide">
+    <svg viewBox="0 0 24 24"><path d="M2.2 11.2C3.4 9 7 5 12 5s8.6 4 9.8 6.2a1.7 1.7 0 0 1 0 1.6C20.6 15 17 19 12 19s-8.6-4-9.8-6.2a1.7 1.7 0 0 1 0-1.6Z"/><circle cx="12" cy="12" r="3"/></svg>
+  </button>
+  {% else %}
   <button class="starbtn hidebtn" data-hide aria-label="Hide story" title="Hide">
     <svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A9.8 9.8 0 0 1 12 5c5 0 8.6 4 9.8 6.2a1.7 1.7 0 0 1 0 1.6 13.2 13.2 0 0 1-2.6 3.2M6.6 6.6C4.3 8 2.9 10 2.2 11.2a1.7 1.7 0 0 0 0 1.6C3.4 15 7 19 12 19c1.5 0 2.9-.36 4.1-.94M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
   </button>
+  {% endif %}
 {%- endmacro %}
 
 {% macro kicker(entry) -%}
@@ -57,6 +63,9 @@
     {% elif filter == 'history' %}
       <h2 class="empty-title">No history yet</h2>
       <p class="empty-text">Stories you've read will appear here, most recent first.</p>
+    {% elif filter == 'hidden' %}
+      <h2 class="empty-title">Nothing hidden</h2>
+      <p class="empty-text">Stories you hide collect here until they age out. Tap the eye on any of them to bring one back.</p>
     {% else %}
       <h2 class="empty-title">No stories yet</h2>
       <p class="empty-text">These feeds haven't published anything we can show. Try refreshing.</p>

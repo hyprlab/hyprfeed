@@ -61,6 +61,14 @@ def create_app(config_class=Config) -> Flask:
             return {"error": "Invalid or missing CSRF token."}, 400
         return None
 
+    @app.after_request
+    def no_stale_html(resp):
+        # Dynamic pages must never be replayed from browser cache — a stale
+        # page briefly shows stories the user has since hidden or read.
+        if resp.mimetype == "text/html":
+            resp.headers["Cache-Control"] = "no-store"
+        return resp
+
     @app.template_global()
     def static_url(filename: str) -> str:
         """Static URL with an mtime cache-buster so redeploys invalidate

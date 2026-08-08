@@ -20,7 +20,7 @@ def retention_cap() -> int:
 bp = Blueprint("main", __name__)
 
 VIEWS = ("magazine", "cards", "list")
-FILTERS = ("all", "unread", "saved", "history")
+FILTERS = ("all", "unread", "saved", "history", "hidden")
 
 
 def _subscribed_feed_ids():
@@ -35,6 +35,15 @@ def _hidden_sub():
 
 
 def _entries_query(feed_ids, filter_name):
+    if filter_name == "hidden":
+        # The hidden shelf: everything the user has tucked away, newest first,
+        # until retention prunes the entries themselves.
+        return (
+            Entry.query.filter(Entry.feed_id.in_(feed_ids))
+            .join(Hidden, (Hidden.entry_id == Entry.id)
+                  & (Hidden.user_id == current_user.id))
+            .order_by(Hidden.created_at.desc())
+        )
     q = Entry.query.filter(Entry.feed_id.in_(feed_ids), Entry.id.not_in(_hidden_sub()))
     if filter_name == "unread":
         read = db.session.query(ReadMark.entry_id).filter(ReadMark.user_id == current_user.id)

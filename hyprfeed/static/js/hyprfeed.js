@@ -833,6 +833,26 @@
     var hideId = parseInt(hideStory.getAttribute("data-id"), 10);
     var hideFeed = parseInt(hideStory.getAttribute("data-feed"), 10);
     var wasUnread = !hideStory.classList.contains("is-read");
+    var root = document.getElementById("entries-root");
+    if (root && root.getAttribute("data-filter") === "hidden") {
+      // In the Hidden view the same action restores the story.
+      api("/entries/" + hideId + "/hide", { hidden: false }).then(function () {
+        document.querySelectorAll('.story[data-id="' + hideId + '"]').forEach(function (el) {
+          el.classList.add("is-hidden");   // leaves this list; it's visible elsewhere again
+        });
+        if (onHidden) onHidden();
+        if (wasUnread) bumpUnread(hideFeed, 1);
+        toast("Story restored", "Undo", function () {
+          api("/entries/" + hideId + "/hide").then(function () {
+            document.querySelectorAll('.story[data-id="' + hideId + '"]').forEach(function (el) {
+              el.classList.remove("is-hidden");
+            });
+            if (wasUnread) bumpUnread(hideFeed, -1);
+          }).catch(function (err) { toast(err.message); });
+        });
+      }).catch(function (err) { toast(err.message); });
+      return;
+    }
     api("/entries/" + hideId + "/hide").then(function () {
       document.querySelectorAll('.story[data-id="' + hideId + '"]').forEach(function (el) {
         el.classList.add("is-hidden");
@@ -1228,12 +1248,15 @@
     document.body.appendChild(pill);
     var pillTimer = null;
     var PILL_HIDE = '<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A9.8 9.8 0 0 1 12 5c5 0 8.6 4 9.8 6.2a1.7 1.7 0 0 1 0 1.6 13.2 13.2 0 0 1-2.6 3.2M6.6 6.6C4.3 8 2.9 10 2.2 11.2a1.7 1.7 0 0 0 0 1.6C3.4 15 7 19 12 19c1.5 0 2.9-.36 4.1-.94M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>Hide';
+    var PILL_UNHIDE = '<svg viewBox="0 0 24 24"><path d="M2.2 11.2C3.4 9 7 5 12 5s8.6 4 9.8 6.2a1.7 1.7 0 0 1 0 1.6C20.6 15 17 19 12 19s-8.6-4-9.8-6.2a1.7 1.7 0 0 1 0-1.6Z"/><circle cx="12" cy="12" r="3"/></svg>Unhide';
     var PILL_SAVE = '<svg viewBox="0 0 24 24"><path d="M7 4.5h10a1 1 0 0 1 1 1V20l-6-3.5L6 20V5.5a1 1 0 0 1 1-1Z"/></svg>Save';
 
     function showPill(el, direction) {
       clearTimeout(pillTimer);
       pill.className = "swipe-pill " + (direction < 0 ? "from-left" : "from-right");
-      pill.innerHTML = direction < 0 ? PILL_HIDE : PILL_SAVE;
+      var root = document.getElementById("entries-root");
+      var inHidden = root && root.getAttribute("data-filter") === "hidden";
+      pill.innerHTML = direction < 0 ? (inHidden ? PILL_UNHIDE : PILL_HIDE) : PILL_SAVE;
       var rect = el.getBoundingClientRect();
       pill.style.top = rect.top + rect.height / 2 + "px";
       // The pill sits on the side the card is heading toward.
