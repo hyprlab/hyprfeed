@@ -878,10 +878,16 @@
   if (reader) {
     document.getElementById("reader-prev").addEventListener("click", function () { openSibling(-1); });
     document.getElementById("reader-next").addEventListener("click", function () { openSibling(1); });
+    var copyTipTimer = null;
     document.getElementById("reader-copy").addEventListener("click", function () {
       if (!currentEntryUrl) return;
+      var btn = this;
       copyText(currentEntryUrl)
-        .then(function () { toast("Link copied"); })
+        .then(function () {
+          btn.classList.add("show-tip");
+          clearTimeout(copyTipTimer);
+          copyTipTimer = setTimeout(function () { btn.classList.remove("show-tip"); }, 1300);
+        })
         .catch(function () { toast("Couldn't copy the link"); });
     });
     document.getElementById("reader-read").addEventListener("click", function () {
