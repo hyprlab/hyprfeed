@@ -129,6 +129,12 @@ def _page_context():
         + [("sub", s) for s in ungrouped if not s.feed.is_youtube],
         key=lambda pair: _pos(pair[1]),
     )
+    # The settings manage list shows the same interleaving, including
+    # ungrouped YouTube feeds.
+    manage_items = sorted(
+        [("group", g) for g in groups] + [("sub", s) for s in ungrouped],
+        key=lambda pair: _pos(pair[1]),
+    )
 
     return {
         "feed_titles": {s.feed_id: s.display_title for s in subs},
@@ -141,7 +147,7 @@ def _page_context():
             g.id: sum(unread_counts.get(s.feed_id, 0) for s in group_members[g.id])
             for g in groups
         },
-        "manage_ungrouped": ungrouped,
+        "manage_items": manage_items,
         "view": view,
         "filter": filter_name,
         "active_sub": active_sub,

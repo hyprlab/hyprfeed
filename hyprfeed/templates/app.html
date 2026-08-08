@@ -315,8 +315,11 @@
       {% endmacro %}
       {% if subs %}
       <ul class="manage-list" id="feeds-manage">
-        {% for sub in manage_ungrouped %}{{ manage_feed(sub) }}{% endfor %}
-        {% for group in groups %}
+        {% for kind, entry in manage_items %}
+        {% if kind == 'sub' %}
+        {{ manage_feed(entry) }}
+        {% else %}
+        {% set group = entry %}
         <li class="manage-group-wrap" data-group="{{ group.id }}" draggable="true">
           <div class="manage-item manage-group">
             <span class="grip" title="Drag to move the group" aria-hidden="true">
@@ -337,6 +340,7 @@
             {% for sub in group_members.get(group.id, []) %}{{ manage_feed(sub, grouped=true) }}{% endfor %}
           </ul>
         </li>
+        {% endif %}
         {% endfor %}
       </ul>
       <p class="hint">Drop a feed onto a group to file it inside; drag it out to remove it. Dragging a group moves only the group and its feeds.</p>
