@@ -4,6 +4,14 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- Shorts backdrops actually blur now: many channels serve Shorts thumbnails
+  as 4:3 files with pillarbox bars baked in, so the blur layer was sampling
+  black. The image is cropped to its central 9:16 slice and the blur layer
+  zooms past the bars to sample real content
+
 ## [1.6.1] — 2026-08-07
 
 ### Added
