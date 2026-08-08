@@ -4,6 +4,17 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.7.1] — 2026-08-08
+
+### Added
+- Copy-link button in the reader toolbar with a "Copied" tooltip; falls back
+  to a legacy copy path on plain-http LAN deployments
+
+### Changed
+- Stories read in the reader now leave the Unread view when the reader
+  closes (All stories keeps them greyed out); an emptied Unread page reloads
+  into the "All caught up" state
+
 ## [1.7.0] — 2026-08-08
 
 ### Added
@@ -230,6 +241,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.7.1]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.1
 [1.7.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.0
 [1.6.2]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.6.2
 [1.6.1]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.6.1
