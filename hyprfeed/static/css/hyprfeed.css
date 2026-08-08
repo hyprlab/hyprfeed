@@ -420,7 +420,12 @@ html[data-theme="dark"] .icon-moon { display: none; }
 .story.is-swiping { transition: none !important; }
 .story.swipe-return { transition: transform .25s ease, opacity .25s ease !important; }
 .story.swipe-out { transition: transform .22s ease-in, opacity .22s ease-in !important; }
-.story.swipe-collapse { transition: height .25s ease, padding .25s ease !important; }
+/* Collapse runs while the slide-out is still finishing, so it must carry
+   the transform/opacity transitions along. */
+.story.swipe-collapse {
+  transition: transform .22s ease-in, opacity .22s ease-in,
+              height .16s ease, padding .16s ease !important;
+}
 .card-title {
   font-size: 16.5px; font-weight: 680; letter-spacing: -0.016em; line-height: 1.3;
 }

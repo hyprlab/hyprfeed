@@ -1236,9 +1236,9 @@
         el.classList.add("swipe-out");
         el.style.transform = "translateX(-110%)";
         el.style.opacity = "0";
+        // Collapse overlaps the slide-out so the cards below start gliding
+        // up almost immediately.
         setTimeout(function () {
-          // Collapse the vacated space so the cards below glide up before
-          // the element leaves the layout.
           el.style.height = el.offsetHeight + "px";
           el.style.overflow = "hidden";
           el.classList.add("swipe-collapse");
@@ -1249,18 +1249,18 @@
               el.style.paddingBottom = "0px";
             });
           });
-          setTimeout(function () {
-            performHide(el, function () {
-              el.classList.remove("swipe-out", "swipe-collapse");
-              el.style.transform = "";
-              el.style.opacity = "";
-              el.style.height = "";
-              el.style.overflow = "";
-              el.style.paddingTop = "";
-              el.style.paddingBottom = "";
-            });
-          }, 270);
-        }, 210);
+        }, 60);
+        setTimeout(function () {
+          performHide(el, function () {
+            el.classList.remove("swipe-out", "swipe-collapse");
+            el.style.transform = "";
+            el.style.opacity = "";
+            el.style.height = "";
+            el.style.overflow = "";
+            el.style.paddingTop = "";
+            el.style.paddingBottom = "";
+          });
+        }, 300);
       } else {
         el.classList.add("swipe-return");
         el.style.transform = "";
