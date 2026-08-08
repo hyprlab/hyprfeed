@@ -487,7 +487,15 @@ html[data-theme="dark"] .icon-moon { display: none; }
 .settings-tabs {
   display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; flex: none;
   overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  /* Edge fades hint at overflow; JS toggles them per side while scrolling. */
+  --fade-l: 0px; --fade-r: 0px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0,
+    #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0,
+    #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
 }
+.settings-tabs.can-scroll-left { --fade-l: 32px; }
+.settings-tabs.can-scroll-right { --fade-r: 32px; }
 .settings-tabs::-webkit-scrollbar { display: none; }
 .tab {
   padding: 8px 12px 10px; font-size: 13.5px; font-weight: 600; color: var(--muted);
