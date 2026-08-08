@@ -4,6 +4,7 @@
   {%- elif filter == 'unread' %}Unread — Hyprfeed
   {%- elif filter == 'saved' %}Saved — Hyprfeed
   {%- elif filter == 'history' %}History — Hyprfeed
+  {%- elif filter == 'hidden' %}Hidden — Hyprfeed
   {%- else %}Hyprfeed{% endif -%}
 {% endblock %}
 {% block body %}
@@ -37,6 +38,10 @@
       <a class="navitem {{ 'is-active' if filter == 'history' and not active_sub }}" href="{{ url_for('main.index', filter='history') }}">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v4l2.5 2.5"/></svg>
         <span>History</span>
+      </a>
+      <a class="navitem {{ 'is-active' if filter == 'hidden' and not active_sub }}" href="{{ url_for('main.index', filter='hidden') }}">
+        <svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A9.8 9.8 0 0 1 12 5c5 0 8.6 4 9.8 6.2a1.7 1.7 0 0 1 0 1.6 13.2 13.2 0 0 1-2.6 3.2M6.6 6.6C4.3 8 2.9 10 2.2 11.2a1.7 1.7 0 0 0 0 1.6C3.4 15 7 19 12 19c1.5 0 2.9-.36 4.1-.94M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+        <span>Hidden</span>
       </a>
     </nav>
 
@@ -130,6 +135,7 @@
         {%- elif filter == 'unread' %}Unread
         {%- elif filter == 'saved' %}Saved
         {%- elif filter == 'history' %}History
+        {%- elif filter == 'hidden' %}Hidden
         {%- else %}All stories{% endif -%}
       </h2>
 
@@ -141,7 +147,7 @@
         <button class="iconbtn" id="refresh-btn" aria-label="Refresh feeds" title="Refresh feeds">
           <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 3.5V7h-3.5"/></svg>
         </button>
-        {% if filter not in ('saved', 'history') %}
+        {% if filter not in ('saved', 'history', 'hidden') %}
         <button class="iconbtn" id="readall-btn" aria-label="Mark all as read" title="Mark all as read"
                 {% if active_sub %}data-feed="{{ active_sub.feed_id }}"{% endif %}>
           <svg viewBox="0 0 24 24"><path d="m3.5 12.5 4 4L14 9M11 16.5l1.5 1.5L20 10.5"/></svg>
