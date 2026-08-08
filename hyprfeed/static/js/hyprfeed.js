@@ -829,28 +829,32 @@
     if (next) openEntry(next);
   }
 
+  function performHide(hideStory, onHidden) {
+    var hideId = parseInt(hideStory.getAttribute("data-id"), 10);
+    var hideFeed = parseInt(hideStory.getAttribute("data-feed"), 10);
+    var wasUnread = !hideStory.classList.contains("is-read");
+    api("/entries/" + hideId + "/hide").then(function () {
+      document.querySelectorAll('.story[data-id="' + hideId + '"]').forEach(function (el) {
+        el.classList.add("is-hidden");
+      });
+      if (onHidden) onHidden();
+      if (wasUnread) bumpUnread(hideFeed, -1);
+      toast("Story hidden", "Undo", function () {
+        api("/entries/" + hideId + "/hide", { hidden: false }).then(function () {
+          document.querySelectorAll('.story[data-id="' + hideId + '"]').forEach(function (el) {
+            el.classList.remove("is-hidden");
+          });
+          if (wasUnread) bumpUnread(hideFeed, 1);
+        }).catch(function (err) { toast(err.message); });
+      });
+    }).catch(function (err) { toast(err.message); });
+  }
+
   document.addEventListener("click", function (e) {
     var hideBtn = e.target.closest("[data-hide]");
     if (hideBtn) {
       e.stopPropagation();
-      var hideStory = hideBtn.closest(".story");
-      var hideId = parseInt(hideStory.getAttribute("data-id"), 10);
-      var hideFeed = parseInt(hideStory.getAttribute("data-feed"), 10);
-      var wasUnread = !hideStory.classList.contains("is-read");
-      api("/entries/" + hideId + "/hide").then(function () {
-        document.querySelectorAll('.story[data-id="' + hideId + '"]').forEach(function (el) {
-          el.classList.add("is-hidden");
-        });
-        if (wasUnread) bumpUnread(hideFeed, -1);
-        toast("Story hidden", "Undo", function () {
-          api("/entries/" + hideId + "/hide", { hidden: false }).then(function () {
-            document.querySelectorAll('.story[data-id="' + hideId + '"]').forEach(function (el) {
-              el.classList.remove("is-hidden");
-            });
-            if (wasUnread) bumpUnread(hideFeed, 1);
-          }).catch(function (err) { toast(err.message); });
-        });
-      }).catch(function (err) { toast(err.message); });
+      performHide(hideBtn.closest(".story"));
       return;
     }
     var star = e.target.closest("[data-star]");
@@ -1179,6 +1183,75 @@
     if (img.complete) classifyYtThumb(img);
   });
 
+  /* ————— Swipe left to hide (touch devices) ————— */
+  (function initSwipeHide() {
+    if (!window.matchMedia("(pointer: coarse)").matches) return;
+    var story = null, startX = 0, startY = 0, dx = 0;
+    var engaged = false, cancelled = false;
+
+    document.addEventListener("touchstart", function (e) {
+      var el = e.target.closest && e.target.closest(".story[data-id]");
+      if (!el || e.touches.length !== 1 || document.querySelector("dialog[open]")) {
+        story = null;
+        return;
+      }
+      story = el;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      dx = 0;
+      engaged = false;
+      cancelled = false;
+    }, { passive: true });
+
+    document.addEventListener("touchmove", function (e) {
+      if (!story || cancelled) return;
+      var t = e.touches[0];
+      dx = t.clientX - startX;
+      var dy = t.clientY - startY;
+      if (!engaged) {
+        // Axis lock: a mostly-vertical move is a scroll, leave it alone.
+        if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { cancelled = true; return; }
+        if (dx < -14 && Math.abs(dx) > Math.abs(dy)) {
+          engaged = true;
+          story.classList.add("is-swiping");
+          window.__hfCardSwipe = true;
+        } else {
+          return;
+        }
+      }
+      e.preventDefault();   // own the gesture: no scroll while sliding the card
+      var x = Math.min(0, dx);
+      story.style.transform = "translateX(" + x + "px)";
+      story.style.opacity = String(Math.max(0.3, 1 + x / (story.offsetWidth * 1.1)));
+    }, { passive: false });
+
+    document.addEventListener("touchend", function () {
+      window.__hfCardSwipe = false;
+      if (!story || !engaged) { story = null; return; }
+      var el = story;
+      story = null;
+      el.classList.remove("is-swiping");
+      var threshold = Math.min(120, el.offsetWidth * 0.35);
+      if (dx <= -threshold) {
+        el.classList.add("swipe-out");
+        el.style.transform = "translateX(-110%)";
+        el.style.opacity = "0";
+        setTimeout(function () {
+          performHide(el, function () {
+            el.classList.remove("swipe-out");
+            el.style.transform = "";
+            el.style.opacity = "";
+          });
+        }, 210);
+      } else {
+        el.classList.add("swipe-return");
+        el.style.transform = "";
+        el.style.opacity = "";
+        setTimeout(function () { el.classList.remove("swipe-return"); }, 300);
+      }
+    });
+  })();
+
   /* ————— Pull to refresh (touch devices) ————— */
   (function initPullToRefresh() {
     if (!window.matchMedia("(pointer: coarse)").matches) return;
@@ -1191,7 +1264,7 @@
     indicator.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 3.5V7h-3.5"/></svg>';
     document.body.appendChild(indicator);
 
-    var startY = null, pulling = false, armed = false, refreshing = false;
+    var startY = null, startX = null, pulling = false, armed = false, refreshing = false;
 
     function setTravel(px) {
       indicator.style.transform = "translateY(" + px + "px) rotate(" + px * 2.2 + "deg)";
@@ -1205,14 +1278,17 @@
       if (refreshing || window.scrollY > 0) return;
       if (document.querySelector("dialog[open]") || document.querySelector(".sidebar.is-open")) return;
       startY = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
       pulling = true;
       armed = false;
     }, { passive: true });
 
     document.addEventListener("touchmove", function (e) {
       if (!pulling || refreshing) return;
+      if (window.__hfCardSwipe) { armed = false; reset(); pulling = false; return; }
       var dy = e.touches[0].clientY - startY;
-      if (dy <= 0 || window.scrollY > 0) {
+      var dxp = e.touches[0].clientX - startX;
+      if (dy <= 0 || Math.abs(dxp) > dy || window.scrollY > 0) {
         armed = false;
         reset();
         return;
