@@ -1,10 +1,9 @@
-"""Parsed Release Notes + Changelog for the in-app About tab.
+"""Parsed Changelog for the in-app About tab.
 
-The canonical Markdown files at the repo root (``RELEASE_NOTES.md`` /
-``CHANGELOG.md``) are the single source of truth; this module parses them
-into version entries and renders their bodies to HTML. Editing the Markdown
-is the only step needed to update the About tab. Parsing is cached by file
-mtime, so dev edits appear without a restart.
+The canonical ``CHANGELOG.md`` at the repo root is the single source of
+truth; this module parses it into version entries and renders their bodies
+to HTML. Editing the Markdown is the only step needed to update the About
+tab. Parsing is cached by file mtime, so dev edits appear without a restart.
 """
 import re
 from dataclasses import dataclass
@@ -14,7 +13,6 @@ from pathlib import Path
 import markdown as md_lib
 
 _ROOT = Path(__file__).resolve().parent.parent
-_RELEASE_NOTES = _ROOT / "RELEASE_NOTES.md"
 _CHANGELOG = _ROOT / "CHANGELOG.md"
 
 _MD_EXT = ["extra", "sane_lists"]
@@ -103,10 +101,6 @@ def _cached(path: Path) -> list[Entry]:
     parsed = _parse(path)
     _cache[str(path)] = (mtime, parsed)
     return parsed
-
-
-def release_notes() -> list[Entry]:
-    return _cached(_RELEASE_NOTES)
 
 
 def changelog() -> list[Entry]:

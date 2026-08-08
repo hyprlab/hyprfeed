@@ -82,7 +82,6 @@ def create_app(config_class=Config) -> Flask:
         }
 
     from . import about_docs
-    app.jinja_env.globals["app_release_notes"] = about_docs.release_notes
     app.jinja_env.globals["app_changelog"] = about_docs.changelog
 
     # ---- Template filters ----

@@ -429,29 +429,13 @@
 
       <details class="about-details" open>
         <summary class="about-summary">
-          <h4>Release notes</h4>
-          <span>What's new, in plain English.</span>
-        </summary>
-        <ul class="release-list">
-          {% for e in app_release_notes() %}
-          <li>
-            <div class="rel-version">{{ e.version }}{% if e.is_latest %} <span class="chip">latest</span>{% endif %}</div>
-            <div class="rel-meta">{{ e.date_label }}{% if e.date_label and e.title %} — {% endif %}{{ e.title }}</div>
-            <div class="rel-body">{{ e.body_html|safe }}</div>
-          </li>
-          {% endfor %}
-        </ul>
-      </details>
-
-      <details class="about-details">
-        <summary class="about-summary">
           <h4>Changelog</h4>
           <span>Every change, in technical detail.</span>
         </summary>
         <ul class="release-list">
           {% for e in app_changelog() %}
           <li>
-            <div class="rel-version">{{ e.version }}</div>
+            <div class="rel-version">{{ e.version }}{% if e.is_latest %} <span class="chip">latest</span>{% endif %}</div>
             {% if e.date_label %}<div class="rel-meta">{{ e.date_label }}</div>{% endif %}
             <div class="rel-body">{{ e.body_html|safe }}</div>
           </li>

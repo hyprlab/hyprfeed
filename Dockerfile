@@ -10,7 +10,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY hyprfeed ./hyprfeed
-COPY run.py LICENSE CHANGELOG.md RELEASE_NOTES.md ./
+COPY run.py LICENSE CHANGELOG.md ./
 
 RUN useradd --create-home hyprfeed \
     && mkdir -p /data \
