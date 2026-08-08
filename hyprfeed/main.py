@@ -20,7 +20,7 @@ def retention_cap() -> int:
 bp = Blueprint("main", __name__)
 
 VIEWS = ("magazine", "cards", "list")
-FILTERS = ("all", "unread", "saved", "history", "hidden")
+FILTERS = ("all", "unread", "saved", "history", "skipped")
 
 
 def _subscribed_feed_ids():
@@ -35,8 +35,8 @@ def _hidden_sub():
 
 
 def _entries_query(feed_ids, filter_name):
-    if filter_name == "hidden":
-        # The hidden shelf: everything the user has tucked away, newest first,
+    if filter_name == "skipped":
+        # The skipped bin: everything the user has skipped, newest first,
         # until retention prunes the entries themselves.
         return (
             Entry.query.filter(Entry.feed_id.in_(feed_ids))
@@ -64,6 +64,8 @@ def _page_context():
     if view not in VIEWS:
         view = "magazine"
     filter_name = request.args.get("filter", "all")
+    if filter_name == "hidden":   # legacy links from before the rename
+        filter_name = "skipped"
     if filter_name not in FILTERS:
         filter_name = "all"
     feed_id = request.args.get("feed", type=int)
