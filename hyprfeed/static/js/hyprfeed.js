@@ -1237,11 +1237,29 @@
         el.style.transform = "translateX(-110%)";
         el.style.opacity = "0";
         setTimeout(function () {
-          performHide(el, function () {
-            el.classList.remove("swipe-out");
-            el.style.transform = "";
-            el.style.opacity = "";
+          // Collapse the vacated space so the cards below glide up before
+          // the element leaves the layout.
+          el.style.height = el.offsetHeight + "px";
+          el.style.overflow = "hidden";
+          el.classList.add("swipe-collapse");
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              el.style.height = "0px";
+              el.style.paddingTop = "0px";
+              el.style.paddingBottom = "0px";
+            });
           });
+          setTimeout(function () {
+            performHide(el, function () {
+              el.classList.remove("swipe-out", "swipe-collapse");
+              el.style.transform = "";
+              el.style.opacity = "";
+              el.style.height = "";
+              el.style.overflow = "";
+              el.style.paddingTop = "";
+              el.style.paddingBottom = "";
+            });
+          }, 270);
         }, 210);
       } else {
         el.classList.add("swipe-return");
