@@ -168,6 +168,12 @@ def _migrate(app: Flask) -> None:
         db.session.commit()
         app.logger.info("migrated: added subscriptions.position")
 
+    sub_columns = {c["name"] for c in inspect(db.engine).get_columns("subscriptions")}
+    if "group_id" not in sub_columns:
+        db.session.execute(text("ALTER TABLE subscriptions ADD COLUMN group_id INTEGER"))
+        db.session.commit()
+        app.logger.info("migrated: added subscriptions.group_id")
+
     # Sweep read/star marks orphaned by pruning before cleanup existed.
     swept = 0
     for table in ("read_marks", "stars", "hidden_entries"):
