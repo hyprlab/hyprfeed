@@ -61,27 +61,29 @@
     </div>
 
     <ul class="feed-list">
-      {{ feed_items(site_subs) }}
+      {% for kind, item in sidebar_items %}
+      {% if kind == 'group' %}
+      <li class="sidebar-group {{ 'is-collapsed' if item.collapsed }}" data-group="{{ item.id }}">
+        <button type="button" class="grouphead" aria-expanded="{{ 'false' if item.collapsed else 'true' }}">
+          <svg class="chev" viewBox="0 0 24 24"><path d="m7 9.5 5 5 5-5"/></svg>
+          <span class="grouphead-name">{{ item.name }}</span>
+          {% if group_unread.get(item.id) %}<span class="count">{{ group_unread[item.id] }}</span>{% endif %}
+        </button>
+        <ul class="feed-list feed-list--group">
+          {{ feed_items(group_members.get(item.id, [])) }}
+          {% if not group_members.get(item.id) %}
+          <li class="feed-list-empty">Empty group</li>
+          {% endif %}
+        </ul>
+      </li>
+      {% else %}
+      {{ feed_items([item]) }}
+      {% endif %}
+      {% endfor %}
       {% if not subs %}
       <li class="feed-list-empty">Nothing yet — add a site you love.</li>
       {% endif %}
     </ul>
-
-    {% for group in groups %}
-    <div class="sidebar-group {{ 'is-collapsed' if group.collapsed }}" data-group="{{ group.id }}">
-      <button type="button" class="grouphead" aria-expanded="{{ 'false' if group.collapsed else 'true' }}">
-        <svg class="chev" viewBox="0 0 24 24"><path d="m7 9.5 5 5 5-5"/></svg>
-        <span class="grouphead-name">{{ group.name }}</span>
-        {% if group_unread.get(group.id) %}<span class="count">{{ group_unread[group.id] }}</span>{% endif %}
-      </button>
-      <ul class="feed-list feed-list--group">
-        {{ feed_items(group_members.get(group.id, [])) }}
-        {% if not group_members.get(group.id) %}
-        <li class="feed-list-empty">Empty group</li>
-        {% endif %}
-      </ul>
-    </div>
-    {% endfor %}
 
     {% if youtube_subs %}
     <div class="sidebar-label">
