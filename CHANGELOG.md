@@ -6,6 +6,15 @@ All notable changes to Hyprfeed are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- Settings modal fills the whole screen on phones; the tab bar stays on one
+  swipeable row and Admin fields stack vertically
+- The About tab shows only the changelog (open by default, with a "latest"
+  chip); the separate release notes were retired
+
+### Removed
+- `RELEASE_NOTES.md` — the changelog is the single record of changes
+
 ### Fixed
 - Shorts backdrops actually blur now: many channels serve Shorts thumbnails
   as 4:3 files with pillarbox bars baked in, so the blur layer was sampling
