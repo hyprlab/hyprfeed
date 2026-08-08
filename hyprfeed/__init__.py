@@ -11,7 +11,7 @@ from flask_login import LoginManager
 from .config import Config
 from .models import User, db, utcnow
 
-__version__ = "1.7.3"
+__version__ = "1.7.4"
 
 logging.basicConfig(level=logging.INFO)
 

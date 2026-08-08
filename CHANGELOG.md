@@ -4,6 +4,13 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.7.4] — 2026-08-08
+
+### Added
+- Mark-all-as-skipped toolbar button beside mark-all-as-read: skips every
+  story in the current feed (or all feeds) behind a scope-aware confirm;
+  everything lands in the Skipped bin, individually restorable
+
 ## [1.7.3] — 2026-08-08
 
 ### Changed
@@ -268,6 +275,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.7.4]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.4
 [1.7.3]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.3
 [1.7.2]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.2
 [1.7.1]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.1
