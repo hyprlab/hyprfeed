@@ -89,7 +89,11 @@
   /* ————— Modals ————— */
   function switchSettingsTab(name) {
     document.querySelectorAll(".tab").forEach(function (t) {
-      t.classList.toggle("is-active", t.getAttribute("data-tab") === name);
+      var active = t.getAttribute("data-tab") === name;
+      t.classList.toggle("is-active", active);
+      if (active && t.scrollIntoView) {
+        t.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+      }
     });
     document.querySelectorAll(".tabpane").forEach(function (pane) {
       pane.classList.toggle("is-active", pane.getAttribute("data-pane") === name);

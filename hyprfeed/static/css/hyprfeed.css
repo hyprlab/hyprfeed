@@ -484,11 +484,16 @@ html[data-theme="dark"] .icon-moon { display: none; }
   flex: 1; min-height: 0;
   padding: 14px 20px 0;
 }
-.settings-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; flex: none; }
+.settings-tabs {
+  display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; flex: none;
+  overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.settings-tabs::-webkit-scrollbar { display: none; }
 .tab {
   padding: 8px 12px 10px; font-size: 13.5px; font-weight: 600; color: var(--muted);
   border-bottom: 2px solid transparent; margin-bottom: -1px;
   transition: color .15s, border-color .15s;
+  white-space: nowrap; flex: none;
 }
 .tab:hover { color: var(--ink); }
 .tab.is-active { color: var(--ink); border-bottom-color: var(--volt); }
