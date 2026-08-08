@@ -23,10 +23,22 @@
     });
   }
 
-  var toastTimer;
+  var toastTimer, toastLeaveTimer;
+  function dismissToast(el) {
+    if (el.hidden) return;
+    el.classList.add("is-leaving");
+    clearTimeout(toastLeaveTimer);
+    toastLeaveTimer = setTimeout(function () {
+      el.hidden = true;
+      el.classList.remove("is-leaving");
+    }, 260);
+  }
   function toast(message, actionLabel, actionFn) {
     var el = document.getElementById("toast");
     if (!el) return;
+    clearTimeout(toastTimer);
+    clearTimeout(toastLeaveTimer);
+    el.classList.remove("is-leaving");
     el.textContent = message;
     if (actionLabel) {
       var action = document.createElement("button");
@@ -34,14 +46,13 @@
       action.textContent = actionLabel;
       action.addEventListener("click", function () {
         clearTimeout(toastTimer);
-        el.hidden = true;
+        dismissToast(el);
         actionFn();
       });
       el.appendChild(action);
     }
     el.hidden = false;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { el.hidden = true; }, actionLabel ? 5000 : 2600);
+    toastTimer = setTimeout(function () { dismissToast(el); }, actionLabel ? 5000 : 2600);
   }
 
   /* ————— Theme ————— */

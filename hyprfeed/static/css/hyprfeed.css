@@ -922,6 +922,8 @@ html { overscroll-behavior-y: contain; }  /* keep the browser's native PTR out o
   animation: toast-in .25s ease both;
 }
 @keyframes toast-in { from { transform: translate(-50%, 10px); opacity: 0; } }
+.toast.is-leaving { animation: toast-out .25s ease forwards; }
+@keyframes toast-out { to { transform: translate(-50%, 16px); opacity: 0; } }
 .toast-action {
   margin-left: 12px; color: var(--volt); font-weight: 750; font-size: 13px;
   text-transform: uppercase; letter-spacing: .05em;
