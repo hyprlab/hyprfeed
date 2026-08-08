@@ -818,6 +818,20 @@ html[data-theme="light"] .tech-tile-name { color: #000; }
 #reader-star.is-starred { color: var(--volt-ink); background: var(--volt); }
 #reader-star.is-starred svg { fill: currentColor; }
 #reader-read.is-read { color: var(--volt-ink); background: var(--volt); }
+#reader-copy { position: relative; }
+#reader-copy.show-tip::after {
+  content: "Copied";
+  position: absolute; top: calc(100% + 8px); left: 50%;
+  background: var(--ink); color: var(--bg);
+  font-size: 11.5px; font-weight: 650; letter-spacing: .01em;
+  padding: 4px 9px; border-radius: 6px; white-space: nowrap;
+  pointer-events: none; z-index: 10;
+  animation: tip-in .15s ease both;
+}
+@keyframes tip-in {
+  from { opacity: 0; transform: translate(-50%, -4px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
 
 .prose { font-size: 16.5px; line-height: 1.72; }
 .prose p { margin: 0 0 1.15em; }
