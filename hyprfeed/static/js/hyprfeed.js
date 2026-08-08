@@ -100,6 +100,18 @@
     });
   }
 
+  var tabsBar = document.querySelector(".settings-tabs");
+  function updateTabFades() {
+    if (!tabsBar) return;
+    var max = tabsBar.scrollWidth - tabsBar.clientWidth;
+    tabsBar.classList.toggle("can-scroll-left", tabsBar.scrollLeft > 2);
+    tabsBar.classList.toggle("can-scroll-right", max - tabsBar.scrollLeft > 2);
+  }
+  if (tabsBar) {
+    tabsBar.addEventListener("scroll", updateTabFades, { passive: true });
+    window.addEventListener("resize", updateTabFades);
+  }
+
   document.querySelectorAll("[data-open]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var dialog = document.getElementById(btn.getAttribute("data-open"));
@@ -107,6 +119,7 @@
       var tab = btn.getAttribute("data-tab-target");
       if (tab) switchSettingsTab(tab);
       dialog.showModal();
+      if (dialog.id === "settings-modal") updateTabFades();
     });
   });
   document.querySelectorAll("dialog").forEach(function (dialog) {
