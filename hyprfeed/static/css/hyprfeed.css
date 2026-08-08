@@ -581,6 +581,10 @@ html[data-theme="dark"] .icon-moon { display: none; }
 .adduser .check { font-size: 13.5px; }
 .adduser .btn { justify-self: end; padding: 8px 16px; }
 .adduser + .form-error { margin-bottom: 12px; }
+@media (max-width: 700px) {
+  /* Phones: admin fields stack instead of sitting side by side. */
+  .inst-grid, .adduser { grid-template-columns: 1fr; }
+}
 .manage-item .avatar { width: 30px; height: 30px; font-size: 13px; }
 
 /* ————— About tab ————— */
