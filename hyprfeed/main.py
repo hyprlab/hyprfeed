@@ -119,8 +119,20 @@ def _page_context():
     valid_group_ids = set(group_members)
     ungrouped = [s for s in subs if s.group_id not in valid_group_ids]
 
+    # Sidebar top level: ungrouped site feeds and groups interleaved by the
+    # shared position sequence.
+    def _pos(obj):
+        return obj.position if obj.position is not None else 1_000_000
+
+    sidebar_items = sorted(
+        [("group", g) for g in groups]
+        + [("sub", s) for s in ungrouped if not s.feed.is_youtube],
+        key=lambda pair: _pos(pair[1]),
+    )
+
     return {
         "feed_titles": {s.feed_id: s.display_title for s in subs},
+        "sidebar_items": sidebar_items,
         "site_subs": [s for s in ungrouped if not s.feed.is_youtube],
         "youtube_subs": [s for s in ungrouped if s.feed.is_youtube],
         "groups": groups,
@@ -449,20 +461,22 @@ def feeds_organize():
         return jsonify(error="Bad layout payload."), 400
     subs = {s.feed_id: s for s in Subscription.query.filter_by(user_id=current_user.id)}
     groups = {g.id: g for g in FeedGroup.query.filter_by(user_id=current_user.id)}
-    feed_pos = group_pos = 0
+    # One shared sequence for groups and feeds so the sidebar can interleave
+    # groups between ungrouped feeds exactly as arranged.
+    seq = 0
     for item in layout[:1000]:
         if not isinstance(item, dict):
             continue
         if item.get("type") == "group":
             group = groups.get(item.get("id"))
             if group:
-                group.position = group_pos
-                group_pos += 1
+                group.position = seq
+                seq += 1
         elif item.get("type") == "feed":
             sub = subs.get(item.get("id"))
             if sub:
-                sub.position = feed_pos
-                feed_pos += 1
+                sub.position = seq
+                seq += 1
                 # Membership is explicit — containment in the UI, never
                 # inferred from adjacency.
                 gid = item.get("group")
