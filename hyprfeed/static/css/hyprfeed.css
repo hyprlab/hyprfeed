@@ -292,11 +292,16 @@ html[data-theme="dark"] .icon-moon { display: none; }
    image uncropped over a blurred, zoomed copy of itself instead of bars. */
 .thumb--blur .thumb-bg {
   position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; transform: scale(1.2);
-  filter: blur(18px) saturate(1.25) brightness(.92);
+  object-fit: cover;
+  /* Zoom well past any baked-in pillarbox bars so the blur samples real
+     content — blurred black bars would otherwise still read as black. */
+  transform: scale(2.2);
+  filter: blur(24px) saturate(1.3) brightness(.9);
 }
 .thumb--blur img:not(.thumb-bg) {
-  position: relative; z-index: 1; object-fit: contain;
+  position: relative; z-index: 1; display: block;
+  height: 100%; width: auto; aspect-ratio: 9 / 16; margin: 0 auto;
+  object-fit: cover;   /* crops baked side bars out of 4:3 Shorts files */
 }
 /* Regular YouTube videos fill the frame (cover). Their feed thumbnails are
    often 4:3 hqdefaults with baked-in letterbox bars — JS marks those
