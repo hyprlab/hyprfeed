@@ -430,11 +430,18 @@ html[data-theme="dark"] .icon-moon { display: none; }
   color: var(--muted); font-size: 13px; font-weight: 700;
   box-shadow: var(--shadow-2); pointer-events: none;
   opacity: 0; transform: translate(0, -50%);
-  transition: transform .24s cubic-bezier(.2, .8, .3, 1), opacity .2s ease,
-              background .12s, color .12s, border-color .12s;
+  /* No transform/opacity transition at rest: the off-screen start position
+     must SNAP into place, or the entry animation retargets mid-flight and
+     the pill just pops in. */
+  transition: background .12s, color .12s, border-color .12s;
 }
 .swipe-pill.from-left { transform: translate(-170%, -50%); }
 .swipe-pill.from-right { transform: translate(170%, -50%); }
+.swipe-pill.is-showing,
+.swipe-pill.is-leaving {
+  transition: transform .24s cubic-bezier(.2, .8, .3, 1), opacity .2s ease,
+              background .12s, color .12s, border-color .12s;
+}
 .swipe-pill.is-showing { transform: translate(0, -50%); opacity: 1; }
 .swipe-pill.is-leaving { transform: translate(0, calc(-50% + 18px)); opacity: 0; }
 .swipe-pill svg { width: 16px; height: 16px; }
