@@ -333,7 +333,7 @@
         {% for sub in group_members.get(group.id, []) %}{{ manage_feed(sub, grouped=true) }}{% endfor %}
         {% endfor %}
       </ul>
-      <p class="hint">Drag feeds under a group header to file them; drag a group to move it and its feeds.</p>
+      <p class="hint">Drop a feed onto a group to file it inside; drag it above the group to take it out. Dragging a group moves it together with its feeds.</p>
       {% else %}
       <p class="hint">You're not following anything yet.</p>
       {% endif %}

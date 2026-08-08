@@ -347,6 +347,7 @@
       });
       li.addEventListener("dragend", function () {
         li.classList.remove("is-dragging");
+        clearDropTargets();
         var anchor = li;
         draggedMembers.forEach(function (m) {
           anchor.after(m);
@@ -360,13 +361,36 @@
       });
     });
 
+    function clearDropTargets() {
+      feedsManage.querySelectorAll(".is-drop-target").forEach(function (el) {
+        el.classList.remove("is-drop-target");
+      });
+    }
+
     feedsManage.addEventListener("dragover", function (e) {
       if (!draggedItem) return;
       e.preventDefault();
+      clearDropTargets();
       var items = Array.prototype.filter.call(
         feedsManage.querySelectorAll(".manage-item:not(.is-dragging):not(.is-drag-hidden)"),
         function () { return true; }
       );
+      var draggingFeed = !draggedItem.classList.contains("manage-group");
+
+      // A feed hovering anywhere over a group header files INTO that group.
+      if (draggingFeed) {
+        for (var h = 0; h < items.length; h++) {
+          if (!items[h].classList.contains("manage-group")) continue;
+          var hr = items[h].getBoundingClientRect();
+          if (e.clientY >= hr.top && e.clientY <= hr.bottom) {
+            items[h].classList.add("is-drop-target");
+            items[h].after(draggedItem);
+            refreshIndent();
+            return;
+          }
+        }
+      }
+
       var next = null;
       for (var i = 0; i < items.length; i++) {
         var rect = items[i].getBoundingClientRect();
@@ -374,6 +398,7 @@
       }
       if (next) feedsManage.insertBefore(draggedItem, next);
       else feedsManage.appendChild(draggedItem);
+      refreshIndent();
     });
 
     // Sort feeds alphabetically within each section, keeping groups in place.
