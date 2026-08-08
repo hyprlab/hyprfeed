@@ -20,7 +20,7 @@ def retention_cap() -> int:
 bp = Blueprint("main", __name__)
 
 VIEWS = ("magazine", "cards", "list")
-FILTERS = ("all", "unread", "saved", "history", "skipped")
+FILTERS = ("all", "saved", "history", "skipped")
 
 
 def _subscribed_feed_ids():
@@ -45,10 +45,7 @@ def _entries_query(feed_ids, filter_name):
             .order_by(Hidden.created_at.desc())
         )
     q = Entry.query.filter(Entry.feed_id.in_(feed_ids), Entry.id.not_in(_hidden_sub()))
-    if filter_name == "unread":
-        read = db.session.query(ReadMark.entry_id).filter(ReadMark.user_id == current_user.id)
-        q = q.filter(Entry.id.not_in(read))
-    elif filter_name == "saved":
+    if filter_name == "saved":
         starred = db.session.query(Star.entry_id).filter(Star.user_id == current_user.id)
         q = q.filter(Entry.id.in_(starred))
     elif filter_name == "history":
@@ -66,6 +63,8 @@ def _page_context():
     filter_name = request.args.get("filter", "all")
     if filter_name == "hidden":   # legacy links from before the rename
         filter_name = "skipped"
+    if filter_name == "unread":   # merged into All stories
+        filter_name = "all"
     if filter_name not in FILTERS:
         filter_name = "all"
     feed_id = request.args.get("feed", type=int)

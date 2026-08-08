@@ -740,14 +740,15 @@
       if (value <= 0) badge.remove();
       else badge.textContent = value;
     });
-    var unreadNav = document.querySelector('.nav-primary a[href*="filter=unread"]');
-    if (unreadNav) {
-      var total = unreadNav.querySelector(".count");
+    var allNav = document.getElementById("nav-all");
+    if (allNav) {
+      var total = allNav.querySelector(".count");
       if (!total && delta > 0) {
         total = document.createElement("span");
         total.className = "count count--volt";
+        total.id = "total-unread";
         total.textContent = "0";
-        unreadNav.appendChild(total);
+        allNav.appendChild(total);
       }
       if (total) {
         var t = (parseInt(total.textContent, 10) || 0) + delta;
@@ -911,20 +912,6 @@
   });
 
   if (reader) {
-    reader.addEventListener("close", function () {
-      // In the Unread view, stories read in the reader leave the list when
-      // it closes. (All stories keeps them greyed out.)
-      var root = document.getElementById("entries-root");
-      if (!root || root.getAttribute("data-filter") !== "unread") return;
-      var dismissed = 0;
-      document.querySelectorAll(".story.is-read:not(.is-hidden)").forEach(function (el) {
-        el.classList.add("is-hidden");
-        dismissed++;
-      });
-      if (dismissed && !document.querySelector(".story:not(.is-hidden)")) {
-        location.reload();   // empty now — show the "All caught up" state
-      }
-    });
     document.getElementById("reader-prev").addEventListener("click", function () { openSibling(-1); });
     document.getElementById("reader-next").addEventListener("click", function () { openSibling(1); });
     var copyTipTimer = null;
@@ -1383,17 +1370,9 @@
           performHide(el, function () { resetSwipeStyles(el); });
         });
       } else if (dir > 0 && dx >= threshold) {
-        // Save + mark read.
-        var root = document.getElementById("entries-root");
-        if (root && root.getAttribute("data-filter") === "unread") {
-          // Read stories leave the Unread view.
-          slideOutAndCollapse(el, 1, function () {
-            performSaveRead(el, function () { resetSwipeStyles(el); });
-          });
-        } else {
-          springBack(el);
-          performSaveRead(el);
-        }
+        // Save + mark read; the card stays in place, greyed and starred.
+        springBack(el);
+        performSaveRead(el);
       } else {
         springBack(el);
       }
