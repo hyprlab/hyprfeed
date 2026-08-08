@@ -466,7 +466,7 @@ html[data-theme="dark"] .icon-moon { display: none; }
 /* Fixed height: switching tabs must not resize the modal — panes scroll inside. */
 #settings-modal[open] {
   display: flex; flex-direction: column;
-  height: min(660px, calc(100dvh - 48px));
+  height: 80vh;
 }
 #settings-modal .modal-head { flex: none; }
 @media (max-width: 700px) {
