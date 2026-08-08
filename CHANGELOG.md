@@ -4,15 +4,17 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.7.0] — 2026-08-08
 
 ### Added
 - Feed groups: create named groups in Settings → Reading & Feeds and organize
-  them by drag and drop — a feed belongs to the group header above it, and
-  dragging a header moves the whole group. Groups render as
-  expandable/collapsible sidebar sections with rolled-up unread counts, and
-  the collapsed state is remembered per user. Deleting a group keeps its
-  feeds. A→Z/Z→A sorting now sorts within each group
+  everything by drag and drop. Drop a feed onto a group to file it (nested
+  feeds show indented under a tree rail); groups are sealed containers, so
+  moving one carries its feeds and can never capture neighbors. Groups render
+  as expandable/collapsible sidebar sections with rolled-up unread counts and
+  per-user remembered collapse state, and can be ordered anywhere between
+  ungrouped feeds — the sidebar and the settings list share one interleaved
+  order. Deleting a group keeps its feeds; A→Z/Z→A sorts within each section
 
 ### Changed
 - Desktop settings modal grows to 80vh
@@ -228,6 +230,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.7.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.0
 [1.6.2]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.6.2
 [1.6.1]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.6.1
 [1.6.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.6.0
