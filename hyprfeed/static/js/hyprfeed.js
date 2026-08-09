@@ -52,7 +52,7 @@
       el.appendChild(action);
     }
     el.hidden = false;
-    toastTimer = setTimeout(function () { dismissToast(el); }, actionLabel ? 5000 : 2600);
+    toastTimer = setTimeout(function () { dismissToast(el); }, actionLabel ? 3500 : 2600);
   }
 
   /* ————— Theme ————— */
