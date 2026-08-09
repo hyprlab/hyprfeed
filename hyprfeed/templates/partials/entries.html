@@ -54,21 +54,22 @@
 {% elif not entries and page == 1 %}
 
   <div class="empty">
+    {% set here = ' in ' ~ active_sub.display_title if active_sub else '' %}
     {% if filter == 'unread' %}
       <h2 class="empty-title">All caught up</h2>
-      <p class="empty-text">No unread stories. Enjoy the quiet, or refresh to check for new ones.</p>
+      <p class="empty-text">No unread stories{{ here }}. Enjoy the quiet, or refresh to check for new ones.</p>
     {% elif filter == 'saved' %}
-      <h2 class="empty-title">Nothing saved yet</h2>
-      <p class="empty-text">Tap the bookmark on any story to keep it here.</p>
+      <h2 class="empty-title">Nothing saved{{ ' here' if active_sub else ' yet' }}</h2>
+      <p class="empty-text">Tap the bookmark on any story{{ here }} to keep it here.</p>
     {% elif filter == 'history' %}
-      <h2 class="empty-title">No history yet</h2>
-      <p class="empty-text">Stories you've read will appear here, most recent first.</p>
+      <h2 class="empty-title">No history{{ ' here' if active_sub else ' yet' }}</h2>
+      <p class="empty-text">Stories you've read{{ here }} will appear here, most recent first.</p>
     {% elif filter == 'skipped' %}
-      <h2 class="empty-title">Nothing skipped</h2>
-      <p class="empty-text">Stories you skip collect here until they age out. Tap the restore arrow on any of them to bring one back.</p>
+      <h2 class="empty-title">Nothing skipped{{ ' here' if active_sub else '' }}</h2>
+      <p class="empty-text">Stories you skip{{ here }} collect here until they age out. Tap the restore arrow on any of them to bring one back.</p>
     {% else %}
       <h2 class="empty-title">No stories yet</h2>
-      <p class="empty-text">These feeds haven't published anything we can show. Try refreshing.</p>
+      <p class="empty-text">{{ 'This feed hasn' if active_sub else "These feeds haven" }}'t published anything we can show. Try refreshing.</p>
     {% endif %}
   </div>
 
