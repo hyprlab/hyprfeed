@@ -552,6 +552,17 @@ def entry_detail(entry_id):
     if current_user.mark_read_on_open and not was_read:
         _set_read(entry.id, True)
         auto_marked = True
+    elif was_read:
+        # Re-opening an already-read story: clear any skip (read-and-skipped
+        # is contradictory) and refresh its read time so History — which is
+        # ordered by most recently read — surfaces it at the top.
+        mark = db.session.get(ReadMark, (current_user.id, entry.id))
+        if mark:
+            mark.read_at = utcnow()
+        skip = db.session.get(Hidden, (current_user.id, entry.id))
+        if skip:
+            db.session.delete(skip)
+        db.session.commit()
     sub = Subscription.query.filter_by(user_id=current_user.id, feed_id=entry.feed_id).first()
     return jsonify(
         id=entry.id,
