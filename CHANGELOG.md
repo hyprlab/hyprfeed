@@ -4,6 +4,11 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.7.5] — 2026-08-09
+
+### Changed
+- Undo toasts dismiss after 3.5s instead of 5s
+
 ## [1.7.4] — 2026-08-08
 
 ### Added
@@ -275,6 +280,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.7.5]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.5
 [1.7.4]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.4
 [1.7.3]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.3
 [1.7.2]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.7.2
