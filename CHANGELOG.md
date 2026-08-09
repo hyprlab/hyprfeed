@@ -4,6 +4,14 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- Reading a skipped story un-skips it: it leaves the Skipped bin when the
+  reader closes and lands in History (and All stories, greyed). Mark-all-read
+  no longer touches skipped stories, and the unread badge stays put while
+  reading from the Skipped view since those stories were never counted
+
 ## [1.8.0] — 2026-08-09
 
 ### Added

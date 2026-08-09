@@ -581,6 +581,12 @@ def _set_read(entry_id: int, read: bool) -> None:
         db.session.add(ReadMark(user_id=current_user.id, entry_id=entry_id))
     elif not read and mark:
         db.session.delete(mark)
+    if read:
+        # Reading a skipped story un-skips it: you engaged with it after all,
+        # so it belongs in History rather than the Skipped bin.
+        skip = db.session.get(Hidden, (current_user.id, entry_id))
+        if skip:
+            db.session.delete(skip)
     db.session.commit()
 
 
@@ -648,7 +654,9 @@ def read_all():
     feed_ids = [feed_id] if feed_id else _subscribed_feed_ids()
     feed_ids = [f for f in feed_ids if f in _subscribed_feed_ids()]
     read_sub = db.session.query(ReadMark.entry_id).filter(ReadMark.user_id == current_user.id)
+    # Skipped stories stay out of it — bulk-reading shouldn't resurrect them.
     unread = db.session.query(Entry.id).filter(
+        Entry.id.not_in(_hidden_sub()),
         Entry.feed_id.in_(feed_ids), Entry.id.not_in(read_sub)
     )
     now = utcnow()

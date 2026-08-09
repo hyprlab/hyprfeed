@@ -791,6 +791,11 @@
     }
   }
 
+  function inSkippedView() {
+    var root = document.getElementById("entries-root");
+    return !!root && root.getAttribute("data-filter") === "skipped";
+  }
+
   function setReaderReadState(read) {
     currentRead = read;
     var btn = document.getElementById("reader-read");
@@ -811,7 +816,7 @@
       .then(function (data) {
         currentEntryId = data.id;
         currentFeedId = data.feed_id;
-        if (data.auto_marked) bumpUnread(data.feed_id, -1);
+        if (data.auto_marked && !inSkippedView()) bumpUnread(data.feed_id, -1);
         setReaderReadState(data.read);
         var readerFeed = document.getElementById("reader-feed");
         readerFeed.textContent = data.feed;
@@ -946,10 +951,11 @@
 
   if (reader) {
     reader.addEventListener("close", function () {
-      // In the Unread view, stories read in the reader leave the list when
-      // it closes. (All stories keeps them greyed out.)
+      // Stories read in the reader leave the Unread list (they're read) and
+      // the Skipped list (reading them un-skipped them) once it closes.
       var root = document.getElementById("entries-root");
-      if (!root || root.getAttribute("data-filter") !== "unread") return;
+      var f = root && root.getAttribute("data-filter");
+      if (f !== "unread" && f !== "skipped") return;
       var dismissed = 0;
       document.querySelectorAll(".story.is-read:not(.is-hidden)").forEach(function (el) {
         el.classList.add("is-hidden");
@@ -979,7 +985,7 @@
       api("/entries/" + currentEntryId + "/read", { read: next }).then(function () {
         setReaderReadState(next);
         setCardRead(currentEntryId, next);
-        bumpUnread(currentFeedId, next ? -1 : 1);
+        if (!inSkippedView()) bumpUnread(currentFeedId, next ? -1 : 1);
         toast(next ? "Marked as read" : "Marked as unread");
       }).catch(function (err) { toast(err.message); });
     });
@@ -1262,7 +1268,7 @@
         var starBtn = el.querySelector("[data-star]");
         if (starBtn) starBtn.classList.add("is-starred");
       });
-      if (wasUnread) bumpUnread(feedId, -1);
+      if (wasUnread && !inSkippedView()) bumpUnread(feedId, -1);
       if (onDone) onDone();
       toast("Saved", "Undo", function () {
         Promise.all([
@@ -1274,7 +1280,7 @@
             var starBtn = el.querySelector("[data-star]");
             if (starBtn) starBtn.classList.remove("is-starred");
           });
-          if (wasUnread) bumpUnread(feedId, 1);
+          if (wasUnread && !inSkippedView()) bumpUnread(feedId, 1);
         }).catch(function (err) { toast(err.message); });
       });
     }).catch(function (err) { toast(err.message); });
