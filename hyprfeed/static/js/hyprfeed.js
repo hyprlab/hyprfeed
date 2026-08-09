@@ -791,6 +791,8 @@
     }
   }
 
+  var readInReader = {};   // entry ids read/opened-as-read in this session
+
   function inSkippedView() {
     var root = document.getElementById("entries-root");
     return !!root && root.getAttribute("data-filter") === "skipped";
@@ -817,6 +819,8 @@
         currentEntryId = data.id;
         currentFeedId = data.feed_id;
         if (data.auto_marked && !inSkippedView()) bumpUnread(data.feed_id, -1);
+        if (data.read) readInReader[data.id] = true;
+        else delete readInReader[data.id];
         setReaderReadState(data.read);
         var readerFeed = document.getElementById("reader-feed");
         readerFeed.textContent = data.feed;
@@ -953,13 +957,19 @@
     reader.addEventListener("close", function () {
       // Stories read in the reader leave the Unread list (they're read) and
       // the Skipped list (reading them un-skipped them) once it closes.
+      // Only stories touched in this session — the Skipped bin can hold
+      // already-read stories that were never opened.
       var root = document.getElementById("entries-root");
       var f = root && root.getAttribute("data-filter");
+      var touched = Object.keys(readInReader);
+      readInReader = {};
       if (f !== "unread" && f !== "skipped") return;
       var dismissed = 0;
-      document.querySelectorAll(".story.is-read:not(.is-hidden)").forEach(function (el) {
-        el.classList.add("is-hidden");
-        dismissed++;
+      touched.forEach(function (id) {
+        document.querySelectorAll('.story[data-id="' + id + '"]:not(.is-hidden)').forEach(function (el) {
+          el.classList.add("is-hidden");
+          dismissed++;
+        });
       });
       if (dismissed && !document.querySelector(".story:not(.is-hidden)")) {
         location.reload();   // empty now — show the "All caught up" state
@@ -985,6 +995,8 @@
       api("/entries/" + currentEntryId + "/read", { read: next }).then(function () {
         setReaderReadState(next);
         setCardRead(currentEntryId, next);
+        if (next) readInReader[currentEntryId] = true;
+        else delete readInReader[currentEntryId];
         if (!inSkippedView()) bumpUnread(currentFeedId, next ? -1 : 1);
         toast(next ? "Marked as read" : "Marked as unread");
       }).catch(function (err) { toast(err.message); });

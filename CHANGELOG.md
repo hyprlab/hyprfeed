@@ -8,9 +8,15 @@ All notable changes to Hyprfeed are documented here. The format follows
 
 ### Changed
 - Reading a skipped story un-skips it: it leaves the Skipped bin when the
-  reader closes and lands in History (and All stories, greyed). Mark-all-read
-  no longer touches skipped stories, and the unread badge stays put while
-  reading from the Skipped view since those stories were never counted
+  reader closes and lands at the top of History (and All stories, greyed).
+  This holds whether the story was unread or had been read before skipping,
+  and re-reading refreshes its position in History. Mark-all-read no longer
+  touches skipped stories, and the unread badge stays put while reading from
+  the Skipped view since those stories were never counted
+
+### Fixed
+- Closing the reader in the Skipped view only dismisses the stories actually
+  opened, instead of every read story in the bin
 
 ## [1.8.0] — 2026-08-09
 
