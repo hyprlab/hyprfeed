@@ -646,6 +646,28 @@
     });
   }
 
+  /* ————— Filter menu ————— */
+  var filterMenu = document.getElementById("filter-menu");
+  if (filterMenu) {
+    var filterBtn = document.getElementById("filter-btn");
+    var filterPop = filterMenu.querySelector(".filterpop");
+    function setFilterOpen(open) {
+      filterMenu.classList.toggle("is-open", open);
+      filterBtn.setAttribute("aria-expanded", String(open));
+      filterPop.hidden = !open;
+    }
+    filterBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setFilterOpen(filterPop.hidden);
+    });
+    document.addEventListener("click", function (e) {
+      if (!filterMenu.contains(e.target)) setFilterOpen(false);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !filterPop.hidden) setFilterOpen(false);
+    });
+  }
+
   /* ————— Topbar actions ————— */
   var refreshBtn = document.getElementById("refresh-btn");
   if (refreshBtn) {

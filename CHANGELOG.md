@@ -4,6 +4,14 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- Filter menu in the topbar beside the view switcher: narrow any feed to its
+  Unread, Saved, Skipped, or History stories, and switch shelves the same way
+  at the top level. The active narrowing shows as a chip beside the feed name,
+  and view switching keeps both the feed and the filter
+
 ## [1.7.5] — 2026-08-09
 
 ### Changed
