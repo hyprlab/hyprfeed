@@ -993,6 +993,7 @@
       if (!dismissed) return;
       var feedParam = root.getAttribute("data-feed");
       var href = "/?filter=history" + (feedParam ? "&feed=" + feedParam : "");
+      if (dismissed === 1 && touched.length === 1) href += "&open=" + touched[0];
       var msg = dismissed === 1
         ? "Moved to History"
         : dismissed + " stories moved to History";
@@ -1045,6 +1046,17 @@
       if (e.key === "j" || e.key === "ArrowRight") openSibling(1);
       if (e.key === "k" || e.key === "ArrowLeft") openSibling(-1);
     });
+
+    // Deep link: ?open=<id> opens that story straight into the reader
+    // (used by the "Moved to History" toast's View link).
+    var openParams = new URLSearchParams(location.search);
+    var openId = openParams.get("open");
+    if (openId && /^\d+$/.test(openId)) {
+      openParams.delete("open");
+      var rest = openParams.toString();
+      history.replaceState(null, "", location.pathname + (rest ? "?" + rest : ""));
+      setTimeout(function () { openEntry(parseInt(openId, 10)); }, 120);
+    }
   }
 
   /* ————— About hero: animated sine-wave gradient ————— */
