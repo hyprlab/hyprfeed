@@ -55,6 +55,25 @@
     toastTimer = setTimeout(function () { dismissToast(el); }, actionLabel ? 3500 : 2600);
   }
 
+  function toastLink(message, label, href) {
+    toast(message, label, function () { location.href = href; });
+  }
+  function queueToast(message, label, href) {
+    // Carries a toast across a page reload (e.g. when a list empties out).
+    try {
+      sessionStorage.setItem("hf-toast", JSON.stringify(
+        { message: message, label: label, href: href }));
+    } catch (_) {}
+  }
+  try {
+    var pendingToast = sessionStorage.getItem("hf-toast");
+    if (pendingToast) {
+      sessionStorage.removeItem("hf-toast");
+      var pt = JSON.parse(pendingToast);
+      setTimeout(function () { toastLink(pt.message, pt.label, pt.href); }, 250);
+    }
+  } catch (_) {}
+
   /* ————— Theme ————— */
   var media = window.matchMedia("(prefers-color-scheme: dark)");
   function applyTheme(pref) {
@@ -971,8 +990,18 @@
           dismissed++;
         });
       });
-      if (dismissed && !document.querySelector(".story:not(.is-hidden)")) {
-        location.reload();   // empty now — show the "All caught up" state
+      if (!dismissed) return;
+      var feedParam = root.getAttribute("data-feed");
+      var href = "/?filter=history" + (feedParam ? "&feed=" + feedParam : "");
+      var msg = dismissed === 1
+        ? "Moved to History"
+        : dismissed + " stories moved to History";
+      if (!document.querySelector(".story:not(.is-hidden)")) {
+        // List is empty now: reload for the caught-up state, carrying the toast.
+        queueToast(msg, "View", href);
+        location.reload();
+      } else {
+        toastLink(msg, "View", href);
       }
     });
     document.getElementById("reader-prev").addEventListener("click", function () { openSibling(-1); });

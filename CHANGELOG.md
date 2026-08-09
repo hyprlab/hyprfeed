@@ -4,6 +4,13 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- Closing the reader after reading now says where the stories went: a
+  "Moved to History" toast (pluralised when you read several) with a View
+  link that opens History — feed-scoped when you were reading inside a feed
+
 ## [1.8.1] — 2026-08-09
 
 ### Changed
