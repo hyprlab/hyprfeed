@@ -9,7 +9,9 @@ All notable changes to Hyprfeed are documented here. The format follows
 ### Added
 - Closing the reader after reading now says where the stories went: a
   "Moved to History" toast (pluralised when you read several) with a View
-  link that opens History — feed-scoped when you were reading inside a feed
+  link — for a single story it reopens the article in the reader from
+  History; for several it opens the History list. Feed-scoped when you were
+  reading inside a feed
 
 ## [1.8.1] — 2026-08-09
 
