@@ -4,6 +4,14 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- Magazine layout heals itself: skipping the lead story (or a full-width
+  feature) promotes the next story into that slot, so the rhythm of one
+  hero plus a feature every twelve cards always holds. Story markup is now
+  shared across sizes, with the variant assigned by position
+
 ## [1.8.2] — 2026-08-09
 
 ### Added

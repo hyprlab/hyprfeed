@@ -76,44 +76,19 @@
 {% else %}
 
   {% if view == 'magazine' %}
-    {% set hero = (entries | selectattr('image_url') | list | first) or entries[0] if page == 1 else none %}
-    {% if hero %}
-    <article class="hero story {{ 'is-read' if hero.id in read_ids }}" data-id="{{ hero.id }}" data-feed="{{ hero.feed_id }}" tabindex="0">
-      {{ thumb(hero, 'thumb--hero') }}
-      <div class="hero-body">
-        {{ kicker(hero) }}
-        <h2 class="hero-title">{{ hero.title }}</h2>
-        {% if hero.summary %}<p class="hero-dek">{{ hero.summary[:280] }}{% if hero.summary|length > 280 %}…{% endif %}</p>{% endif %}
-        <p class="story-meta">
-          {% if hero.author %}<span>{{ hero.author }}</span><span class="kicker-sep">·</span>{% endif %}
-          <span>{{ hero.word_count|readtime }} read</span>
-        </p>
-        {{ star_btn(hero) }}
-        {{ hide_btn(hero) }}
-      </div>
-    </article>
-    {% endif %}
+    {# One markup for every story; the variant class is positional so the
+       layout can re-heal when a story is skipped (see relayoutMagazine). #}
     <div class="grid grid--magazine">
-      {% for entry in entries if not (hero and entry.id == hero.id) %}
-      {% if loop.index0 > 0 and loop.index0 % 12 == 0 %}
-      {# Every ~4 rows, a full-width feature breaks up the card rhythm. #}
-      <article class="breaker story {{ 'is-read' if entry.id in read_ids }}" data-id="{{ entry.id }}" data-feed="{{ entry.feed_id }}" tabindex="0">
-        {{ thumb(entry, 'thumb--breaker') }}
-        <div class="breaker-body">
-          {{ kicker(entry) }}
-          <h3 class="breaker-title">{{ entry.title }}</h3>
-          {% if entry.summary %}<p class="breaker-dek">{{ entry.summary[:220] }}{% if entry.summary|length > 220 %}…{% endif %}</p>{% endif %}
-          {{ star_btn(entry) }}
-          {{ hide_btn(entry) }}
-        </div>
-      </article>
-      {% else %}
-      <article class="card story {{ 'is-read' if entry.id in read_ids }}" data-id="{{ entry.id }}" data-feed="{{ entry.feed_id }}" tabindex="0">
+      {% for entry in entries %}
+      {% set variant = 'hero' if (page == 1 and loop.index0 == 0)
+                       else ('breaker' if loop.index0 > 0 and loop.index0 % 12 == 0 else 'card') %}
+      <article class="story {{ variant }} {{ 'is-read' if entry.id in read_ids }}"
+               data-id="{{ entry.id }}" data-feed="{{ entry.feed_id }}" tabindex="0">
         {{ thumb(entry) }}
-        <div class="card-body">
+        <div class="story-body">
           {{ kicker(entry) }}
-          <h3 class="card-title">{{ entry.title }}</h3>
-          {% if entry.summary %}<p class="card-dek">{{ entry.summary[:150] }}{% if entry.summary|length > 150 %}…{% endif %}</p>{% endif %}
+          <h3 class="story-title">{{ entry.title }}</h3>
+          {% if entry.summary %}<p class="story-dek">{{ entry.summary[:280] }}{% if entry.summary|length > 280 %}…{% endif %}</p>{% endif %}
           {% if entry.author or entry.word_count %}
           <p class="story-meta">
             {% if entry.author %}<span>{{ entry.author }}</span>{% endif %}
@@ -125,18 +100,18 @@
           {{ hide_btn(entry) }}
         </div>
       </article>
-      {% endif %}
       {% endfor %}
     </div>
 
   {% elif view == 'cards' %}
     <div class="grid grid--cards">
       {% for entry in entries %}
-      <article class="card story {{ 'is-read' if entry.id in read_ids }}" data-id="{{ entry.id }}" data-feed="{{ entry.feed_id }}" tabindex="0">
+      <article class="story card {{ 'is-read' if entry.id in read_ids }}"
+               data-id="{{ entry.id }}" data-feed="{{ entry.feed_id }}" tabindex="0">
         {{ thumb(entry) }}
-        <div class="card-body">
+        <div class="story-body">
           {{ kicker(entry) }}
-          <h3 class="card-title card-title--sm">{{ entry.title }}</h3>
+          <h3 class="story-title">{{ entry.title }}</h3>
           {{ star_btn(entry) }}
           {{ hide_btn(entry) }}
         </div>
