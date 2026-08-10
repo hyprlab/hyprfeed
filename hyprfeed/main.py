@@ -67,7 +67,8 @@ def _page_context():
     view = request.args.get("view", current_user.view_mode)
     if view not in VIEWS:
         view = "magazine"
-    filter_name = request.args.get("filter", "all")
+    # Landing on the app shows Unread; other shelves link explicitly.
+    filter_name = request.args.get("filter", "unread")
     if filter_name == "hidden":   # legacy links from before the rename
         filter_name = "skipped"
     if filter_name not in FILTERS:
