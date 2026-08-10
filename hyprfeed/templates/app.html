@@ -27,7 +27,7 @@
         <span>Unread</span>
         {% if total_unread %}<span class="count count--volt" id="total-unread">{{ total_unread if total_unread < 1000 else '999+' }}</span>{% endif %}
       </a>
-      <a class="navitem {{ 'is-active' if filter == 'all' and not active_sub }}" href="{{ url_for('main.index') }}">
+      <a class="navitem {{ 'is-active' if filter == 'all' and not active_sub }}" href="{{ url_for('main.index', filter='all') }}">
         <svg viewBox="0 0 24 24"><path d="M4 5.5h16M4 12h16M4 18.5h10"/></svg>
         <span>All stories</span>
       </a>
@@ -49,7 +49,7 @@
       {% for sub in sub_list %}
       <li>
         <a class="feeditem {{ 'is-active' if active_sub and active_sub.feed_id == sub.feed_id }}"
-           href="{{ url_for('main.index', feed=sub.feed_id) }}" title="{{ sub.display_title }}">
+           href="{{ url_for('main.index', feed=sub.feed_id, filter='all') }}" title="{{ sub.display_title }}">
           <img class="favicon" src="{{ sub.feed.icon_url or '' }}" alt="" loading="lazy" onerror="this.classList.add('is-broken')">
           <span class="feeditem-title">{{ sub.display_title }}</span>
           {% if unread_counts.get(sub.feed_id) %}<span class="count">{{ unread_counts[sub.feed_id] }}</span>{% endif %}
@@ -177,7 +177,7 @@
             {% if active_sub %}<p class="filterpop-head">In {{ active_sub.display_title }}</p>{% endif %}
             {% for value, label, icon in filter_opts %}
             <a class="filteropt {{ 'is-active' if value == filter }}" role="menuitem"
-               href="{{ url_for('main.index', filter=value if value != 'all' else none,
+               href="{{ url_for('main.index', filter=value,
                                 feed=active_sub.feed_id if active_sub else none) }}">
               <svg viewBox="0 0 24 24">{{ icon|safe }}</svg>
               <span>{{ label }}</span>
@@ -187,7 +187,7 @@
           </div>
         </div>
         <div class="viewswitch" role="group" aria-label="View mode">
-          {% set qs = {'filter': filter if filter != 'all' else none, 'feed': active_sub.feed_id if active_sub else none} %}
+          {% set qs = {'filter': filter, 'feed': active_sub.feed_id if active_sub else none} %}
           <a class="viewswitch-btn {{ 'is-active' if view == 'magazine' }}" title="Magazine"
              href="{{ url_for('main.index', view='magazine', **qs) }}">
             <svg viewBox="0 0 24 24"><path d="M4 5h10v8H4zM17 5h3v3h-3zM17 11h3v2h-3zM4 16h16v1.5H4zM4 19.5h11v1.5H4z"/></svg>
