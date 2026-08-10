@@ -902,6 +902,22 @@
     if (next) openEntry(next);
   }
 
+  function relayoutMagazine() {
+    var grid = document.querySelector(".grid--magazine");
+    if (!grid) return;
+    var visible = Array.prototype.filter.call(grid.children, function (el) {
+      return el.classList.contains("story") && !el.classList.contains("is-hidden");
+    });
+    visible.forEach(function (el, i) {
+      // Same rule the server renders with: lead story is the hero, then a
+      // full-width breaker every 12 cards.
+      var variant = i === 0 ? "hero" : (i % 12 === 0 ? "breaker" : "card");
+      if (el.classList.contains(variant)) return;
+      el.classList.remove("hero", "breaker", "card");
+      el.classList.add(variant);
+    });
+  }
+
   function performHide(hideStory, onHidden) {
     var hideId = parseInt(hideStory.getAttribute("data-id"), 10);
     var hideFeed = parseInt(hideStory.getAttribute("data-feed"), 10);
@@ -913,6 +929,7 @@
         document.querySelectorAll('.story[data-id="' + hideId + '"]').forEach(function (el) {
           el.classList.add("is-hidden");   // leaves this list; it's visible elsewhere again
         });
+        relayoutMagazine();
         if (onHidden) onHidden();
         if (wasUnread) bumpUnread(hideFeed, 1);
         toast("Story restored", "Undo", function () {
@@ -920,6 +937,7 @@
             document.querySelectorAll('.story[data-id="' + hideId + '"]').forEach(function (el) {
               el.classList.remove("is-hidden");
             });
+            relayoutMagazine();
             if (wasUnread) bumpUnread(hideFeed, -1);
           }).catch(function (err) { toast(err.message); });
         });
@@ -930,6 +948,7 @@
       document.querySelectorAll('.story[data-id="' + hideId + '"]').forEach(function (el) {
         el.classList.add("is-hidden");
       });
+      relayoutMagazine();
       if (onHidden) onHidden();
       if (wasUnread) bumpUnread(hideFeed, -1);
       toast("Story skipped", "Undo", function () {
@@ -937,6 +956,7 @@
           document.querySelectorAll('.story[data-id="' + hideId + '"]').forEach(function (el) {
             el.classList.remove("is-hidden");
           });
+          relayoutMagazine();
           if (wasUnread) bumpUnread(hideFeed, 1);
         }).catch(function (err) { toast(err.message); });
       });
@@ -990,6 +1010,7 @@
           dismissed++;
         });
       });
+      relayoutMagazine();
       if (!dismissed) return;
       var feedParam = root.getAttribute("data-feed");
       var href = "/?filter=history" + (feedParam ? "&feed=" + feedParam : "");
@@ -1321,6 +1342,7 @@
         var starBtn = el.querySelector("[data-star]");
         if (starBtn) starBtn.classList.add("is-starred");
       });
+      relayoutMagazine();
       if (wasUnread && !inSkippedView()) bumpUnread(feedId, -1);
       if (onDone) onDone();
       toast("Saved", "Undo", function () {
@@ -1333,6 +1355,7 @@
             var starBtn = el.querySelector("[data-star]");
             if (starBtn) starBtn.classList.remove("is-starred");
           });
+          relayoutMagazine();
           if (wasUnread && !inSkippedView()) bumpUnread(feedId, 1);
         }).catch(function (err) { toast(err.message); });
       });
@@ -1588,6 +1611,7 @@
         var grid = document.querySelector("#entries-root .grid");
         if (newGrid && grid) {
           while (newGrid.firstChild) grid.appendChild(newGrid.firstChild);
+          relayoutMagazine();
         }
         var oldPager = document.querySelector("#entries-root .pager");
         var newPager = doc.querySelector(".pager");
