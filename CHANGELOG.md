@@ -4,7 +4,7 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.8.3] — 2026-08-10
 
 ### Changed
 - Magazine layout heals itself: skipping the lead story (or a full-width
@@ -319,6 +319,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.8.3]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.3
 [1.8.2]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.2
 [1.8.1]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.1
 [1.8.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.0
