@@ -4,6 +4,19 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.8.5] — 2026-08-12
+
+### Changed
+- The filter menu now appears only when you're inside a feed. On the Unread,
+  All stories, Saved, Skipped and History shelves it just repeated the
+  sidebar, so it's gone from the topbar there
+
+### Fixed
+- Unfollowing a feed from Settings no longer closes the modal: the feed
+  disappears from the manage list and the sidebar in place, so you can tidy
+  up several feeds in one visit. The story list refreshes when you close
+  Settings
+
 ## [1.8.4] — 2026-08-10
 
 ### Changed
@@ -325,6 +338,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.8.5]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.5
 [1.8.4]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.4
 [1.8.3]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.3
 [1.8.2]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.2

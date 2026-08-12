@@ -157,6 +157,9 @@
           <svg viewBox="0 0 24 24"><path d="m5 5.5 6.5 6.5L5 18.5M12.5 5.5 19 12l-6.5 6.5"/></svg>
         </button>
         {% endif %}
+        {# Only a feed view needs the filter: the shelves in the sidebar are
+           the same choices, so the menu would just repeat them. #}
+        {% if active_sub %}
         {% set filter_opts = [
           ('unread',  'Unread',  '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>'),
           ('all',     'All stories', '<path d="M4 5.5h16M4 12h16M4 18.5h10"/>'),
@@ -166,7 +169,7 @@
         ] %}
         <div class="filtermenu" id="filter-menu">
           <button class="filterbtn" id="filter-btn" aria-haspopup="true" aria-expanded="false"
-                  title="Filter stories{{ ' in this feed' if active_sub }}">
+                  title="Filter stories in this feed">
             <svg viewBox="0 0 24 24"><path d="M3.5 5.5h17l-6.5 7.5V20l-4-2v-5L3.5 5.5Z"/></svg>
             <span class="filterbtn-label">
               {%- for value, label, _icon in filter_opts %}{% if value == filter %}{{ label }}{% endif %}{% endfor -%}
@@ -174,7 +177,7 @@
             <svg class="chev" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
           </button>
           <div class="filterpop" role="menu" hidden>
-            {% if active_sub %}<p class="filterpop-head">In {{ active_sub.display_title }}</p>{% endif %}
+            <p class="filterpop-head">In {{ active_sub.display_title }}</p>
             {% for value, label, icon in filter_opts %}
             <a class="filteropt {{ 'is-active' if value == filter }}" role="menuitem"
                href="{{ url_for('main.index', filter=value,
@@ -186,6 +189,7 @@
             {% endfor %}
           </div>
         </div>
+        {% endif %}
         <div class="viewswitch" role="group" aria-label="View mode">
           {% set qs = {'filter': filter, 'feed': active_sub.feed_id if active_sub else none} %}
           <a class="viewswitch-btn {{ 'is-active' if view == 'magazine' }}" title="Magazine"

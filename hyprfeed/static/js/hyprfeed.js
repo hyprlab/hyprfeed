@@ -216,6 +216,38 @@
   }
 
   /* ————— Manage feeds ————— */
+  // Unfollowing from settings keeps the modal open: the feed is dropped from
+  // the manage list and the sidebar in place, and the page refreshes once the
+  // modal closes so the story list and counts catch up.
+  var feedsDirty = false;
+  var activeFeedRemoved = false;
+
+  function dropFeedFromUi(feedId) {
+    var id = parseInt(feedId, 10);
+    var row = document.querySelector('.manage-item[data-feed="' + id + '"]');
+    if (row) row.remove();
+    document.querySelectorAll(".feed-list .feeditem").forEach(function (link) {
+      var m = link.href.match(/[?&]feed=(\d+)/);
+      if (!m || parseInt(m[1], 10) !== id) return;
+      if (link.classList.contains("is-active")) activeFeedRemoved = true;
+      var list = link.closest("ul");
+      (link.closest("li") || link).remove();
+      if (!list || list.children.length) return;
+      if (list.classList.contains("feed-list--yt")) {
+        var label = list.previousElementSibling;
+        if (label && label.classList.contains("sidebar-label")) label.remove();
+        list.remove();
+        return;
+      }
+      var empty = document.createElement("li");
+      empty.className = "feed-list-empty";
+      empty.textContent = list.classList.contains("feed-list--group")
+        ? "Empty group" : "Nothing yet — add a site you love.";
+      list.appendChild(empty);
+    });
+    feedsDirty = true;
+  }
+
   document.querySelectorAll(".manage-item").forEach(function (item) {
     var feedId = item.getAttribute("data-feed");
     var renameBtn = item.querySelector("[data-rename]");
@@ -233,10 +265,13 @@
     }
     if (unsubBtn) {
       unsubBtn.addEventListener("click", function () {
-        var name = item.querySelector(".manage-title").textContent;
+        var titleEl = item.querySelector(".manage-title");
+        // firstChild skips the "watcher" chip that can follow the title.
+        var name = (titleEl.firstChild || titleEl).textContent.trim();
         if (!confirm('Unfollow "' + name + '"?')) return;
         api("/feeds/" + feedId + "/unsubscribe").then(function () {
-          location.href = "/";
+          dropFeedFromUi(feedId);
+          toast("Unfollowed " + name);
         }).catch(function (err) { toast(err.message); });
       });
     }
@@ -504,7 +539,9 @@
   var settingsModal = document.getElementById("settings-modal");
   if (settingsModal) {
     settingsModal.addEventListener("close", function () {
-      if (organizeDirty) location.reload();
+      // Reloading a /?feed=N view whose feed just went away would 404.
+      if (activeFeedRemoved) location.href = "/";
+      else if (organizeDirty || feedsDirty) location.reload();
     });
   }
   // Reopen settings on the feeds tab after a group action reload.
