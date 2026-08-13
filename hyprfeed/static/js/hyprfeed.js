@@ -36,6 +36,10 @@
   function toast(message, actionLabel, actionFn) {
     var el = document.getElementById("toast");
     if (!el) return;
+    // A modal <dialog> paints above everything outside it, so a toast raised
+    // while the reader is open has to live inside it to be seen at all.
+    var host = reader && reader.open ? reader : document.body;
+    if (el.parentNode !== host) host.appendChild(el);
     clearTimeout(toastTimer);
     clearTimeout(toastLeaveTimer);
     el.classList.remove("is-leaving");
@@ -152,13 +156,37 @@
       if (dialog.id === "settings-modal") updateTabFades();
     });
   });
+  function prefersReducedMotion() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  // The reader slides back out through the top before it actually closes, so
+  // every way of dismissing it routes through here (button, backdrop, Escape).
+  var READER_EXIT_MS = 300;   // keep in step with the reader-out animation
+  var readerExitTimer = null;
+  function closeDialog(dialog) {
+    if (dialog.id !== "reader" || prefersReducedMotion()) { dialog.close(); return; }
+    if (dialog.classList.contains("is-closing")) return;
+    dialog.classList.add("is-closing");
+    clearTimeout(readerExitTimer);
+    readerExitTimer = setTimeout(function () {
+      dialog.classList.remove("is-closing");
+      dialog.close();
+    }, READER_EXIT_MS);
+  }
   document.querySelectorAll("dialog").forEach(function (dialog) {
     dialog.addEventListener("click", function (e) {
-      if (e.target === dialog) dialog.close(); // backdrop click
+      if (e.target === dialog) closeDialog(dialog); // backdrop click
     });
     dialog.querySelectorAll("[data-close]").forEach(function (btn) {
-      btn.addEventListener("click", function () { dialog.close(); });
+      btn.addEventListener("click", function () { closeDialog(dialog); });
     });
+    if (dialog.id === "reader") {
+      dialog.addEventListener("cancel", function (e) {  // Escape
+        e.preventDefault();
+        closeDialog(dialog);
+      });
+    }
   });
 
   /* ————— Settings: tabs & preferences ————— */
@@ -1121,7 +1149,7 @@
   (function initAboutHeroBg() {
     var canvas = document.querySelector(".about-hero-bg");
     if (!canvas) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (prefersReducedMotion()) return;
     var W = 200, H = 120;
     canvas.width = W; canvas.height = H;
     var cctx = canvas.getContext("2d");
