@@ -25,6 +25,7 @@
   --font: "Inter", system-ui, -apple-system, sans-serif;
   --radius: 14px;
   --radius-sm: 10px;
+  --topbar-h: 59px;             /* 12px padding + 34px controls + 1px rule */
   --shadow-1: 0 1px 2px rgb(20 20 10 / .04), 0 4px 16px rgb(20 20 10 / .05);
   --shadow-2: 0 2px 6px rgb(20 20 10 / .07), 0 14px 34px rgb(20 20 10 / .10);
 }
@@ -529,8 +530,19 @@ html[data-theme="dark"] .icon-moon { display: none; }
 }
 .modal--wide { width: min(620px, calc(100vw - 32px)); }
 .modal::backdrop, .reader::backdrop { background: var(--scrim); backdrop-filter: blur(3px); }
-.modal[open], .reader[open] { animation: modal-in .22s cubic-bezier(.2, .9, .3, 1.2) both; }
+.modal[open] { animation: modal-in .22s cubic-bezier(.2, .9, .3, 1.2) both; }
 @keyframes modal-in { from { transform: translateY(14px) scale(.97); opacity: 0; } }
+/* The reader drops in from above and leaves back through the top, handing the
+   eye off to the toast that lands under the topbar. .is-closing is set in JS,
+   which delays dialog.close() by the same 300ms. */
+.reader[open] { animation: reader-in .3s cubic-bezier(.16, .8, .3, 1) both; }
+.reader.is-closing { animation: reader-out .3s cubic-bezier(.5, 0, .75, .2) both; }
+.reader[open]::backdrop { animation: scrim-in .3s ease both; }
+.reader.is-closing::backdrop { animation: scrim-out .3s ease both; }
+@keyframes reader-in { from { transform: translateY(-100%); } }
+@keyframes reader-out { to { transform: translateY(-100%); } }
+@keyframes scrim-in { from { opacity: 0; } }
+@keyframes scrim-out { to { opacity: 0; } }
 
 .modal-head {
   display: flex; align-items: center; justify-content: space-between;
@@ -944,17 +956,19 @@ html { overscroll-behavior-y: contain; }  /* keep the browser's native PTR out o
 .ptr.is-refreshing svg { animation: spin .8s linear infinite; }
 
 /* ————— Toast ————— */
+/* Toasts sit just under the topbar: the reader leaves through the top, so
+   that's where the eye already is when the message lands. */
 .toast {
-  position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+  position: fixed; left: 50%; top: calc(var(--topbar-h) + 12px); transform: translateX(-50%);
   z-index: 100;
   background: var(--ink); color: var(--bg);
   font-size: 13.5px; font-weight: 600;
   padding: 10px 18px; border-radius: 99px; box-shadow: var(--shadow-2);
   animation: toast-in .25s ease both;
 }
-@keyframes toast-in { from { transform: translate(-50%, 10px); opacity: 0; } }
+@keyframes toast-in { from { transform: translate(-50%, -10px); opacity: 0; } }
 .toast.is-leaving { animation: toast-out .25s ease forwards; }
-@keyframes toast-out { to { transform: translate(-50%, 16px); opacity: 0; } }
+@keyframes toast-out { to { transform: translate(-50%, -16px); opacity: 0; } }
 .toast-action {
   margin-left: 12px; color: var(--volt); font-weight: 750; font-size: 13px;
   text-transform: uppercase; letter-spacing: .05em;

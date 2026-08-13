@@ -4,6 +4,18 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.8.6] — 2026-08-13
+
+### Changed
+- The reader now arrives from above and leaves back through the top in 300ms,
+  instead of appearing and vanishing in place
+- Toasts appear just under the topbar rather than at the foot of the window,
+  so the reader's exit hands the eye straight to the message
+
+### Fixed
+- Toasts raised while an article was open — "Marked as read", copy failures —
+  were painting behind the reader and never seen
+
 ## [1.8.5] — 2026-08-12
 
 ### Changed
@@ -338,6 +350,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.8.6]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.6
 [1.8.5]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.5
 [1.8.4]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.4
 [1.8.3]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.3
