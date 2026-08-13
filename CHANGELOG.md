@@ -4,6 +4,12 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.8.7] — 2026-08-13
+
+### Changed
+- The reader rises in from below the fold instead of dropping from above, so
+  opening and closing an article read as one continuous upward pass
+
 ## [1.8.6] — 2026-08-13
 
 ### Changed
@@ -350,6 +356,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.8.7]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.7
 [1.8.6]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.6
 [1.8.5]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.5
 [1.8.4]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.4

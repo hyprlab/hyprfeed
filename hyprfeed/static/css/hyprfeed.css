@@ -532,14 +532,15 @@ html[data-theme="dark"] .icon-moon { display: none; }
 .modal::backdrop, .reader::backdrop { background: var(--scrim); backdrop-filter: blur(3px); }
 .modal[open] { animation: modal-in .22s cubic-bezier(.2, .9, .3, 1.2) both; }
 @keyframes modal-in { from { transform: translateY(14px) scale(.97); opacity: 0; } }
-/* The reader drops in from above and leaves back through the top, handing the
-   eye off to the toast that lands under the topbar. .is-closing is set in JS,
-   which delays dialog.close() by the same 300ms. */
+/* One continuous upward pass: the reader rises in from below the fold and
+   keeps going out through the top, handing the eye off to the toast that
+   lands under the topbar. .is-closing is set in JS, which delays
+   dialog.close() by the same 300ms. */
 .reader[open] { animation: reader-in .3s cubic-bezier(.16, .8, .3, 1) both; }
 .reader.is-closing { animation: reader-out .3s cubic-bezier(.5, 0, .75, .2) both; }
 .reader[open]::backdrop { animation: scrim-in .3s ease both; }
 .reader.is-closing::backdrop { animation: scrim-out .3s ease both; }
-@keyframes reader-in { from { transform: translateY(-100%); } }
+@keyframes reader-in { from { transform: translateY(100%); } }
 @keyframes reader-out { to { transform: translateY(-100%); } }
 @keyframes scrim-in { from { opacity: 0; } }
 @keyframes scrim-out { to { opacity: 0; } }
