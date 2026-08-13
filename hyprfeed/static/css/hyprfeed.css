@@ -520,6 +520,20 @@ html[data-theme="dark"] .icon-moon { display: none; }
 @keyframes bolt-in { from { transform: translateY(8px) scale(.85); opacity: 0; } }
 
 .pager { display: flex; justify-content: center; padding: 30px 0 10px; }
+/* Infinite scroll on: the row keeps its place in the flow (the observer needs
+   something to watch) but reads as a loading state, not a button. */
+.pager-auto { display: none; align-items: center; gap: 8px; color: var(--faint); font-size: 13px; font-weight: 600; }
+.pager-spin { width: 15px; height: 15px; animation: spin 1s linear infinite; }
+#entries-root[data-infinite="1"] .pager .btn { display: none; }
+#entries-root[data-infinite="1"] .pager-auto { display: inline-flex; }
+.pager-end {
+  text-align: center; padding: 34px 0 12px;
+  color: var(--faint); font-size: 13px; font-weight: 600;
+}
+.pager-end::before {
+  content: ""; display: block; width: 26px; height: 2px; border-radius: 2px;
+  background: var(--volt); margin: 0 auto 14px;
+}
 
 /* ————— Modals ————— */
 .modal, .reader { border: 0; padding: 0; background: var(--surface); color: var(--ink); }

@@ -214,6 +214,7 @@
 
     <div id="entries-root"
          data-view="{{ view }}" data-filter="{{ filter }}"
+         data-infinite="{{ '1' if current_user.infinite_scroll else '0' }}"
          {% if active_sub %}data-feed="{{ active_sub.feed_id }}"{% endif %}>
       {% include "partials/entries.html" %}
     </div>
@@ -299,6 +300,10 @@
       <label class="check setting-row">
         <input type="checkbox" id="mark-read-open" {{ 'checked' if current_user.mark_read_on_open }}>
         <span>Mark stories as read when opened</span>
+      </label>
+      <label class="check setting-row">
+        <input type="checkbox" id="infinite-scroll" {{ 'checked' if current_user.infinite_scroll }}>
+        <span>Load older stories automatically as you scroll</span>
       </label>
 
       <div class="sortrow">

@@ -136,9 +136,15 @@
     </div>
   {% endif %}
 
+  {# The button is the fallback; with infinite scroll on, CSS swaps it for the
+     auto label and an observer on this row does the loading. #}
   {% if has_more %}
   <div class="pager">
     <button class="btn btn--ghost" id="load-more" data-next="{{ page + 1 }}">Load older stories</button>
+    <span class="pager-auto">
+      <svg class="pager-spin" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-3.4-6.5"/></svg>
+      Loading older stories…
+    </span>
   </div>
   {% endif %}
 

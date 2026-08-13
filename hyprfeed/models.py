@@ -22,6 +22,7 @@ class User(UserMixin, db.Model):
     theme = db.Column(db.String(10), default="system", nullable=False)  # system|light|dark
     view_mode = db.Column(db.String(10), default="magazine", nullable=False)  # magazine|cards|list
     mark_read_on_open = db.Column(db.Boolean, default=True, nullable=False)
+    infinite_scroll = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
     subscriptions = db.relationship(

@@ -11,7 +11,7 @@ from flask_login import LoginManager
 from .config import Config
 from .models import User, db, utcnow
 
-__version__ = "1.8.7"
+__version__ = "1.9.0"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -152,6 +152,13 @@ def _migrate(app: Flask) -> None:
         app.logger.info("migrated: added feeds.kind")
 
     user_columns = {c["name"] for c in inspect(db.engine).get_columns("users")}
+    if "infinite_scroll" not in user_columns:
+        db.session.execute(text(
+            "ALTER TABLE users ADD COLUMN infinite_scroll BOOLEAN NOT NULL DEFAULT 1"
+        ))
+        db.session.commit()
+        app.logger.info("migrated: added users.infinite_scroll")
+
     if "name" not in user_columns:
         db.session.execute(text("ALTER TABLE users ADD COLUMN name VARCHAR(120)"))
         db.session.commit()
