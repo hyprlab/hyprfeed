@@ -206,6 +206,20 @@
       api("/settings", { mark_read_on_open: markRead.checked }).catch(function () {});
     });
   }
+  var infinite = document.getElementById("infinite-scroll");
+  if (infinite) {
+    infinite.addEventListener("change", function () {
+      // Takes effect on the page behind the modal, no reload needed.
+      var root = document.getElementById("entries-root");
+      if (root) root.setAttribute("data-infinite", infinite.checked ? "1" : "0");
+      watchPager();
+      api("/settings", { infinite_scroll: infinite.checked })
+        .then(function () {
+          toast(infinite.checked ? "Stories load as you scroll" : "Load older stories manually");
+        })
+        .catch(function () {});
+    });
+  }
 
   var acctName = document.getElementById("acct-name");
   if (acctName) {
@@ -1659,10 +1673,38 @@
     });
   })();
 
-  /* ————— Load more ————— */
-  document.addEventListener("click", function (e) {
-    var btn = e.target.closest("#load-more");
-    if (!btn) return;
+  /* ————— Load more / infinite scroll ————— */
+  var entriesRoot = document.getElementById("entries-root");
+  var loadingMore = false;
+  var pagerWatcher = null;
+
+  function infiniteScrollOn() {
+    return !!entriesRoot && entriesRoot.getAttribute("data-infinite") === "1";
+  }
+
+  // Watch the pager row, not the last story: it survives magazine relayouts
+  // and is replaced wholesale by every load, so re-observing is enough.
+  function watchPager() {
+    if (!pagerWatcher) return;
+    pagerWatcher.disconnect();
+    if (!infiniteScrollOn()) return;
+    var pager = document.querySelector("#entries-root .pager");
+    if (pager) pagerWatcher.observe(pager);
+  }
+
+  function markEndOfStories() {
+    var list = document.querySelector("#entries-root .entries");
+    // Only worth saying once, and only after something was actually loaded.
+    if (!list || list.querySelector(".pager-end")) return;
+    var note = document.createElement("p");
+    note.className = "pager-end";
+    note.textContent = "That's every story — nothing older to load.";
+    list.appendChild(note);
+  }
+
+  function loadMore(btn) {
+    if (loadingMore) return;
+    loadingMore = true;
     btn.disabled = true;
     btn.textContent = "Loading…";
     var params = new URLSearchParams(location.search);
@@ -1682,13 +1724,30 @@
         var newPager = doc.querySelector(".pager");
         if (oldPager) {
           if (newPager) oldPager.replaceWith(newPager);
-          else oldPager.remove();
+          else { oldPager.remove(); markEndOfStories(); }
         }
+        loadingMore = false;
+        watchPager();
       })
       .catch(function () {
+        loadingMore = false;
         btn.disabled = false;
         btn.textContent = "Load older stories";
         toast("Could not load more stories.");
       });
+  }
+
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest("#load-more");
+    if (btn) loadMore(btn);
   });
+
+  if (entriesRoot && window.IntersectionObserver) {
+    pagerWatcher = new IntersectionObserver(function (rows) {
+      if (!rows.some(function (row) { return row.isIntersecting; })) return;
+      var btn = document.getElementById("load-more");
+      if (btn && infiniteScrollOn()) loadMore(btn);
+    }, { rootMargin: "500px 0px" });   // start fetching before the end is in view
+    watchPager();
+  }
 })();

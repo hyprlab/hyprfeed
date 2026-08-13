@@ -4,6 +4,16 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.9.0] — 2026-08-13
+
+### Added
+- Infinite scroll: older stories load on their own as you near the bottom of
+  the list, page after page, until the feed is exhausted — at which point the
+  list signs off with "That's every story — nothing older to load." Toggle it
+  in Settings → Reading & Feeds ("Load older stories automatically as you
+  scroll"); switch it off and the Load older stories button comes back. The
+  choice is per-user and applies immediately, without a reload
+
 ## [1.8.7] — 2026-08-13
 
 ### Changed
@@ -356,6 +366,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.9.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.9.0
 [1.8.7]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.7
 [1.8.6]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.6
 [1.8.5]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.5

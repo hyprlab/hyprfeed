@@ -175,6 +175,7 @@ def _page_context():
         "total_unread": sum(unread_counts.values()),
         "page": page,
         "has_more": has_more,
+        "infinite_scroll": current_user.infinite_scroll,
     }
 
 
@@ -691,6 +692,8 @@ def settings():
         current_user.view_mode = data["view_mode"]
     if "mark_read_on_open" in data:
         current_user.mark_read_on_open = bool(data["mark_read_on_open"])
+    if "infinite_scroll" in data:
+        current_user.infinite_scroll = bool(data["infinite_scroll"])
     db.session.commit()
     return jsonify(ok=True)
 
