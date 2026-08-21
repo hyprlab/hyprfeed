@@ -4,6 +4,13 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.9.1] — 2026-08-21
+
+### Fixed
+- Scrolling the wheel beside an open article no longer scrolls the story list
+  behind it — the page is held in place, and only the article moves, right
+  where you left it when the reader closes
+
 ## [1.9.0] — 2026-08-13
 
 ### Added

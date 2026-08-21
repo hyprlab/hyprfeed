@@ -64,7 +64,7 @@ html[data-theme="dark"] {
 }
 
 * { box-sizing: border-box; }
-html { height: 100%; }
+html { height: 100%; scrollbar-gutter: stable; }  /* reserve the gutter so locking scroll doesn't shift the layout */
 body {
   margin: 0;
   min-height: 100%;
@@ -879,9 +879,14 @@ html[data-theme="light"] .tech-tile-name { color: #000; }
 /* ————— Reader ————— */
 .reader {
   width: min(840px, 100vw); height: 100dvh; max-height: 100dvh;
-  margin: 0 auto; overflow-y: auto;
+  margin: 0 auto; overflow-y: auto; overscroll-behavior: contain;
   border-left: 1px solid var(--line); border-right: 1px solid var(--line);
 }
+/* On desktop the reader is narrower than the viewport, so a wheel over the
+   gutters would scroll the feed behind it. Freeze the page while the article
+   is up: overflow: hidden keeps the root's scroll offset, so the list is
+   right where it was when the reader closes. */
+html:has(.reader[open]) { overflow: hidden; }
 .reader-bar {
   position: sticky; top: 0; z-index: 5;
   display: flex; align-items: center; justify-content: space-between;
