@@ -4,6 +4,13 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.9.2] — 2026-08-21
+
+### Fixed
+- The story list no longer scrolls behind the settings and add-feed dialogs or
+  the ⌘K search palette when the wheel strays outside them — the same hold the
+  reader got in 1.9.1
+
 ## [1.9.1] — 2026-08-21
 
 ### Fixed

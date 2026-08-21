@@ -544,6 +544,12 @@ html[data-theme="dark"] .icon-moon { display: none; }
 }
 .modal--wide { width: min(620px, calc(100vw - 32px)); }
 .modal::backdrop, .reader::backdrop { background: var(--scrim); backdrop-filter: blur(3px); }
+/* Every dialog here is a modal, and each leaves viewport around it — the
+   reader's gutters, the backdrop around a modal or the palette. A wheel over
+   that space would scroll the feed behind, so freeze the page while any
+   dialog is up: overflow: hidden keeps the root's scroll offset, so the list
+   is right where it was when the dialog closes. */
+html:has(dialog[open]) { overflow: hidden; }
 .modal[open] { animation: modal-in .22s cubic-bezier(.2, .9, .3, 1.2) both; }
 @keyframes modal-in { from { transform: translateY(14px) scale(.97); opacity: 0; } }
 /* One continuous upward pass: the reader rises in from below the fold and
@@ -610,7 +616,7 @@ html[data-theme="dark"] .icon-moon { display: none; }
 .tab:hover { color: var(--ink); }
 .tab.is-active { color: var(--ink); border-bottom-color: var(--volt); }
 .tabpane { display: none; }
-.tabpane.is-active { display: block; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-bottom: 22px; }
+.tabpane.is-active { display: block; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding-bottom: 22px; }
 .setting-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
 .setting-row { margin-top: 18px; }
 
@@ -852,7 +858,7 @@ html[data-theme="light"] .tech-tile-name { color: #000; }
 }
 .palette-results {
   border-top: 1px solid var(--line);
-  max-height: min(420px, 55vh); overflow-y: auto; padding: 8px;
+  max-height: min(420px, 55vh); overflow-y: auto; overscroll-behavior: contain; padding: 8px;
 }
 .palette-label {
   font-size: 10.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
@@ -882,11 +888,6 @@ html[data-theme="light"] .tech-tile-name { color: #000; }
   margin: 0 auto; overflow-y: auto; overscroll-behavior: contain;
   border-left: 1px solid var(--line); border-right: 1px solid var(--line);
 }
-/* On desktop the reader is narrower than the viewport, so a wheel over the
-   gutters would scroll the feed behind it. Freeze the page while the article
-   is up: overflow: hidden keeps the root's scroll offset, so the list is
-   right where it was when the reader closes. */
-html:has(.reader[open]) { overflow: hidden; }
 .reader-bar {
   position: sticky; top: 0; z-index: 5;
   display: flex; align-items: center; justify-content: space-between;
