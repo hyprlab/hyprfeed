@@ -595,8 +595,13 @@ html:has(dialog[open]) { overflow: hidden; }
   padding: 14px 20px 0;
 }
 .settings-tabs {
-  display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; flex: none;
-  overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  display: flex; gap: 4px; margin-bottom: 18px; flex: none;
+  /* The rule under the tabs is a background, not a border: a border would sit
+     below the padding box, and the active tab's -1px overlap of it made the
+     strip scrollable vertically as well as horizontally (touch drags snagged). */
+  background: linear-gradient(var(--line), var(--line)) 0 100% / 100% 1px no-repeat;
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  touch-action: pan-x; overscroll-behavior-x: contain;
   /* Edge fades hint at overflow; JS toggles them per side while scrolling. */
   --fade-l: 0px; --fade-r: 0px;
   -webkit-mask-image: linear-gradient(90deg, transparent 0,
@@ -609,7 +614,7 @@ html:has(dialog[open]) { overflow: hidden; }
 .settings-tabs::-webkit-scrollbar { display: none; }
 .tab {
   padding: 8px 12px 10px; font-size: 13.5px; font-weight: 600; color: var(--muted);
-  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
   transition: color .15s, border-color .15s;
   white-space: nowrap; flex: none;
 }

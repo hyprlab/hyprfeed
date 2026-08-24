@@ -79,6 +79,17 @@ def sanitize_html(html: str) -> str:
     return "".join(s.out)
 
 
+# Only block-level tags separate words; inline tags must not, or stylised markup
+# such as The Atlantic's drop caps (<p>W<span>hen ...</span>) turns into "W hen".
+BLOCK = {
+    "p", "br", "hr", "div", "section", "article", "header", "footer", "aside",
+    "ul", "ol", "li", "dl", "dt", "dd",
+    "h1", "h2", "h3", "h4", "h5", "h6",
+    "blockquote", "pre", "figure", "figcaption",
+    "table", "thead", "tbody", "tr", "th", "td",
+}
+
+
 class _Stripper(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
@@ -88,10 +99,17 @@ class _Stripper(HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag in DROP_WITH_CONTENT:
             self.skip_depth += 1
+            self.chunks.append(" ")
+        elif tag in BLOCK:
+            self.chunks.append(" ")
 
     def handle_endtag(self, tag):
-        if tag in DROP_WITH_CONTENT and self.skip_depth:
-            self.skip_depth -= 1
+        if tag in DROP_WITH_CONTENT:
+            if self.skip_depth:
+                self.skip_depth -= 1
+            self.chunks.append(" ")
+        elif tag in BLOCK:
+            self.chunks.append(" ")
 
     def handle_data(self, data):
         if not self.skip_depth:
@@ -108,7 +126,7 @@ def strip_tags(html: str) -> str:
         s.close()
     except Exception:
         pass
-    return re.sub(r"\s+", " ", " ".join(s.chunks)).strip()
+    return re.sub(r"\s+", " ", "".join(s.chunks)).strip()
 
 
 _IMG_SRC = re.compile(r"<img[^>]+src=[\"']([^\"']+)[\"']", re.I)

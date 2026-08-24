@@ -4,6 +4,17 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.9.3] — 2026-08-24
+
+### Fixed
+- Story summaries from The Atlantic no longer break their opening word apart.
+  Their articles arrive with a stylised first letter, and the plain-text pass
+  was inserting a space at every tag boundary — so "When the United States"
+  read "W hen the United States" on the card
+- The settings tabs on a phone now pan sideways only. A one-pixel overhang
+  under the active tab had made the strip scrollable up and down as well, so
+  touch drags snagged instead of sliding along the row
+
 ## [1.9.2] — 2026-08-21
 
 ### Fixed
