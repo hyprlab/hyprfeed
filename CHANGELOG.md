@@ -4,6 +4,16 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.9.4] — 2026-09-20
+
+### Fixed
+- Clicking inside an open article no longer closes it. The reader card is wider
+  than its column of text, so the quiet margins beside the story were counting
+  as the blurred background behind it — the X button, Escape, and a click
+  outside the card are the only ways out again
+- Selecting a passage in an article and letting go of the mouse out on the
+  blurred background no longer dismisses the reader mid-selection
+
 ## [1.9.3] — 2026-08-24
 
 ### Fixed
@@ -391,6 +401,10 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.9.4]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.9.4
+[1.9.3]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.9.3
+[1.9.2]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.9.2
+[1.9.1]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.9.1
 [1.9.0]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.9.0
 [1.8.7]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.7
 [1.8.6]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.8.6

@@ -174,10 +174,32 @@
       dialog.close();
     }, READER_EXIT_MS);
   }
-  document.querySelectorAll("dialog").forEach(function (dialog) {
-    dialog.addEventListener("click", function (e) {
-      if (e.target === dialog) closeDialog(dialog); // backdrop click
+  // A click on a modal's ::backdrop is dispatched to the <dialog> itself, so
+  // target identity alone can't tell it apart from a click on the dialog's own
+  // chrome — the reader's 840px shell is wider than its 660px article column,
+  // so its side gutters are the dialog element too. Compare the pointer to the
+  // dialog's box (which follows the open/close transform) instead, and require
+  // the press to have started outside as well so a text selection dragged off
+  // the article doesn't dismiss it.
+  function hitOutside(dialog, e) {
+    var r = dialog.getBoundingClientRect();
+    if (!r.width || !r.height) return false;
+    return e.clientX < r.left || e.clientX > r.right ||
+           e.clientY < r.top || e.clientY > r.bottom;
+  }
+  function onBackdropClick(dialog, close) {
+    var pressedOutside = false;
+    dialog.addEventListener("pointerdown", function (e) {
+      pressedOutside = e.target === dialog && hitOutside(dialog, e);
     });
+    dialog.addEventListener("click", function (e) {
+      var fromBackdrop = pressedOutside;
+      pressedOutside = false;   // don't let a stale press arm a later click
+      if (fromBackdrop && e.target === dialog && hitOutside(dialog, e)) close();
+    });
+  }
+  document.querySelectorAll("dialog").forEach(function (dialog) {
+    onBackdropClick(dialog, function () { closeDialog(dialog); });
     dialog.querySelectorAll("[data-close]").forEach(function (btn) {
       btn.addEventListener("click", function () { closeDialog(dialog); });
     });
@@ -1265,10 +1287,6 @@
         else openPalette();
       }
     });
-    palette.addEventListener("click", function (e) {
-      if (e.target === palette) palette.close();
-    });
-
     function highlighted(text, query) {
       var span = document.createElement("span");
       span.className = "palette-item-title";
