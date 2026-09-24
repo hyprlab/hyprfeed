@@ -4,6 +4,13 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Changed
+- Settings lists its sections in a sidebar on the left instead of tabs across
+  the top, with the chosen section and its title on the right. On phones it
+  opens to the list of sections, and each one slides in with a back button
+
 ## [1.9.5] — 2026-09-24
 
 ### Fixed
