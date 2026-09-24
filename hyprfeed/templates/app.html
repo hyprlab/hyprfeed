@@ -262,23 +262,48 @@
 </dialog>
 
 <!-- ————— Settings ————— -->
-<dialog class="modal modal--wide" id="settings-modal">
-  <div class="modal-head">
-    <h3>Settings</h3>
-    <button class="iconbtn" data-close aria-label="Close">
-      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-    </button>
-  </div>
-  <div class="settings">
-    <nav class="settings-tabs" role="tablist">
-      <button class="tab is-active" data-tab="appearance" role="tab">Appearance</button>
-      <button class="tab" data-tab="reading" role="tab">Reading &amp; Feeds</button>
-      <button class="tab" data-tab="account" role="tab">Account</button>
-      {% if current_user.is_admin %}<button class="tab" data-tab="admin" role="tab">Admin</button>{% endif %}
-      <button class="tab" data-tab="about" role="tab">About</button>
-    </nav>
+<dialog class="modal modal--settings" id="settings-modal" aria-label="Settings">
+  <div class="settings" data-view="pane">
+    <aside class="settings-nav">
+      <div class="settings-nav-head">
+        <h3>Settings</h3>
+        <button class="iconbtn settings-nav-close" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <nav class="settings-links" role="tablist" aria-orientation="vertical" aria-label="Settings sections">
+        {% set settings_sections = [
+          ('appearance', 'Appearance', '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M12 7.5h5.8M12 12h7.5M12 16.5h5.8"/>'),
+          ('reading', 'Reading & Feeds', '<path d="M5.5 5a13.5 13.5 0 0 1 13.5 13.5M5.5 11a7.5 7.5 0 0 1 7.5 7.5"/><circle cx="6.5" cy="17.5" r="1.4"/>'),
+          ('account', 'Account', '<circle cx="12" cy="8.5" r="3.7"/><path d="M5 20a7 7 0 0 1 14 0"/>'),
+          ('admin', 'Admin', '<path d="M12 21s7.5-3.6 7.5-9.4V6L12 3 4.5 6v5.6C4.5 17.4 12 21 12 21Z"/>') if current_user.is_admin else None,
+          ('about', 'About', '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.9v.01"/>'),
+        ] %}
+        {% for section in settings_sections if section %}
+        {% set key, label, icon = section %}
+        <button type="button" class="navitem settings-link{{ ' is-active' if loop.first }}" role="tab"
+                id="settings-tab-{{ key }}" data-tab="{{ key }}" aria-controls="settings-pane-{{ key }}"
+                aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ '0' if loop.first else '-1' }}">
+          <svg viewBox="0 0 24 24">{{ icon|safe }}</svg>
+          <span>{{ label }}</span>
+          <svg class="settings-link-chev" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6"/></svg>
+        </button>
+        {% endfor %}
+      </nav>
+    </aside>
 
-    <section class="tabpane is-active" data-pane="appearance">
+    <div class="settings-main">
+      <div class="settings-main-head">
+        <button class="iconbtn settings-back" type="button" data-settings-back aria-label="All settings">
+          <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <h3 id="settings-title">Appearance</h3>
+        <button class="iconbtn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+    <section class="tabpane is-active" id="settings-pane-appearance" data-pane="appearance" role="tabpanel" aria-labelledby="settings-tab-appearance">
       <p class="setting-label">Theme</p>
       <div class="theme-picker">
         {% for t in ('system', 'light', 'dark') %}
@@ -292,7 +317,7 @@
       </div>
     </section>
 
-    <section class="tabpane" data-pane="reading">
+    <section class="tabpane" id="settings-pane-reading" data-pane="reading" role="tabpanel" aria-labelledby="settings-tab-reading">
       <p class="setting-label">Reading</p>
       <div class="seg" id="default-view">
         {% for v in ('magazine', 'cards', 'list') %}
@@ -407,7 +432,7 @@
       </div>
     </section>
 
-    <section class="tabpane" data-pane="account">
+    <section class="tabpane" id="settings-pane-account" data-pane="account" role="tabpanel" aria-labelledby="settings-tab-account">
       <p class="setting-label">Profile</p>
       <label class="field field--narrow">
         <span class="field-label">Name</span>
@@ -427,7 +452,7 @@
     </section>
 
     {% if current_user.is_admin %}
-    <section class="tabpane" data-pane="admin">
+    <section class="tabpane" id="settings-pane-admin" data-pane="admin" role="tabpanel" aria-labelledby="settings-tab-admin">
       <p class="setting-label">Instance</p>
       <label class="check">
         <input type="checkbox" id="reg-open" {{ 'checked' if allow_registration }}>
@@ -486,7 +511,7 @@
     </section>
     {% endif %}
 
-    <section class="tabpane" data-pane="about">
+    <section class="tabpane" id="settings-pane-about" data-pane="about" role="tabpanel" aria-labelledby="settings-tab-about">
       <div class="about-hero">
         <canvas class="about-hero-bg" aria-hidden="true"></canvas>
         <div class="about-brand">
@@ -539,6 +564,7 @@
         </ul>
       </details>
     </section>
+    </div>
   </div>
 </dialog>
 

@@ -544,7 +544,6 @@ html[data-theme="dark"] .icon-moon { display: none; }
   border-radius: 18px; box-shadow: var(--shadow-2);
   border: 1px solid var(--line);
 }
-.modal--wide { width: min(620px, calc(100vw - 32px)); }
 .modal::backdrop, .reader::backdrop { background: var(--scrim); backdrop-filter: blur(3px); }
 /* Every dialog here is a modal, and each leaves viewport around it — the
    reader's gutters, the backdrop around a modal or the palette. A wheel over
@@ -575,14 +574,44 @@ html:has(dialog[open]) { overflow: hidden; }
 .modal-body { display: flex; flex-direction: column; gap: 12px; padding: 16px 20px 20px; }
 
 /* ————— Settings ————— */
-/* Fixed height: switching tabs must not resize the modal — panes scroll inside. */
-#settings-modal[open] {
-  display: flex; flex-direction: column;
-  height: 80vh;
+/* A section rail on the left, the active pane on the right. Fixed height:
+   switching sections must not resize the modal — panes scroll inside. */
+.modal--settings { width: min(900px, calc(100vw - 32px)); overflow: hidden; }
+#settings-modal[open] { display: flex; height: min(80vh, 760px); }
+.settings { display: flex; flex: 1; min-width: 0; min-height: 0; }
+
+.settings-nav {
+  display: flex; flex-direction: column; flex: none; width: 216px;
+  background: var(--panel); border-right: 1px solid var(--line);
+  padding: 18px 12px;
 }
-#settings-modal .modal-head { flex: none; }
+.settings-nav-head {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 34px; padding: 0 10px 14px;
+}
+.settings-nav-head h3 { font-size: 17px; font-weight: 750; letter-spacing: -0.02em; }
+.settings-nav-close { display: none; }
+.settings-links { display: flex; flex-direction: column; gap: 2px; }
+.settings-link { width: 100%; text-align: left; }
+.settings-link-chev { display: none; }
+
+.settings-main { display: flex; flex-direction: column; flex: 1; min-width: 0; container-type: inline-size; }
+.settings-main-head {
+  display: flex; align-items: center; gap: 8px; flex: none;
+  padding: 18px 20px 14px 28px;
+}
+.settings-main-head h3 { flex: 1; min-width: 0; font-size: 17px; font-weight: 750; letter-spacing: -0.02em; }
+.settings-back { display: none; margin-left: -8px; }
+.tabpane { display: none; }
+.tabpane.is-active {
+  display: block; flex: 1; min-height: 0;
+  overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+  padding: 4px 28px 26px;
+}
+
 @media (max-width: 700px) {
-  /* Phones: settings takes over the whole screen. */
+  /* Phones: settings takes over the whole screen and drills in — the section
+     list first, then one pane at a time with a back button. */
   #settings-modal[open] {
     width: 100vw; max-width: 100vw;
     height: 100dvh; max-height: 100dvh;
@@ -590,40 +619,23 @@ html:has(dialog[open]) { overflow: hidden; }
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
+  .settings-nav { width: 100%; border-right: 0; padding: 14px 12px; }
+  .settings-nav-head { padding: 0 6px 12px 10px; }
+  .settings-nav-close { display: inline-flex; }
+  /* The list is its own screen here, so no section reads as "current". */
+  .settings-link, .settings-link.is-active {
+    padding: 12px 10px; font-size: 15px; font-weight: 550;
+    color: var(--ink); background: none; box-shadow: none;
+  }
+  .settings-link-chev { display: block; margin-left: auto; width: 16px; height: 16px; color: var(--faint); }
+  .settings[data-view="nav"] .settings-main,
+  .settings[data-view="pane"] .settings-nav { display: none; }
+  .settings[data-view="pane"] .settings-main { animation: settings-push .24s cubic-bezier(.2, .9, .3, 1) both; }
+  .settings-main-head { padding: 14px 12px 10px; }
+  .settings-back { display: inline-flex; margin-left: 0; }
+  .tabpane.is-active { padding: 4px 20px 22px; }
 }
-.settings {
-  display: flex; flex-direction: column;
-  flex: 1; min-height: 0;
-  padding: 14px 20px 0;
-}
-.settings-tabs {
-  display: flex; gap: 4px; margin-bottom: 18px; flex: none;
-  /* The rule under the tabs is a background, not a border: a border would sit
-     below the padding box, and the active tab's -1px overlap of it made the
-     strip scrollable vertically as well as horizontally (touch drags snagged). */
-  background: linear-gradient(var(--line), var(--line)) 0 100% / 100% 1px no-repeat;
-  overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch;
-  touch-action: pan-x; overscroll-behavior-x: contain;
-  /* Edge fades hint at overflow; JS toggles them per side while scrolling. */
-  --fade-l: 0px; --fade-r: 0px;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0,
-    #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
-  mask-image: linear-gradient(90deg, transparent 0,
-    #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
-}
-.settings-tabs.can-scroll-left { --fade-l: 32px; }
-.settings-tabs.can-scroll-right { --fade-r: 32px; }
-.settings-tabs::-webkit-scrollbar { display: none; }
-.tab {
-  padding: 8px 12px 10px; font-size: 13.5px; font-weight: 600; color: var(--muted);
-  border-bottom: 2px solid transparent;
-  transition: color .15s, border-color .15s;
-  white-space: nowrap; flex: none;
-}
-.tab:hover { color: var(--ink); }
-.tab.is-active { color: var(--ink); border-bottom-color: var(--volt); }
-.tabpane { display: none; }
-.tabpane.is-active { display: block; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding-bottom: 22px; }
+@keyframes settings-push { from { transform: translateX(24px); opacity: 0; } }
 .setting-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
 .setting-row { margin-top: 18px; }
 
@@ -814,7 +826,7 @@ html[data-theme="light"] .tech-tile-name { color: #000; }
 .rel-body strong { color: var(--ink); }
 .rel-body code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .9em; background: var(--field); padding: 1px 4px; border-radius: 4px; }
 
-@media (max-width: 560px) {
+@container (max-width: 520px) {
   .about-hero { grid-template-columns: 1fr; gap: 16px; }
   .about-brand { align-items: center; text-align: center; }
 }

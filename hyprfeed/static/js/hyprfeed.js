@@ -121,29 +121,27 @@
   });
 
   /* ————— Modals ————— */
+  var settingsRoot = document.querySelector("#settings-modal .settings");
+  var settingsLinks = Array.prototype.slice.call(document.querySelectorAll(".settings-link"));
+  var settingsTitle = document.getElementById("settings-title");
+  // Phones drill in: "nav" shows the section list, "pane" one section with a
+  // back button. On wider screens both are always visible and this is inert.
+  var phoneSettings = window.matchMedia("(max-width: 700px)");
+  function setSettingsView(view) {
+    if (settingsRoot) settingsRoot.setAttribute("data-view", view);
+  }
   function switchSettingsTab(name) {
-    document.querySelectorAll(".tab").forEach(function (t) {
-      var active = t.getAttribute("data-tab") === name;
-      t.classList.toggle("is-active", active);
-      if (active && t.scrollIntoView) {
-        t.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
-      }
+    settingsLinks.forEach(function (link) {
+      var active = link.getAttribute("data-tab") === name;
+      link.classList.toggle("is-active", active);
+      link.setAttribute("aria-selected", active ? "true" : "false");
+      link.tabIndex = active ? 0 : -1;
+      if (active && settingsTitle) settingsTitle.textContent = link.textContent.trim();
     });
     document.querySelectorAll(".tabpane").forEach(function (pane) {
       pane.classList.toggle("is-active", pane.getAttribute("data-pane") === name);
     });
-  }
-
-  var tabsBar = document.querySelector(".settings-tabs");
-  function updateTabFades() {
-    if (!tabsBar) return;
-    var max = tabsBar.scrollWidth - tabsBar.clientWidth;
-    tabsBar.classList.toggle("can-scroll-left", tabsBar.scrollLeft > 2);
-    tabsBar.classList.toggle("can-scroll-right", max - tabsBar.scrollLeft > 2);
-  }
-  if (tabsBar) {
-    tabsBar.addEventListener("scroll", updateTabFades, { passive: true });
-    window.addEventListener("resize", updateTabFades);
+    setSettingsView("pane");
   }
 
   document.querySelectorAll("[data-open]").forEach(function (btn) {
@@ -152,8 +150,8 @@
       if (!dialog) return;
       var tab = btn.getAttribute("data-tab-target");
       if (tab) switchSettingsTab(tab);
+      else if (dialog.id === "settings-modal") setSettingsView(phoneSettings.matches ? "nav" : "pane");
       dialog.showModal();
-      if (dialog.id === "settings-modal") updateTabFades();
     });
   });
   function prefersReducedMotion() {
@@ -211,10 +209,27 @@
     }
   });
 
-  /* ————— Settings: tabs & preferences ————— */
-  document.querySelectorAll(".tab").forEach(function (tab) {
-    tab.addEventListener("click", function () {
-      switchSettingsTab(tab.getAttribute("data-tab"));
+  /* ————— Settings: sections & preferences ————— */
+  settingsLinks.forEach(function (link, i) {
+    link.addEventListener("click", function () {
+      switchSettingsTab(link.getAttribute("data-tab"));
+    });
+    // Vertical tablist: arrows move between sections, Home/End jump.
+    link.addEventListener("keydown", function (e) {
+      var next = { ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: settingsLinks.length - 1 }[e.key];
+      if (next === undefined) return;
+      e.preventDefault();
+      var target = settingsLinks[(next + settingsLinks.length) % settingsLinks.length];
+      // On phones the list is its own screen — just move focus, don't drill in.
+      if (!phoneSettings.matches) switchSettingsTab(target.getAttribute("data-tab"));
+      target.focus();
+    });
+  });
+  document.querySelectorAll("[data-settings-back]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      setSettingsView("nav");
+      var active = document.querySelector(".settings-link.is-active");
+      if (active) active.focus();
     });
   });
   document.querySelectorAll('input[name="view_mode"]').forEach(function (radio) {
