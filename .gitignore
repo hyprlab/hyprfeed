@@ -2,5 +2,6 @@ __pycache__/
 *.pyc
 .venv/
 venv/
-data/
+data/*
+!data/CONTRIBUTORS
 .env
