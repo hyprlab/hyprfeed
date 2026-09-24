@@ -4,6 +4,14 @@ All notable changes to Hyprfeed are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and Hyprfeed uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.9.5] — 2026-09-24
+
+### Fixed
+- The sidebar's logo and your account row now stay put while the feed list
+  scrolls beneath them. A long list used to carry the Hyprfeed wordmark off the
+  top and settings and sign-out off the bottom, so getting back to them meant
+  scrolling the sidebar to its ends
+
 ## [1.9.4] — 2026-09-20
 
 ### Fixed
@@ -401,6 +409,7 @@ First stable release. ⚡
 - Automatic in-place schema migrations on startup
 - Gunicorn with access logging; cache-busted static assets
 
+[1.9.5]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.9.5
 [1.9.4]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.9.4
 [1.9.3]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.9.3
 [1.9.2]: https://github.com/hyprlab/hyprfeed/releases/tag/v1.9.2

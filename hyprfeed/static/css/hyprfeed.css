@@ -148,9 +148,11 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   display: flex; flex-direction: column;
   background: var(--panel); border-right: 1px solid var(--line);
   padding: 18px 14px 14px;
-  overflow-y: auto;
+  overflow: hidden;
 }
-.sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: 0 8px 16px; }
+/* Head and foot are pinned; only the library in between scrolls. */
+.sidebar-head { display: flex; align-items: center; justify-content: space-between; flex: none; padding: 0 8px 16px; }
+.sidebar-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .sidebar-close { display: none; }
 
 .nav-primary { display: flex; flex-direction: column; gap: 2px; }
@@ -204,8 +206,8 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .feed-list--group .feeditem { padding-left: 28px; }
 
 .sidebar-foot {
-  display: flex; align-items: center; gap: 4px;
-  margin-top: auto; padding: 12px 6px 0; border-top: 1px solid var(--line);
+  display: flex; align-items: center; gap: 4px; flex: none;
+  padding: 12px 6px 0; border-top: 1px solid var(--line);
 }
 .user {
   display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0;
