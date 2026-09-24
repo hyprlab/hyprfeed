@@ -13,7 +13,7 @@
 </p>
 
 Hyprfeed is a self-hosted, multi-user RSS reader that turns the sites you
-follow into an elegant magazine. Paste any website URL — Hyprfeed discovers its
+follow into a magazine. Paste any website URL — Hyprfeed discovers its
 feed, and if the site doesn't publish one, it can watch the page itself and
 turn new articles into stories.
 
@@ -101,88 +101,15 @@ docker compose pull && docker compose up -d
 ```
 
 Schema migrations run automatically on startup. Your data lives in the
-`hyprfeed-data` volume and survives updates.
+`hyprfeed-data` volume and survives updates; backing it up is covered in
+[the documentation](docs/DOCUMENTATION.md#backups).
 
-### Backup
+## Documentation
 
-Everything (database, generated secret key) is in the `/data` volume:
-
-```bash
-docker run --rm -v hyprfeed_hyprfeed-data:/data -v "$PWD":/backup alpine \
-  tar czf /backup/hyprfeed-backup.tgz -C /data .
-```
-
-## Configuration
-
-Most day-to-day settings (registration, refresh cadence, story retention) are
-managed **in the app** under Settings → Admin — the setup wizard seeds them on
-first run. Environment variables provide secrets and fresh-install defaults.
-
-Example `.env` (same as [`.env.example`](.env.example)):
-
-```ini
-# Session signing key. If unset, one is generated and stored in the data volume.
-SECRET_KEY=
-
-# Cloudflare Turnstile — leave both empty to run without the challenge.
-TURNSTILE_SITE_KEY=
-TURNSTILE_SECRET_KEY=
-
-# ——— Fresh-install defaults (admins manage these at runtime afterwards) ———
-ALLOW_REGISTRATION=1      # allow new sign-ups (0 to close)
-REFRESH_MINUTES=15        # background refresh interval (0 pauses)
-MAX_ENTRIES_PER_FEED=300  # stories kept per feed; older ones are pruned
-```
-
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `SECRET_KEY` | auto-generated in `/data` | Session signing key — set one explicitly if you run replicas |
-| `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | empty (disabled) | Cloudflare Turnstile bot protection |
-| `ALLOW_REGISTRATION` | `1` | Fresh-install default; Settings → Admin toggle overrides at runtime |
-| `REFRESH_MINUTES` | `15` | Fresh-install default; Settings → Admin overrides at runtime (`0` pauses) |
-| `MAX_ENTRIES_PER_FEED` | `300` | Fresh-install default; Settings → Admin overrides at runtime |
-| `DATA_DIR` | `/data` | Where SQLite and the secret key live |
-
-### Cloudflare Turnstile
-
-1. Create a widget in the [Cloudflare dashboard](https://dash.cloudflare.com/?to=/:account/turnstile)
-   for the domain you serve Hyprfeed on.
-2. Add both keys to `.env`:
-   ```
-   TURNSTILE_SITE_KEY=0x...
-   TURNSTILE_SECRET_KEY=0x...
-   ```
-3. `docker compose up -d`
-
-With the keys unset the challenge is skipped entirely — convenient for LAN-only
-or development use.
-
-## How the page watcher works
-
-When you add a site and no RSS/Atom feed can be discovered, Hyprfeed offers
-**"Follow without a feed."** It then:
-
-1. scans the page for article-looking links (same site, wordy slugs,
-   headline-length link text; navigation, tag, and author pages are filtered out),
-2. fetches each *new* article once (at most 8 per refresh cycle) and reads its
-   Open Graph metadata for the title, lead image, description, and publish date,
-3. serves those stories like any other feed — unread counts, saving, and the
-   reader all work the same.
-
-Watched feeds are labeled with a "watcher" chip in Settings → Feeds. The reader
-shows the article's summary with a link out to the site, out of respect for
-publishers.
-
-## Running from source
-
-```bash
-git clone https://github.com/hyprlab/hyprfeed.git && cd hyprfeed
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python run.py            # http://localhost:8000
-```
-
-Or build the container yourself: `docker compose up -d --build`.
+- [Configuration, Turnstile, the page watcher, backups, running from source](docs/DOCUMENTATION.md)
+- [Contributing](docs/CONTRIBUTING.md): commits, code conventions, credit
+- [Releasing](docs/RELEASING.md): versioning and the release procedure
+- [Changelog](CHANGELOG.md), also shown in the app under Settings → About
 
 ## Stack
 
@@ -210,8 +137,10 @@ development tool:
   talks only to the feeds and sites you choose to follow. AI was used to
   *build* the app, not to run it.
 
-Bug reports and pull requests are welcome from humans and their AI tools alike;
-everything merged gets the same human review.
+Commits are made under the maintainer's name; the tool is declared here once,
+for the whole repository, instead of in a trailer on every commit. Bug reports
+and pull requests are welcome from humans and their AI tools alike; everything
+merged gets the same human review.
 
 ## License
 
