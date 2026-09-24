@@ -71,7 +71,7 @@ On `main`, with the changelog's `## Unreleased` section written:
 tools/prepare-release.sh               # version from next-version.sh
 ```
 
-That runs the docs check, turns `## Unreleased` into `## [X.Y.Z] — date`, sets
+That runs the docs check, turns `## Unreleased` into a dated `## [X.Y.Z]` section, sets
 `__version__`, commits `chore(release): X.Y.Z`, tags it, and stops. Nothing is
 pushed.
 

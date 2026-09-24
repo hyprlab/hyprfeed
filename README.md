@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="hyprfeed/static/img/logo.svg" width="72" alt="Hyprfeed logo — a yellow lightning bolt">
+  <img src="hyprfeed/static/img/logo.svg" width="72" alt="Hyprfeed logo: a yellow lightning bolt">
 </p>
 
 <h1 align="center">Hyprfeed</h1>
 
-<p align="center"><strong>A self-hosted RSS reader for the open web — follow any site, even ones without a feed.</strong></p>
+<p align="center"><strong>A self-hosted RSS reader for the open web. Follow any site, even ones without a feed.</strong></p>
 
 <p align="center">
   <a href="https://hub.docker.com/r/hyprlab/hyprfeed"><img src="https://img.shields.io/docker/v/hyprlab/hyprfeed?label=docker&color=F7DF1E" alt="Docker Hub"></a>
@@ -13,8 +13,8 @@
 </p>
 
 Hyprfeed is a self-hosted, multi-user RSS reader that turns the sites you
-follow into a magazine. Paste any website URL — Hyprfeed discovers its
-feed, and if the site doesn't publish one, it can watch the page itself and
+follow into a magazine. Paste any website URL and Hyprfeed discovers its
+feed. If the site doesn't publish one, it can watch the page itself and
 turn new articles into stories.
 
 <p align="center">
@@ -23,22 +23,22 @@ turn new articles into stories.
 
 ## Features
 
-- **Three view modes** — magazine (lead story + mixed grid), cards, and a
+- **Three view modes:** magazine (lead story + mixed grid), cards, and a
   compact list; switch from the topbar, per-user preference remembered
-- **Feed auto-discovery** — paste `example.com` and Hyprfeed finds the RSS or
+- **Feed auto-discovery:** paste `example.com` and Hyprfeed finds the RSS or
   Atom feed for you
-- **Page watcher** — follow sites with *no feed at all*: Hyprfeed detects new
+- **Page watcher:** follow sites with *no feed at all*: Hyprfeed detects new
   article links on the page and enriches each story with the article's own
   title, image, description, and publish date
-- **Built-in reader** — clean, sanitized article view with reading-time
+- **Built-in reader:** clean, sanitized article view with reading-time
   estimate and `j` / `k` keyboard navigation
-- **Multi-user** — private subscriptions, read state, and saved stories per
+- **Multi-user:** private subscriptions, read state, and saved stories per
   account; email-based sign-in
-- **Admin panel** — the first registered account becomes admin: manage users,
+- **Admin panel:** the first registered account becomes admin and can manage users,
   reset passwords, promote admins, and open/close registration at runtime
-- **Cloudflare Turnstile** — optional bot protection on sign-in and sign-up
-- **Light & dark themes** — follows your system or your choice, instant toggle
-- **Self-contained** — Inter typeface embedded, no CDNs, no external services
+- **Cloudflare Turnstile:** optional bot protection on sign-in and sign-up
+- **Light & dark themes:** follows your system or your choice, instant toggle
+- **Self-contained:** Inter typeface embedded, no CDNs, no external services
   required, SQLite storage in a single Docker volume
 
 ## Install with Docker Compose
@@ -52,12 +52,12 @@ turn new articles into stories.
        image: hyprlab/hyprfeed:latest
        container_name: hyprfeed
        ports:
-         # host:container — change the left side if 8098 is taken on your host
+         # host:container. Change the left side if 8098 is taken on your host
          - "8098:8000"
        environment:
          # Session signing key. If unset, one is generated and kept in the data volume.
          - SECRET_KEY=${SECRET_KEY:-}
-         # Cloudflare Turnstile (optional — leave empty to disable the challenge)
+         # Cloudflare Turnstile (optional; leave empty to disable the challenge)
          - TURNSTILE_SITE_KEY=${TURNSTILE_SITE_KEY:-}
          - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY:-}
          # Set to 0 to close sign-ups (the admin panel can also toggle this at runtime)
@@ -75,7 +75,7 @@ turn new articles into stories.
    ```
 
 2. (Optional) add a `.env` file next to it to set any of the variables above
-   ([`.env.example`](.env.example)) — everything works with the defaults for a
+   ([`.env.example`](.env.example)). Everything works with the defaults for a
    first run.
 
 3. Start it:
@@ -84,7 +84,7 @@ turn new articles into stories.
    docker compose up -d
    ```
 
-4. Open **http://localhost:8098** and create your account — **the first
+4. Open **http://localhost:8098** and create your account. **The first
    account registered becomes the admin**, so register yourself before opening
    the instance to others (or set `ALLOW_REGISTRATION=0` after you're in, or
    flip the toggle in Settings → Admin).
@@ -114,7 +114,7 @@ Schema migrations run automatically on startup. Your data lives in the
 ## Stack
 
 Flask · SQLAlchemy · Flask-Login · feedparser · SQLite · gunicorn. No frontend
-framework and no CDN dependencies — the [Inter](https://rsms.me/inter/)
+framework and no CDN dependencies: the [Inter](https://rsms.me/inter/)
 variable font (SIL Open Font License) is bundled in the image.
 
 ## AI notice
@@ -122,18 +122,18 @@ variable font (SIL Open Font License) is bundled in the image.
 Hyprfeed is built by a human maintainer working with generative AI as a
 development tool:
 
-- **Code** — the large majority of the Python, JavaScript, and CSS in this
+- **Code:** the large majority of the Python, JavaScript, and CSS in this
   repository was written with Anthropic's Claude (via Claude Code), working
   from the maintainer's direction. The maintainer decides what gets built,
   reviews the results, tests every release, and signs off on everything that
   ships.
-- **Text** — documentation, release notes, and in-app copy are largely
+- **Text:** documentation, release notes, and in-app copy are largely
   AI-drafted and human-edited.
-- **Artwork** — the flat bolt logo and the app's visual design were created
+- **Artwork:** the flat bolt logo and the app's visual design were created
   with the same AI assistance; the dimensional app icon artwork was provided
   by the maintainer.
 - **The app itself contains no AI.** Hyprfeed has no AI features, makes no
-  requests to AI services, and never sends your reading data anywhere — it
+  requests to AI services, and never sends your reading data anywhere; it
   talks only to the feeds and sites you choose to follow. AI was used to
   *build* the app, not to run it.
 
@@ -147,7 +147,7 @@ merged gets the same human review.
 Hyprfeed is free software, released under the
 [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0). You may run,
 study, share, and modify it. If you run a modified version as a network
-service, the AGPL requires you to offer its source code to your users — the
+service, the AGPL requires you to offer its source code to your users, and the
 "Source" link in the app's settings makes that easy to satisfy.
 
 © 2026 Hyprlab
