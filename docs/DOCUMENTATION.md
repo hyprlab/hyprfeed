@@ -18,7 +18,7 @@ to apply.
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | empty (off) | Cloudflare Turnstile on sign-in and sign-up; see [Turnstile](#cloudflare-turnstile) |
 | `ALLOW_REGISTRATION` | `1` | Fresh-install default; the Settings → Admin toggle overrides it |
 | `REFRESH_MINUTES` | `15` | Fresh-install default; Settings → Admin overrides it (`0` pauses) |
-| `MAX_ENTRIES_PER_FEED` | `300` | Fresh-install default; Settings → Admin overrides it |
+| `MAX_ENTRIES_PER_FEED` | `300` | Fresh-install default; Settings → Admin overrides it. Stories in someone's History are kept beyond it |
 | `DATA_DIR` | `/data` | Where SQLite and the secret key live |
 
 ## Cloudflare Turnstile

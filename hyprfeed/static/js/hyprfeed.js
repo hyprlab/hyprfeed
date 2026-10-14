@@ -289,6 +289,31 @@
     });
   }
 
+  // Clear history, with Undo. The History list behind the dialog reloads
+  // when it closes.
+  var historyClear = document.getElementById("history-clear");
+  var historyDirty = false;
+  if (historyClear) {
+    var historyCount = document.getElementById("history-count");
+    var countBefore = historyCount.textContent;
+    historyClear.addEventListener("click", function () {
+      historyClear.disabled = true;
+      api("/history/clear").then(function (data) {
+        historyDirty = true;
+        historyCount.textContent = "0 stories";
+        toast("History cleared", "Undo", function () {
+          api("/history/clear", { restore: data.previous }).then(function () {
+            historyCount.textContent = countBefore;
+            historyClear.disabled = false;
+          }).catch(function (err) { toast(err.message); });
+        });
+      }).catch(function (err) {
+        historyClear.disabled = false;
+        toast(err.message);
+      });
+    });
+  }
+
   var acctName = document.getElementById("acct-name");
   if (acctName) {
     acctName.addEventListener("change", function () {
@@ -652,6 +677,7 @@
       // Reloading a /?feed=N view whose feed just went away would 404.
       if (activeFeedRemoved) location.href = "/";
       else if (organizeDirty || feedsDirty) location.reload();
+      else if (historyDirty && inHistoryView()) location.reload();
     });
   }
   // Reopen settings on the feeds tab after a group action reload.
@@ -977,6 +1003,11 @@
   }
 
   var readInReader = {};   // entry ids read/opened-as-read in this session
+
+  function inHistoryView() {
+    var root = document.getElementById("entries-root");
+    return !!root && root.getAttribute("data-filter") === "history";
+  }
 
   function inSkippedView() {
     var root = document.getElementById("entries-root");

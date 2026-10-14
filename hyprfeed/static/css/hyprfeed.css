@@ -750,6 +750,7 @@ html:has(dialog[open]) { overflow: hidden; }
 .setting-label--flush { margin-bottom: 0; }
 .sortbtns { display: flex; gap: 6px; }
 .btn--xs { padding: 4px 10px; font-size: 12px; border-radius: 8px; }
+.history-hint { margin-top: 8px; }
 .feedadd { display: flex; gap: 8px; margin-top: 10px; }
 .feedadd input {
   flex: 1; padding: 9px 11px; font: inherit; font-size: 13.5px; color: var(--ink);

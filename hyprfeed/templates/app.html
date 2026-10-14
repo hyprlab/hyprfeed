@@ -338,6 +338,18 @@
       </label>
 
       <div class="sortrow">
+        <p class="setting-label setting-label--flush">History</p>
+        <button class="btn btn--ghost btn--xs" id="history-clear" type="button"
+                {{ 'disabled' if not history_count }}>Clear history</button>
+      </div>
+      <p class="hint history-hint">
+        <span id="history-count">{{ history_count }} {{ 'story' if history_count == 1 else 'stories' }}</span>.
+        Everything you read stays in History, even after it is skipped or its
+        feed is unfollowed. Clearing it keeps those stories read, so they
+        don't come back to Unread.
+      </p>
+
+      <div class="sortrow">
         <p class="setting-label setting-label--flush">Your feeds</p>
         <div class="sortbtns">
           <button class="btn btn--ghost btn--xs" id="group-create" title="Create a feed group">New group</button>
@@ -472,7 +484,7 @@
           <input type="number" id="inst-retention" min="20" max="5000" step="10" value="{{ inst_retention }}">
         </label>
       </div>
-      <p class="hint">0 minutes pauses background refresh. Stories beyond the cap are pruned oldest-first, read or not.</p>
+      <p class="hint">0 minutes pauses background refresh. Stories beyond the cap are pruned oldest-first, except those in someone's History.</p>
       {% if admin_stats %}
       <p class="hint admin-stats">{{ admin_stats.users }} {{ 'user' if admin_stats.users == 1 else 'users' }} · {{ admin_stats.feeds }} {{ 'feed' if admin_stats.feeds == 1 else 'feeds' }} · {{ admin_stats.entries }} stories</p>
       {% endif %}

@@ -200,6 +200,12 @@ def _migrate(app: Flask) -> None:
         db.session.commit()
         app.logger.info("cleaned up %d orphaned read/star marks", swept)
 
+    user_columns = {c["name"] for c in inspect(db.engine).get_columns("users")}
+    if "history_cleared_at" not in user_columns:
+        db.session.execute(text("ALTER TABLE users ADD COLUMN history_cleared_at DATETIME"))
+        db.session.commit()
+        app.logger.info("migrated: added users.history_cleared_at")
+
 
 def _start_refresher(app: Flask) -> None:
     """Background thread that refreshes every feed on an interval."""

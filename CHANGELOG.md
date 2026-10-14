@@ -6,7 +6,16 @@ All notable changes to Hyprfeed are documented here. The format follows
 
 ## Unreleased
 
+### Added
+- Clear history, under Settings → Reading & Feeds, with an Undo. The stories
+  stay read, so they don't come back to Unread; reading one again puts it back
+  in History
+
 ### Fixed
+- History keeps every story you read. Skipping stories, including with Skip
+  all, used to take the read ones out of History; they are back. Stories in
+  History are also no longer deleted when a feed passes its story limit or
+  when you unfollow its feed
 - Messages raised while the Settings window is open, such as an error or an
   Undo, now appear above it instead of hidden behind it
 

@@ -12,7 +12,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from .models import Entry, Feed, Hidden, ReadMark, Star, db, purge_feed, utcnow
+from .models import (Entry, Feed, Subscription, db, delete_entries, history_entry_ids,
+                     purge_feed, utcnow)
 from .sanitize import first_image, sanitize_html, strip_tags
 
 log = logging.getLogger("hyprfeed.fetcher")
@@ -217,8 +218,8 @@ def _favicon_for(site_url: str) -> str | None:
 
 
 def _prune_entries(feed_id: int, max_entries: int) -> None:
-    """Trim a feed to its newest max_entries, removing read/star marks of the
-    pruned entries so they don't accumulate as orphans."""
+    """Trim a feed to its newest max_entries. Stories in somebody's History
+    are kept beyond the cap: what was read stays readable."""
     ids_to_keep = [
         eid for (eid,) in db.session.query(Entry.id)
         .filter(Entry.feed_id == feed_id)
@@ -227,15 +228,13 @@ def _prune_entries(feed_id: int, max_entries: int) -> None:
     ]
     if len(ids_to_keep) < max_entries:
         return
-    doomed = db.session.query(Entry.id).filter(
-        Entry.feed_id == feed_id, Entry.id.not_in(ids_to_keep)
-    )
-    ReadMark.query.filter(ReadMark.entry_id.in_(doomed)).delete(synchronize_session=False)
-    Star.query.filter(Star.entry_id.in_(doomed)).delete(synchronize_session=False)
-    Hidden.query.filter(Hidden.entry_id.in_(doomed)).delete(synchronize_session=False)
-    db.session.query(Entry).filter(
-        Entry.feed_id == feed_id, Entry.id.not_in(ids_to_keep)
-    ).delete(synchronize_session=False)
+    doomed = [
+        eid for (eid,) in db.session.query(Entry.id).filter(
+            Entry.feed_id == feed_id, Entry.id.not_in(ids_to_keep),
+            Entry.id.not_in(history_entry_ids()),
+        )
+    ]
+    delete_entries(doomed)
 
 
 # ———— Page watcher (sites without feeds) ————
@@ -601,7 +600,13 @@ def refresh_all_feeds(app) -> None:
     from .models import int_setting
     with app.app_context():
         cap = int_setting("max_entries_per_feed", app.config["MAX_ENTRIES_PER_FEED"])
-        feeds = Feed.query.all()
+        followed = db.session.query(Subscription.feed_id)
+        # A feed nobody follows is kept only for stories in somebody's
+        # History; sweep what a cleared History has released.
+        for feed in Feed.query.filter(Feed.id.not_in(followed)).all():
+            purge_feed(feed)
+        db.session.commit()
+        feeds = Feed.query.filter(Feed.id.in_(followed)).all()
         for feed in feeds:
             try:
                 refresh_feed(feed, cap)

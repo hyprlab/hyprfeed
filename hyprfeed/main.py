@@ -1,4 +1,5 @@
 import threading
+from datetime import datetime
 import xml.etree.ElementTree as ET
 
 from flask import (Blueprint, Response, abort, current_app, jsonify,
@@ -34,6 +35,27 @@ def _hidden_sub():
     return db.session.query(Hidden.entry_id).filter(Hidden.user_id == current_user.id)
 
 
+def _in_history():
+    """The current user's History as a filter on ReadMark: every read since
+    they last cleared it."""
+    cleared = current_user.history_cleared_at
+    return ReadMark.read_at > cleared if cleared else db.true()
+
+
+def _history_query(feed_id=None):
+    """Reading history, most recently read first. Unlike every other list it
+    ignores skips and subscriptions: a story read once stays here even after
+    it is skipped or its feed is unfollowed, until History is cleared."""
+    q = (
+        Entry.query.join(ReadMark, (ReadMark.entry_id == Entry.id)
+                         & (ReadMark.user_id == current_user.id))
+        .filter(_in_history())
+    )
+    if feed_id:
+        q = q.filter(Entry.feed_id == feed_id)
+    return q.order_by(ReadMark.read_at.desc())
+
+
 def _entries_query(feed_ids, filter_name):
     if filter_name == "skipped":
         # The skipped bin: everything the user has skipped, newest first,
@@ -55,11 +77,6 @@ def _entries_query(feed_ids, filter_name):
     elif filter_name == "saved":
         starred = db.session.query(Star.entry_id).filter(Star.user_id == current_user.id)
         q = q.filter(Entry.id.in_(starred))
-    elif filter_name == "history":
-        # Reading history: most recently read first.
-        q = q.join(ReadMark, (ReadMark.entry_id == Entry.id)
-                   & (ReadMark.user_id == current_user.id))
-        return q.order_by(ReadMark.read_at.desc())
     return q.order_by(Entry.published.desc())
 
 
@@ -96,7 +113,10 @@ def _page_context():
         feed_ids = [feed_id]
 
     per_page = current_app.config["ENTRIES_PER_PAGE"]
-    query = _entries_query(feed_ids, filter_name) if feed_ids else None
+    if filter_name == "history":
+        query = _history_query(feed_id if active_sub else None)
+    else:
+        query = _entries_query(feed_ids, filter_name) if feed_ids else None
     entries = (
         query.offset((page - 1) * per_page).limit(per_page + 1).all() if query else []
     )
@@ -173,6 +193,7 @@ def _page_context():
         "star_ids": star_ids,
         "unread_counts": unread_counts,
         "total_unread": sum(unread_counts.values()),
+        "history_count": _history_query().order_by(None).count(),
         "page": page,
         "has_more": has_more,
         "infinite_scroll": current_user.infinite_scroll,
@@ -191,7 +212,7 @@ def _admin_context():
         "inst_retention": retention_cap(),
         "admin_stats": {
             "users": len(users),
-            "feeds": db.session.query(func.count(Feed.id)).scalar(),
+            "feeds": db.session.query(func.count(func.distinct(Subscription.feed_id))).scalar(),
             "entries": db.session.query(func.count(Entry.id)).scalar(),
         },
     }
@@ -547,7 +568,9 @@ def refresh():
 @login_required
 def entry_detail(entry_id):
     entry = Entry.query.get_or_404(entry_id)
-    if entry.feed_id not in _subscribed_feed_ids():
+    # A story from an unfollowed feed still opens from History.
+    if (entry.feed_id not in _subscribed_feed_ids()
+            and db.session.get(ReadMark, (current_user.id, entry.id)) is None):
         abort(404)
     was_read = db.session.get(ReadMark, (current_user.id, entry.id)) is not None
     auto_marked = False
@@ -712,6 +735,30 @@ def _gc_orphan_feeds() -> None:
     ).all()
     for feed in orphans:
         purge_feed(feed)
+
+
+@bp.route("/history/clear", methods=["POST"])
+@login_required
+def history_clear():
+    """Clear History, or with {"restore": <what clearing returned>} undo it.
+    Stories stay read either way, so nothing returns to Unread."""
+    data = request.get_json(silent=True) or {}
+    previous = current_user.history_cleared_at
+    if "restore" in data:
+        restore = data["restore"]
+        try:
+            when = datetime.fromisoformat(restore) if restore else None
+        except (TypeError, ValueError):
+            return jsonify(error="That clear can't be undone anymore."), 400
+        # Only ever back to an earlier point: undo, not a way to hide more.
+        if previous is None or (when is not None and when > previous):
+            return jsonify(error="That clear can't be undone anymore."), 400
+        current_user.history_cleared_at = when
+        db.session.commit()
+        return jsonify(ok=True)
+    current_user.history_cleared_at = utcnow()
+    db.session.commit()
+    return jsonify(ok=True, previous=previous.isoformat() if previous else None)
 
 
 @bp.route("/admin/instance", methods=["POST"])

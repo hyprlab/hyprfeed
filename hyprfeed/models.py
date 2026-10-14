@@ -23,6 +23,9 @@ class User(UserMixin, db.Model):
     view_mode = db.Column(db.String(10), default="magazine", nullable=False)  # magazine|cards|list
     mark_read_on_open = db.Column(db.Boolean, default=True, nullable=False)
     infinite_scroll = db.Column(db.Boolean, default=True, nullable=False)
+    # Clearing History hides what was read before this moment; the stories
+    # stay read, and reading one again brings it back.
+    history_cleared_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
     subscriptions = db.relationship(
@@ -148,14 +151,38 @@ class Entry(db.Model):
     word_count = db.Column(db.Integer, default=0, nullable=False)
 
 
-def purge_feed(feed: "Feed") -> None:
-    """Delete a feed along with its entries AND their read/star marks —
-    plain cascade would leave the marks orphaned."""
-    entry_ids = db.session.query(Entry.id).filter(Entry.feed_id == feed.id)
+def history_entry_ids():
+    """Entries in somebody's History: read, and since that reader last
+    cleared it. These are never pruned or purged."""
+    return (
+        db.session.query(ReadMark.entry_id)
+        .join(User, User.id == ReadMark.user_id)
+        .filter(db.or_(User.history_cleared_at.is_(None),
+                       ReadMark.read_at > User.history_cleared_at))
+    )
+
+
+def delete_entries(entry_ids) -> None:
+    """Delete entries with their read, star and skip marks; a plain delete
+    would leave the marks orphaned."""
     ReadMark.query.filter(ReadMark.entry_id.in_(entry_ids)).delete(synchronize_session=False)
     Star.query.filter(Star.entry_id.in_(entry_ids)).delete(synchronize_session=False)
     Hidden.query.filter(Hidden.entry_id.in_(entry_ids)).delete(synchronize_session=False)
-    db.session.delete(feed)
+    Entry.query.filter(Entry.id.in_(entry_ids)).delete(synchronize_session=False)
+
+
+def purge_feed(feed: "Feed") -> None:
+    """Delete a feed nobody follows, except the stories still in somebody's
+    History. Until those are cleared the feed row stays, unfollowed and never
+    fetched, so History can still show where they came from."""
+    doomed = [
+        eid for (eid,) in db.session.query(Entry.id).filter(
+            Entry.feed_id == feed.id, Entry.id.not_in(history_entry_ids())
+        )
+    ]
+    delete_entries(doomed)
+    if not db.session.query(Entry.id).filter(Entry.feed_id == feed.id).first():
+        db.session.delete(feed)
 
 
 class ReadMark(db.Model):
