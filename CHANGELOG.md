@@ -6,6 +6,8 @@ All notable changes to Hyprfeed are documented here. The format follows
 
 ## Unreleased
 
+## [1.11.1] — 2026-10-14
+
 ### Changed
 - Read stories are dimmed only in Unread, All stories and a feed's own list.
   In Saved and History, where every story is one you meant to keep or have
