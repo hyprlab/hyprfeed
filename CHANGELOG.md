@@ -6,6 +6,8 @@ All notable changes to Hyprfeed are documented here. The format follows
 
 ## Unreleased
 
+## [1.11.0] — 2026-10-14
+
 ### Added
 - Clear history, under Settings → Reading & Feeds, with an Undo. The stories
   stay read, so they don't come back to Unread; reading one again puts it back
