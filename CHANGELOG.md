@@ -10,6 +10,11 @@ All notable changes to Hyprfeed are documented here. The format follows
 - Settings lists its sections in a sidebar on the left instead of tabs across
   the top, with the chosen section and its title on the right. On phones it
   opens to the list of sections, and each one slides in with a back button
+- The chosen row in the sidebar and in Settings is a rounded gray pill with a
+  short yellow bar beside it, instead of a yellow wash with a bar along its
+  edge. The chosen search result is gray as well
+- The chosen option of a segmented control, such as the default view, is shown
+  in yellow
 
 ## [1.9.5] — 2026-09-24
 

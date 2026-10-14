@@ -42,6 +42,10 @@ html[data-theme="light"] {
   --line: #E4E4DD;
   --line-strong: #D4D4CC;
   --wash: rgb(255 214 10 / .17);
+  /* The chosen row (sidebar, settings, search) and a row under the pointer:
+     grey a step darker than the panel, the volt bar alone marking it. */
+  --selected: #E2E2DB;
+  --hover: #E8E8E2;
   --scrim: rgb(25 25 20 / .40);
 }
 
@@ -58,6 +62,8 @@ html[data-theme="dark"] {
   --line: #26262B;
   --line-strong: #34343A;
   --wash: rgb(247 223 30 / .10);
+  --selected: var(--wash);
+  --hover: var(--wash);
   --scrim: rgb(0 0 0 / .55);
   --shadow-1: 0 1px 2px rgb(0 0 0 / .35), 0 6px 20px rgb(0 0 0 / .30);
   --shadow-2: 0 2px 8px rgb(0 0 0 / .45), 0 18px 44px rgb(0 0 0 / .45);
@@ -152,7 +158,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 }
 /* Head and foot are pinned; only the library in between scrolls. */
 .sidebar-head { display: flex; align-items: center; justify-content: space-between; flex: none; padding: 0 8px 16px; }
-.sidebar-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.sidebar-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -10px; padding: 0 10px; }
 .sidebar-close { display: none; }
 
 .nav-primary { display: flex; flex-direction: column; gap: 2px; }
@@ -163,8 +169,8 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   transition: background .15s, color .15s;
 }
 .navitem svg { width: 18px; height: 18px; }
-.navitem:hover { color: var(--ink); background: var(--wash); }
-.navitem.is-active { color: var(--ink); font-weight: 650; background: var(--wash); box-shadow: inset 3px 0 0 var(--volt); }
+.navitem:hover { color: var(--ink); background: var(--hover); }
+.navitem.is-active { color: var(--ink); font-weight: 650; background: var(--selected); }
 .navitem .count { margin-left: auto; }
 
 .sidebar-label {
@@ -179,8 +185,16 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   font-size: 13.5px; color: var(--muted);
   transition: background .15s, color .15s;
 }
-.feeditem:hover { color: var(--ink); background: var(--wash); }
-.feeditem.is-active { color: var(--ink); font-weight: 600; background: var(--wash); box-shadow: inset 3px 0 0 var(--volt); }
+.feeditem:hover { color: var(--ink); background: var(--hover); }
+.feeditem.is-active { color: var(--ink); font-weight: 600; background: var(--selected); }
+/* The chosen row in the sidebar and settings: the grey pill, with a short
+   rounded volt bar standing just outside its left edge. The scrolling
+   lists lend their rows 10px of side padding so the bar isn't clipped. */
+.navitem, .feeditem { position: relative; }
+.navitem.is-active::before, .feeditem.is-active::before {
+  content: ""; position: absolute; left: -4px; top: 20%; bottom: 20%;
+  width: 3px; border-radius: 99px; background: var(--volt);
+}
 .feeditem-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 .feed-list-empty { padding: 10px; font-size: 13px; color: var(--faint); }
 .favicon { width: 17px; height: 17px; border-radius: 4px; flex: none; }
@@ -198,7 +212,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   font-size: 13px; font-weight: 700; color: var(--muted);
   transition: background .15s, color .15s;
 }
-.grouphead:hover { color: var(--ink); background: var(--wash); }
+.grouphead:hover { color: var(--ink); background: var(--hover); }
 .grouphead .chev { width: 14px; height: 14px; flex: none; transition: transform .15s; }
 .sidebar-group.is-collapsed .chev { transform: rotate(-90deg); }
 .sidebar-group.is-collapsed .feed-list { display: none; }
@@ -627,6 +641,7 @@ html:has(dialog[open]) { overflow: hidden; }
     padding: 12px 10px; font-size: 15px; font-weight: 550;
     color: var(--ink); background: none; box-shadow: none;
   }
+  .settings-link.is-active::before { display: none; }
   .settings-link-chev { display: block; margin-left: auto; width: 16px; height: 16px; color: var(--faint); }
   .settings[data-view="nav"] .settings-main,
   .settings[data-view="pane"] .settings-nav { display: none; }
@@ -662,7 +677,7 @@ html:has(dialog[open]) { overflow: hidden; }
   font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer;
   transition: background .15s, color .15s;
 }
-.seg input:checked + span { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-1); }
+.seg input:checked + span { background: var(--volt); color: var(--volt-ink); box-shadow: var(--shadow-1); }
 
 .sortrow { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; }
 .setting-label--flush { margin-bottom: 0; }
@@ -898,7 +913,7 @@ html[data-theme="light"] .tech-tile-name { color: #000; }
   border-radius: 3px; padding: 0 1px;
 }
 .palette-item-meta { font-size: 11.5px; color: var(--faint); font-weight: 550; flex: none; }
-.palette-item.is-active { background: var(--wash); box-shadow: inset 3px 0 0 var(--volt); }
+.palette-item.is-active { background: var(--selected); box-shadow: inset 3px 0 0 var(--volt); }
 .palette-empty { padding: 18px 12px 14px; text-align: center; font-size: 13.5px; color: var(--muted); }
 
 /* ————— Reader ————— */
