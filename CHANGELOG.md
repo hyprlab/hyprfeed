@@ -6,6 +6,8 @@ All notable changes to Hyprfeed are documented here. The format follows
 
 ## Unreleased
 
+## [1.10.0] — 2026-10-14
+
 ### Added
 - A light and dark switch in the sidebar's footer, beside Settings, as well
   as the one in the top bar
