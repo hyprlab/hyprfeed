@@ -163,13 +163,42 @@
   var READER_EXIT_MS = 300;   // keep in step with the reader-out animation
   var readerExitTimer = null;
   function closeDialog(dialog) {
-    if (dialog.id !== "reader" || prefersReducedMotion()) { dialog.close(); return; }
+    if (dialog.id !== "reader") { dialog.close(); return; }
     if (dialog.classList.contains("is-closing")) return;
-    dialog.classList.add("is-closing");
+    // The story stays in the list once read, so the reader folds back into
+    // its card, brought into view first: the list picks up where reading
+    // stopped. A story with no card on the page leaves through the top.
+    var card = currentEntryId &&
+      document.querySelector('.story[data-id="' + currentEntryId + '"]:not(.is-hidden)');
+    if (card) card.scrollIntoView({ block: "nearest" });
+    // Closing hands focus back to the card that first opened the reader,
+    // which after a few j presses can be far up the list: the card it
+    // folds into takes focus instead, without scrolling.
+    function closeOnto() {
+      dialog.close();
+      if (card) card.focus({ preventScroll: true });
+    }
+    if (prefersReducedMotion()) { closeOnto(); return; }
+    if (card) {
+      var from = dialog.getBoundingClientRect();
+      var to = card.getBoundingClientRect();
+      dialog.style.setProperty("--fold-x", (to.left - from.left) + "px");
+      dialog.style.setProperty("--fold-y", (to.top - from.top) + "px");
+      dialog.style.setProperty("--fold-sx", String(to.width / from.width));
+      dialog.style.setProperty("--fold-sy", String(to.height / from.height));
+    }
+    var exitClass = card ? "is-folding" : "is-closing";
+    dialog.classList.add("is-closing", exitClass);
     clearTimeout(readerExitTimer);
     readerExitTimer = setTimeout(function () {
-      dialog.classList.remove("is-closing");
-      dialog.close();
+      dialog.classList.remove("is-closing", "is-folding");
+      closeOnto();
+      if (card) {
+        card.classList.remove("is-landing");
+        void card.offsetWidth;   // restart the animation on a second close
+        card.classList.add("is-landing");
+        setTimeout(function () { card.classList.remove("is-landing"); }, 500);
+      }
     }, READER_EXIT_MS);
   }
   // A click on a modal's ::backdrop is dispatched to the <dialog> itself, so
@@ -881,7 +910,7 @@
   }
 
   function storyIds() {
-    return Array.prototype.map.call(document.querySelectorAll(".story[data-id]"), function (el) {
+    return Array.prototype.map.call(document.querySelectorAll(".story[data-id]:not(.is-hidden)"), function (el) {
       return parseInt(el.getAttribute("data-id"), 10);
     });
   }
@@ -889,7 +918,26 @@
   function setCardRead(entryId, read) {
     document.querySelectorAll('.story[data-id="' + entryId + '"]').forEach(function (el) {
       el.classList.toggle("is-read", read);
+      syncHideButton(el);
     });
+  }
+
+  // In Unread a read story stays on the page, greyed, until it is cleared.
+  // Skipping it would make no sense (it is read, so it won't come back), so
+  // its skip button and its left swipe clear it from the page instead.
+  function inUnreadView() {
+    var root = document.getElementById("entries-root");
+    return !!root && root.getAttribute("data-filter") === "unread";
+  }
+  function clearsInsteadOfSkip(el) {
+    return inUnreadView() && el.classList.contains("is-read");
+  }
+  function syncHideButton(el) {
+    var btn = el.querySelector("[data-hide]");
+    if (!btn || !inUnreadView()) return;
+    var clear = el.classList.contains("is-read");
+    btn.title = clear ? "Clear" : "Skip";
+    btn.setAttribute("aria-label", clear ? "Clear story" : "Skip story");
   }
 
   function bumpUnread(feedId, delta) {
@@ -1034,7 +1082,20 @@
     });
   }
 
+  function performClear(story, onCleared) {
+    var id = story.getAttribute("data-id");
+    var cards = document.querySelectorAll('.story[data-id="' + id + '"]');
+    cards.forEach(function (el) { el.classList.add("is-hidden"); });
+    relayoutMagazine();
+    if (onCleared) onCleared();
+    toast("Story cleared", "Undo", function () {
+      cards.forEach(function (el) { el.classList.remove("is-hidden"); });
+      relayoutMagazine();
+    });
+  }
+
   function performHide(hideStory, onHidden) {
+    if (clearsInsteadOfSkip(hideStory)) { performClear(hideStory, onHidden); return; }
     var hideId = parseInt(hideStory.getAttribute("data-id"), 10);
     var hideFeed = parseInt(hideStory.getAttribute("data-feed"), 10);
     var wasUnread = !hideStory.classList.contains("is-read");
@@ -1110,15 +1171,15 @@
 
   if (reader) {
     reader.addEventListener("close", function () {
-      // Stories read in the reader leave the Unread list (they're read) and
-      // the Skipped list (reading them un-skipped them) once it closes.
-      // Only stories touched in this session — the Skipped bin can hold
-      // already-read stories that were never opened.
+      // Read stories stay where they are, greyed, in every list but Skipped:
+      // reading a story there un-skipped it, so it leaves that list once the
+      // reader closes. Only stories touched in this session; the Skipped bin
+      // can hold already-read stories that were never opened.
       var root = document.getElementById("entries-root");
       var f = root && root.getAttribute("data-filter");
       var touched = Object.keys(readInReader);
       readInReader = {};
-      if (f !== "unread" && f !== "skipped") return;
+      if (f !== "skipped") return;
       var dismissed = 0;
       touched.forEach(function (id) {
         document.querySelectorAll('.story[data-id="' + id + '"]:not(.is-hidden)').forEach(function (el) {
@@ -1445,28 +1506,34 @@
     var id = parseInt(storyEl.getAttribute("data-id"), 10);
     var feedId = parseInt(storyEl.getAttribute("data-feed"), 10);
     var wasUnread = !storyEl.classList.contains("is-read");
+    var starEl = storyEl.querySelector("[data-star]");
+    var wasStarred = !!starEl && starEl.classList.contains("is-starred");
+    function setStarred(on) {
+      document.querySelectorAll('.story[data-id="' + id + '"] [data-star]').forEach(function (el) {
+        el.classList.toggle("is-starred", on);
+      });
+    }
     Promise.all([
       api("/entries/" + id + "/star", { starred: true }),
       api("/entries/" + id + "/read", { read: true }),
     ]).then(function () {
-      document.querySelectorAll('.story[data-id="' + id + '"]').forEach(function (el) {
-        el.classList.add("is-read");
-        var starBtn = el.querySelector("[data-star]");
-        if (starBtn) starBtn.classList.add("is-starred");
-      });
+      setCardRead(id, true);
+      setStarred(true);
       relayoutMagazine();
       if (wasUnread && !inSkippedView()) bumpUnread(feedId, -1);
       if (onDone) onDone();
       toast("Saved", "Undo", function () {
-        Promise.all([
-          api("/entries/" + id + "/star", { starred: false }),
-          api("/entries/" + id + "/read", { read: false }),
-        ]).then(function () {
+        // Back to exactly what it was: a greyed story stays read, and one
+        // that was already saved stays saved.
+        var undo = [];
+        if (!wasStarred) undo.push(api("/entries/" + id + "/star", { starred: false }));
+        if (wasUnread) undo.push(api("/entries/" + id + "/read", { read: false }));
+        Promise.all(undo).then(function () {
           document.querySelectorAll('.story[data-id="' + id + '"]').forEach(function (el) {
-            el.classList.remove("is-read", "is-hidden");
-            var starBtn = el.querySelector("[data-star]");
-            if (starBtn) starBtn.classList.remove("is-starred");
+            el.classList.remove("is-hidden");
           });
+          if (wasUnread) setCardRead(id, false);
+          setStarred(wasStarred);
           relayoutMagazine();
           if (wasUnread && !inSkippedView()) bumpUnread(feedId, 1);
         }).catch(function (err) { toast(err.message); });
@@ -1488,6 +1555,7 @@
     var pillTimer = null;
     var PILL_HIDE = '<svg viewBox="0 0 24 24"><path d="m5 5.5 6.5 6.5L5 18.5M12.5 5.5 19 12l-6.5 6.5"/></svg>Skip';
     var PILL_UNHIDE = '<svg viewBox="0 0 24 24"><path d="M2.5 4v6h6"/><path d="M4.6 15.5A8.5 8.5 0 1 0 4 9L2.5 10"/></svg>Restore';
+    var PILL_CLEAR = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>Clear';
     var PILL_SAVE = '<svg viewBox="0 0 24 24"><path d="M7 4.5h10a1 1 0 0 1 1 1V20l-6-3.5L6 20V5.5a1 1 0 0 1 1-1Z"/></svg>Save';
 
     function showPill(el, direction) {
@@ -1495,7 +1563,8 @@
       pill.className = "swipe-pill " + (direction < 0 ? "from-left" : "from-right");
       var root = document.getElementById("entries-root");
       var inHidden = root && root.getAttribute("data-filter") === "skipped";
-      pill.innerHTML = direction < 0 ? (inHidden ? PILL_UNHIDE : PILL_HIDE) : PILL_SAVE;
+      var left = inHidden ? PILL_UNHIDE : (clearsInsteadOfSkip(el) ? PILL_CLEAR : PILL_HIDE);
+      pill.innerHTML = direction < 0 ? left : PILL_SAVE;
       var rect = el.getBoundingClientRect();
       pill.style.top = rect.top + rect.height / 2 + "px";
       // The pill sits on the side the card is heading toward.
@@ -1612,9 +1681,9 @@
         });
       } else if (dir > 0 && dx >= threshold) {
         // Save + mark read.
-        var rootEl = document.getElementById("entries-root");
-        if (rootEl && rootEl.getAttribute("data-filter") === "unread") {
-          // Read stories leave the Unread view.
+        if (inUnreadView() && !el.classList.contains("is-read")) {
+          // Saving an unread story files it away: it leaves the Unread view.
+          // A greyed one is already read and stays where it is.
           slideOutAndCollapse(el, 1, function () {
             performSaveRead(el, function () { resetSwipeStyles(el); });
           });

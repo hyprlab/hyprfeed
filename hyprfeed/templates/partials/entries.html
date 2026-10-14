@@ -10,8 +10,11 @@
     <svg viewBox="0 0 24 24"><path d="M2.5 4v6h6"/><path d="M4.6 15.5A8.5 8.5 0 1 0 4 9L2.5 10"/></svg>
   </button>
   {% else %}
+  {# In Unread a story read on the page stays, greyed, and this button clears
+     it instead (syncHideButton in hyprfeed.js swaps the label). #}
   <button class="starbtn hidebtn" data-hide aria-label="Skip story" title="Skip">
-    <svg viewBox="0 0 24 24"><path d="m5 5.5 6.5 6.5L5 18.5M12.5 5.5 19 12l-6.5 6.5"/></svg>
+    <svg class="hidebtn-skip" viewBox="0 0 24 24"><path d="m5 5.5 6.5 6.5L5 18.5M12.5 5.5 19 12l-6.5 6.5"/></svg>
+    {% if filter == 'unread' %}<svg class="hidebtn-clear" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>{% endif %}
   </button>
   {% endif %}
 {%- endmacro %}
@@ -130,7 +133,7 @@
         {% if entry.summary %}<span class="row-dek">{{ entry.summary[:120] }}</span>{% endif %}
         <time class="row-time">{{ entry.published|ago }}</time>
         {{ star_btn(entry) }}
-          {{ hide_btn(entry) }}
+        {{ hide_btn(entry) }}
       </article>
       {% endfor %}
     </div>

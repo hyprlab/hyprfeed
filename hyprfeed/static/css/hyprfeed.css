@@ -328,6 +328,11 @@ html[data-theme="dark"] .icon-moon { display: none; }
 /* ————— Entries: shared ————— */
 .entries { padding: clamp(18px, 3vw, 34px) clamp(16px, 3.5vw, 36px) 60px; }
 .story { cursor: pointer; }
+/* Room for the sticky topbar when the reader brings a card into view. */
+.story { scroll-margin: calc(var(--topbar-h) + 14px) 0 14px; }
+/* The card the reader has just folded back into settles into place. */
+.story.is-landing { animation: card-land .45s cubic-bezier(.2, .8, .3, 1); }
+@keyframes card-land { from { transform: scale(1.02); box-shadow: var(--shadow-2); } }
 
 .kicker {
   display: flex; align-items: center; gap: 7px;
@@ -434,6 +439,11 @@ html[data-theme="dark"] .icon-moon { display: none; }
    important on touch, where they're always visible. */
 .story-body .starbtn { top: 8px; right: 10px; background: none; backdrop-filter: none; }
 .story-body .hidebtn { top: 8px; right: 44px; }
+/* In Unread a read story's skip button clears it instead (only that list
+   renders the second icon). */
+.hidebtn-clear { display: none; }
+.story.is-read .hidebtn-clear { display: block; }
+.story.is-read .hidebtn:has(.hidebtn-clear) .hidebtn-skip { display: none; }
 .story-body .kicker { padding-right: 72px; }
 .story.hero .story-body .starbtn, .story.breaker .story-body .starbtn { top: 14px; right: 14px; }
 .story.hero .story-body .hidebtn, .story.breaker .story-body .hidebtn { top: 14px; right: 52px; }
@@ -567,16 +577,31 @@ html[data-theme="dark"] .icon-moon { display: none; }
 html:has(dialog[open]) { overflow: hidden; }
 .modal[open] { animation: modal-in .22s cubic-bezier(.2, .9, .3, 1.2) both; }
 @keyframes modal-in { from { transform: translateY(14px) scale(.97); opacity: 0; } }
-/* One continuous upward pass: the reader rises in from below the fold and
-   keeps going out through the top, handing the eye off to the toast that
-   lands under the topbar. .is-closing is set in JS, which delays
-   dialog.close() by the same 300ms. */
+/* The reader rises in from below the fold. .is-closing is set in JS, which
+   delays dialog.close() by the same 300ms; without a card to fold into
+   (below), it keeps going out through the top. */
 .reader[open] { animation: reader-in .3s cubic-bezier(.16, .8, .3, 1) both; }
 .reader.is-closing { animation: reader-out .3s cubic-bezier(.5, 0, .75, .2) both; }
 .reader[open]::backdrop { animation: scrim-in .3s ease both; }
 .reader.is-closing::backdrop { animation: scrim-out .3s ease both; }
 @keyframes reader-in { from { transform: translateY(100%); } }
 @keyframes reader-out { to { transform: translateY(-100%); } }
+/* Closing a story that has a card on the page folds the reader back into
+   that card instead; JS measures the card into --fold-*. The article fades
+   first, so what shrinks is a blank page, never squashed text. */
+.reader.is-closing.is-folding {
+  transform-origin: 0 0;
+  animation: reader-fold .3s cubic-bezier(.4, 0, .2, 1) both;
+}
+.reader.is-folding > * { animation: fold-fade .12s ease-out both; }
+@keyframes fold-fade { to { opacity: 0; } }
+@keyframes reader-fold {
+  70% { opacity: 1; }
+  to {
+    transform: translate(var(--fold-x), var(--fold-y)) scale(var(--fold-sx), var(--fold-sy));
+    opacity: 0;
+  }
+}
 @keyframes scrim-in { from { opacity: 0; } }
 @keyframes scrim-out { to { opacity: 0; } }
 

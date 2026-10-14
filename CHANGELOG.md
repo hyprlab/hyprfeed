@@ -9,8 +9,17 @@ All notable changes to Hyprfeed are documented here. The format follows
 ### Added
 - A light and dark switch in the sidebar's footer, beside Settings, as well
   as the one in the top bar
+- In Unread, a story you have read can be cleared off the page with the X on
+  its card or a swipe to the left. It stays read and in History, and is not
+  put in Skipped
 
 ### Changed
+- Closing a story in Unread no longer takes it off the page. The reader folds
+  back into its card, which stays where it was, grayed as read, so you can
+  keep scrolling and come back to it. It is marked as read and listed in
+  History as before, and leaves Unread the next time the page loads
+- Swiping right to save a story you have already read in Unread keeps it on
+  the page instead of sliding it away
 - Settings lists its sections in a sidebar on the left instead of tabs across
   the top, with the chosen section and its title on the right. On phones it
   opens to the list of sections, and each one slides in with a back button
@@ -19,6 +28,12 @@ All notable changes to Hyprfeed are documented here. The format follows
   edge. The chosen search result is gray as well
 - The chosen option of a segmented control, such as the default view, is shown
   in yellow
+
+### Fixed
+- Undoing a save on a story that was already read or already saved no longer
+  marks it unread or removes it from Saved
+- Next and previous in the reader no longer step onto stories that were
+  skipped or cleared from the page
 
 ## [1.9.5] — 2026-09-24
 
