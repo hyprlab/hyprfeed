@@ -6,6 +6,8 @@ All notable changes to Hyprfeed are documented here. The format follows
 
 ## Unreleased
 
+## [1.10.1] — 2026-10-14
+
 ### Fixed
 - On phones and tablets, cards no longer lift and zoom as a finger passes over
   them while scrolling. Hover effects now only appear with a mouse or trackpad
