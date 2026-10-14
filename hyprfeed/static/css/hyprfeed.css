@@ -372,7 +372,12 @@ html[data-theme="dark"] .icon-moon { display: none; }
 .is-read .unread-dot { display: none; }
 /* List rows are a grid: keep the dot's cell so columns don't shift when read. */
 .row.is-read .unread-dot { display: block; visibility: hidden; }
-.is-read .story-title, .is-read .row-title { color: color-mix(in srgb, var(--ink) 55%, var(--bg)); }
+/* Read stories dim only where read and unread mix: Unread, All stories and
+   a feed's own list. Saved and History are lists to come back to (History
+   is all read), so nothing in them dims. */
+:is([data-filter="unread"], [data-filter="all"]) .is-read :is(.story-title, .row-title) {
+  color: color-mix(in srgb, var(--ink) 55%, var(--bg));
+}
 
 .starbtn {
   position: absolute; top: 10px; right: 10px; z-index: 2;
