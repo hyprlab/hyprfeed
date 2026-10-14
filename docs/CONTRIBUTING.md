@@ -101,6 +101,8 @@ renders the changelog, so a skipped section is a gap users see.
 
 - Match what is there: the app factory, blueprints, the `{"error": "..."}`
   shape for JSON failures, `api()` in `hyprfeed.js` for every mutating call.
+- Reuse before writing: look for the helper before writing a second copy, and
+  extract one on the second use of a pattern.
 - Schema changes go in `_migrate()` in `hyprfeed/__init__.py` as guarded
   `ALTER TABLE` steps. Never edit an old step. A step an older version can't
   read back is a MAJOR release.
