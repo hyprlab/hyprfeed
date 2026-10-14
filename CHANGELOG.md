@@ -6,6 +6,10 @@ All notable changes to Hyprfeed are documented here. The format follows
 
 ## Unreleased
 
+### Added
+- A light and dark switch in the sidebar's footer, beside Settings, as well
+  as the one in the top bar
+
 ### Changed
 - Settings lists its sections in a sidebar on the left instead of tabs across
   the top, with the chosen section and its title on the right. On phones it

@@ -88,16 +88,16 @@
     if (root.getAttribute("data-theme-pref") === "system") applyTheme("system");
   });
 
-  var themeBtn = document.getElementById("theme-btn");
-  if (themeBtn) {
-    themeBtn.addEventListener("click", function () {
+  // The same switch in the topbar and the sidebar foot.
+  document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
       var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
       applyTheme(next);
       var radio = document.querySelector('input[name="theme"][value="' + next + '"]');
       if (radio) radio.checked = true;
       api("/settings", { theme: next }).catch(function () {});
     });
-  }
+  });
   document.querySelectorAll('input[name="theme"]').forEach(function (radio) {
     radio.addEventListener("change", function () {
       applyTheme(radio.value);
