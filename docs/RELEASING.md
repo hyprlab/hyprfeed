@@ -80,14 +80,15 @@ pushed.
 ```sh
 git push origin main vX.Y.Z
 tools/release-notes.sh X.Y.Z > /tmp/notes-X.Y.Z.md
+# shorten every line in the notes file now ("Release notes" below)
 gh release create vX.Y.Z --title "vX.Y.Z" --notes-file /tmp/notes-X.Y.Z.md
 tools/publish-image.sh X.Y.Z
 docker compose pull && docker compose up -d     # the maintainer's own instance
 ```
 
 The release title is the version and nothing else: no name, no tagline. The
-body is that version's changelog section plus the generated list of commits;
-never hand `CHANGELOG.md` itself to `gh release create`. There is no separate
+body is short lists and a compare link, as in "Release notes" below; never
+hand `CHANGELOG.md` itself to `gh release create`. There is no separate
 release-notes file: the changelog is the single record.
 
 Then reply to and close every issue the release fixes, and delete the
@@ -106,6 +107,45 @@ or can't sign anyone in, while `main` holds work that can't ship yet.
 4. Publish as above, pushing `stable-X.Y` instead of `main`.
 5. Merge `stable-X.Y` back into `main`, so the changelog entry survives.
 6. Never delete a `stable-X.Y` branch: patch commits may exist only there.
+
+## Release notes
+
+`tools/release-notes.sh` prints a draft: the version's changelog section under
+the release headings, and a compare link. Before `gh release create`, shorten
+every line in the file to a few words and its issue. The changelog keeps its
+full sentences, which the About section shows; the release page does not
+repeat them.
+
+```
+### New features:
+
+- Folders for feeds in the sidebar - (#12)
+- Import and export OPML - (#15)
+
+### Changes:
+
+- Settings sections in a sidebar instead of tabs
+
+### Fixes:
+
+- the reader closing on a click beside the text - (#18)
+
+### Translations:
+
+- Polish by [Name](https://github.com/login)
+
+---
+
+**Full changelog:** [v1.9.4...v1.10.0](https://github.com/hyprlab/hyprfeed/compare/v1.9.4...v1.10.0)
+```
+
+- Features start with a capital; fixes are lower case and name the bug that
+  is gone. The issue, if any, ends the line as ` - (#N)`.
+- Drop a heading with nothing under it. No introduction, no closing line, and
+  no bold except the `Full changelog:` label.
+- No list of commits: the compare link shows them.
+- An `@` only for people whose code, art or translation is in the release;
+  translators are credited by a link on their name.
 
 ## The Releases page
 

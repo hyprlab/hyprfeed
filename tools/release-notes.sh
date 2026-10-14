@@ -3,13 +3,16 @@
 #
 #   tools/release-notes.sh 1.3.0 > /tmp/notes.md
 #
-# The body is that version's CHANGELOG section and nothing else. Never hand
+# The body is that version's CHANGELOG section, its Keep a Changelog headings
+# renamed (Added becomes "New features:", Changed "Changes:", Fixed "Fixes:").
+# It is a draft: shorten each line to a few words and its issue, as in
+# docs/RELEASING.md ("Release notes"), before `gh release create`. Never hand
 # CHANGELOG.md itself to `gh release create`: every release page would carry
 # the whole history.
 #
-# With the tag pushed, it appends a "What's changed" list against the previous
-# tag OF THE SAME KIND (a beta against the previous beta, a stable against the
-# previous stable) and a compare link.
+# With the tag pushed, it appends a "Full changelog" compare link against the
+# previous tag OF THE SAME KIND (a beta against the previous beta, a stable
+# against the previous stable). No commit list: the compare link has it.
 #
 # GitHub keeps every line break in a release body, so paragraphs and list items
 # are unwrapped to one line each. An @handle keeps its @ only if the person is
@@ -29,6 +32,8 @@ text = pathlib.Path("CHANGELOG.md").read_text(encoding="utf-8")
 m = re.search(r"^##\s+\[?" + re.escape(version) + r"\]?[^\n]*\n(.*?)(?=^## |\Z)", text, re.M | re.S)
 if not m:
     sys.exit(f"CHANGELOG.md has no section for {version}.")
+names = {"added": "New features", "changed": "Changes", "fixed": "Fixes",
+         "translated": "Translations", "translations": "Translations"}
 out, buf = [], []
 def flush():
     if buf:
@@ -37,6 +42,9 @@ for line in m.group(1).strip().splitlines():
     s = line.strip()
     if not s:
         flush(); out.append("")
+    elif h := re.match(r"^###\s+(.+?):?$", s):
+        flush()
+        out += [f"### {names.get(h.group(1).lower(), h.group(1))}:", ""]
     elif re.match(r"^([-*]|\d+\.|#+)\s", s):
         flush(); buf.append(s)
     else:
@@ -52,14 +60,12 @@ if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
         prev=$(git tag -l 'v*' --sort=-v:refname | grep -vE -- '-' | grep -vx "$TAG" | head -1 || true)
     fi
     if [ -n "$prev" ]; then
-        echo
-        echo "### What's changed"
-        echo
-        git log --no-merges --format='- %s' "$prev..$TAG" | grep -v '^- chore(release)' || true
-        repo=$(git remote get-url origin 2>/dev/null | sed -E 's#^(git@github\.com:|https://github\.com/)##; s#\.git$##' || true)
+        repo=$(git remote get-url origin 2>/dev/null | sed -E 's#^(git@[^:]+:|ssh://git@[^/]+/|https://github\.com/)##; s#\.git$##' || true)
         if [ -n "$repo" ]; then
             echo
-            echo "**Full changes:** https://github.com/$repo/compare/$prev...$TAG"
+            echo "---"
+            echo
+            echo "**Full changelog:** [$prev...$TAG](https://github.com/$repo/compare/$prev...$TAG)"
         fi
     fi
 fi
