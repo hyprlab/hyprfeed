@@ -6,6 +6,10 @@ All notable changes to Hyprfeed are documented here. The format follows
 
 ## Unreleased
 
+### Fixed
+- Messages raised while the Settings window is open, such as an error or an
+  Undo, now appear above it instead of hidden behind it
+
 ## [1.10.1] — 2026-10-14
 
 ### Fixed

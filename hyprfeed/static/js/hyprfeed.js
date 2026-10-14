@@ -37,8 +37,10 @@
     var el = document.getElementById("toast");
     if (!el) return;
     // A modal <dialog> paints above everything outside it, so a toast raised
-    // while the reader is open has to live inside it to be seen at all.
-    var host = reader && reader.open ? reader : document.body;
+    // while the reader or a dialog such as Settings is open has to live
+    // inside it to be seen at all.
+    var open = document.querySelectorAll("dialog[open]");
+    var host = open.length ? open[open.length - 1] : document.body;
     if (el.parentNode !== host) host.appendChild(el);
     clearTimeout(toastTimer);
     clearTimeout(toastLeaveTimer);
